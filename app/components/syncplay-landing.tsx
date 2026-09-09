@@ -13,7 +13,7 @@ function normalizeRoomCode(value: string) {
 
 export function SyncPlayLanding() {
   const router = useRouter();
-  const [displayName, setDisplayName] = useState("Elroy");
+  const [displayName, setDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [message, setMessage] = useState("Create a private room or join an invite link.");
   const [isPending, startTransition] = useTransition();
