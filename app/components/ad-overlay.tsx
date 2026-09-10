@@ -27,6 +27,7 @@ export function AdOverlay({
   const videoUrl = adVideos[0];
   const [remainingMs, setRemainingMs] = useState(skipDelayMs);
   const [canSkip, setCanSkip] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -57,6 +58,13 @@ export function AdOverlay({
         muted
         playsInline
         loop
+        onLoadedData={() => setVideoProgress(0)}
+        onTimeUpdate={(event) => {
+          const { currentTime, duration } = event.currentTarget;
+          if (Number.isFinite(duration) && duration > 0) {
+            setVideoProgress((currentTime / duration) * 100);
+          }
+        }}
       />
       <button
         type="button"
@@ -66,8 +74,15 @@ export function AdOverlay({
       >
         {canSkip ? "Skip ad" : `Skip ad in ${Math.max(1, Math.ceil(remainingMs / 1000))}s`}
       </button>
-      <div className="syncplay-ad-progress" aria-label="Advertisement progress">
-        <span style={{ animationDuration: `${skipDelayMs}ms` }} />
+      <div
+        className="syncplay-ad-progress"
+        aria-label="Advertisement video progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(videoProgress)}
+        role="progressbar"
+      >
+        <span style={{ width: `${Math.min(videoProgress, 100)}%` }} />
       </div>
     </div>
   );

@@ -393,17 +393,10 @@ a {
 
 .syncplay-ad-progress span {
   display: block;
-  width: 0;
   height: 100%;
   border-radius: 0;
   background: linear-gradient(90deg, #38bdf8 0%, #60a5fa 45%, #8b5cf6 100%);
-  animation: syncplay-ad-progress linear forwards;
-}
-
-@keyframes syncplay-ad-progress {
-  to {
-    width: 100%;
-  }
+  transition: width 0.12s linear;
 }
 
 .syncplay-ad-button {
