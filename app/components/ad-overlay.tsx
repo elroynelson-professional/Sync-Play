@@ -57,6 +57,7 @@ export function AdOverlay({
         autoPlay
         muted
         playsInline
+        loop
         onLoadedMetadata={() => setVideoProgress(0)}
         onTimeUpdate={(event) => {
           const { currentTime, duration } = event.currentTarget;
@@ -64,7 +65,6 @@ export function AdOverlay({
             setVideoProgress((currentTime / duration) * 100);
           }
         }}
-        onEnded={() => setVideoProgress(100)}
       />
       <button
         type="button"
