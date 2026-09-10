@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 type AdOverlayProps = {
   isOpen: boolean;
   skipDelayMs?: number;
-  durationMs?: number;
   onSkip: () => void;
 };
 
@@ -23,7 +22,6 @@ const adVideos = [
 export function AdOverlay({
   isOpen,
   skipDelayMs = 5000,
-  durationMs = 7000,
   onSkip,
 }: AdOverlayProps) {
   const videoUrl = adVideos[0];
@@ -41,17 +39,12 @@ export function AdOverlay({
       setRemainingMs(Math.max(0, skipDelayMs - elapsedMs));
       setCanSkip(elapsedMs >= skipDelayMs);
 
-      if (elapsedMs >= durationMs) {
-        onSkip();
-        return;
-      }
-
       frameId = window.requestAnimationFrame(updateTimer);
     };
 
     frameId = window.requestAnimationFrame(updateTimer);
     return () => window.cancelAnimationFrame(frameId);
-  }, [durationMs, isOpen, onSkip, skipDelayMs]);
+  }, [isOpen, skipDelayMs]);
 
   if (!isOpen) return null;
 
