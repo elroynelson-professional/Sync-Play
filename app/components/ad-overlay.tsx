@@ -57,14 +57,14 @@ export function AdOverlay({
         autoPlay
         muted
         playsInline
-        loop
-        onLoadedData={() => setVideoProgress(0)}
+        onLoadedMetadata={() => setVideoProgress(0)}
         onTimeUpdate={(event) => {
           const { currentTime, duration } = event.currentTarget;
           if (Number.isFinite(duration) && duration > 0) {
             setVideoProgress((currentTime / duration) * 100);
           }
         }}
+        onEnded={() => setVideoProgress(100)}
       />
       <button
         type="button"
