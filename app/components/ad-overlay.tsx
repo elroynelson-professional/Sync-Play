@@ -135,14 +135,25 @@ export function AdOverlay({
         <div className="syncplay-ad-badge">Advertisement</div>
 
         {activeAd.videoUrl ? (
-          <video
-            className="syncplay-ad-video"
-            src={activeAd.videoUrl}
-            autoPlay
-            muted
-            playsInline
-            loop
-          />
+          <div className="syncplay-ad-media" aria-label={resolvedTitle}>
+            <video
+              className="syncplay-ad-video syncplay-ad-video-background"
+              src={activeAd.videoUrl}
+              autoPlay
+              muted
+              playsInline
+              loop
+              aria-hidden="true"
+            />
+            <video
+              className="syncplay-ad-video syncplay-ad-video-foreground"
+              src={activeAd.videoUrl}
+              autoPlay
+              muted
+              playsInline
+              loop
+            />
+          </div>
         ) : (
           <div className="syncplay-ad-visual" aria-hidden="true">
             <div className="syncplay-ad-brand">{resolvedBrand}</div>

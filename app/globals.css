@@ -241,12 +241,15 @@ a {
   padding: clamp(1.5rem, 4vw, 4rem);
   border: none;
   border-radius: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(8, 15, 23, 0.96) 100%);
+  overflow: hidden;
+  background: #020617;
   box-shadow: none;
   color: #e2e8f0;
 }
 
 .syncplay-ad-badge {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   padding: 0.38rem 0.7rem;
@@ -276,12 +279,28 @@ a {
   overflow: hidden;
 }
 
+.syncplay-ad-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #020617;
+}
+
 .syncplay-ad-video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.syncplay-ad-video-background {
   object-fit: cover;
+  filter: blur(28px) brightness(0.5);
+  transform: scale(1.08);
+}
+
+.syncplay-ad-video-foreground {
+  object-fit: contain;
   background: #000;
 }
 
@@ -320,8 +339,14 @@ a {
 }
 
 .syncplay-ad-copy {
+  position: relative;
+  z-index: 1;
   margin-top: 1.25rem;
   max-width: 52rem;
+  padding: 0.8rem 1rem;
+  border-radius: 1rem;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(10px);
 }
 
 .syncplay-ad-kicker {
@@ -355,6 +380,7 @@ a {
   overflow: hidden;
   border-radius: 0;
   background: rgba(148, 163, 184, 0.18);
+  z-index: 2;
 }
 
 .syncplay-ad-progress span {
