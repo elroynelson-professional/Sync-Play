@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type AdOverlayProps = {
   isOpen: boolean;
+  skipDelayMs?: number;
   durationMs?: number;
   onSkip: () => void;
 };
@@ -19,15 +20,38 @@ const adVideos = [
   "/ads/info.mp4",
 ];
 
-export function AdOverlay({ isOpen, durationMs = 7000, onSkip }: AdOverlayProps) {
+export function AdOverlay({
+  isOpen,
+  skipDelayMs = 5000,
+  durationMs = 7000,
+  onSkip,
+}: AdOverlayProps) {
   const videoUrl = adVideos[0];
+  const [remainingMs, setRemainingMs] = useState(skipDelayMs);
+  const [canSkip, setCanSkip] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const timer = window.setTimeout(onSkip, durationMs);
-    return () => window.clearTimeout(timer);
-  }, [durationMs, isOpen, onSkip]);
+    const startedAt = Date.now();
+    let frameId = 0;
+
+    const updateTimer = () => {
+      const elapsedMs = Date.now() - startedAt;
+      setRemainingMs(Math.max(0, skipDelayMs - elapsedMs));
+      setCanSkip(elapsedMs >= skipDelayMs);
+
+      if (elapsedMs >= durationMs) {
+        onSkip();
+        return;
+      }
+
+      frameId = window.requestAnimationFrame(updateTimer);
+    };
+
+    frameId = window.requestAnimationFrame(updateTimer);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [durationMs, isOpen, onSkip, skipDelayMs]);
 
   if (!isOpen) return null;
 
@@ -41,8 +65,13 @@ export function AdOverlay({ isOpen, durationMs = 7000, onSkip }: AdOverlayProps)
         playsInline
         loop
       />
-      <button type="button" className="syncplay-ad-button is-active" onClick={onSkip}>
-        Skip
+      <button
+        type="button"
+        className={`syncplay-ad-button ${canSkip ? "is-active" : ""}`}
+        onClick={onSkip}
+        disabled={!canSkip}
+      >
+        {canSkip ? "Skip ad" : `Skip ad in ${Math.max(1, Math.ceil(remainingMs / 1000))}s`}
       </button>
       <div className="syncplay-ad-progress" aria-label="Advertisement progress">
         <span style={{ animationDuration: `${durationMs}ms` }} />
