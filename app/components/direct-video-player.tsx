@@ -19,6 +19,7 @@ function getExpectedPosition(playback: PlaybackState) {
 export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlayerProps>(
   function DirectMediaPlayer({ playback, onTrackEnd, mediaKind = "video" }, ref) {
     const [mediaError, setMediaError] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const mediaRef = useRef<HTMLMediaElement | null>(null);
     const frameRef = useRef<HTMLDivElement | null>(null);
     const activeTrackIdRef = useRef<string | null>(null);
@@ -87,6 +88,15 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
       return () => window.clearInterval(timer);
     }, [playback]);
 
+    useEffect(() => {
+      const handleFullscreenChange = () => {
+        setIsFullscreen(document.fullscreenElement === frameRef.current);
+      };
+
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+      return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, []);
+
     function toggleFullscreen() {
       if (document.fullscreenElement) {
         void document.exitFullscreen();
@@ -143,10 +153,27 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="absolute right-3 top-3 z-10 rounded-lg bg-black/70 px-3 py-2 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/90"
-            aria-label="View video fullscreen"
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg bg-black/70 text-white backdrop-blur transition hover:bg-black/90"
+            aria-label={isFullscreen ? "Exit fullscreen" : "View video fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "View video fullscreen"}
           >
-            Fullscreen
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              {isFullscreen ? (
+                <>
+                  <path d="M8 3v5H3" />
+                  <path d="M3 8l5-5" />
+                  <path d="M16 21v-5h5" />
+                  <path d="M21 16l-5 5" />
+                </>
+              ) : (
+                <>
+                  <path d="M8 3H3v5" />
+                  <path d="M3 8l5-5" />
+                  <path d="M16 21h5v-5" />
+                  <path d="M21 16l-5 5" />
+                </>
+              )}
+            </svg>
           </button>
         ) : null}
       </div>
