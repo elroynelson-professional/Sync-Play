@@ -150,27 +150,6 @@ a {
   background: #090909 !important;
 }
 
-.syncplay-room--fullscreen {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-}
-
-.syncplay-room--fullscreen .syncplay-player-frame--fullscreen {
-  min-height: 72vh !important;
-  aspect-ratio: 16 / 9 !important;
-}
-
-.syncplay-room--fullscreen .syncplay-playback-panel,
-.syncplay-room--fullscreen .syncplay-chat-panel,
-.syncplay-room--fullscreen .syncplay-chat-launcher {
-  position: relative;
-  z-index: 1;
-}
-
-.syncplay-room--fullscreen .syncplay-chat-floating {
-  max-height: 28rem;
-}
-
 .syncplay-transport-bar {
   border-color: var(--control-border) !important;
   background: var(--soft-background) !important;
