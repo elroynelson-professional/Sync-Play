@@ -24,10 +24,26 @@ export function AdOverlay({
   skipDelayMs = 5000,
   onSkip,
 }: AdOverlayProps) {
-  const videoUrl = adVideos[0];
+  const [videoIndex, setVideoIndex] = useState(0);
   const [remainingMs, setRemainingMs] = useState(skipDelayMs);
   const [canSkip, setCanSkip] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
+  const videoUrl = adVideos[videoIndex] ?? adVideos[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setVideoIndex((currentIndex) => {
+        if (adVideos.length < 2) return 0;
+
+        const nextIndex = Math.floor(Math.random() * adVideos.length);
+        return nextIndex === currentIndex ? (nextIndex + 1) % adVideos.length : nextIndex;
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
