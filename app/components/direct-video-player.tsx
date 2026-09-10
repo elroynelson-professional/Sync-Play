@@ -19,7 +19,9 @@ function getExpectedPosition(playback: PlaybackState) {
 export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlayerProps>(
   function DirectMediaPlayer({ playback, onTrackEnd, mediaKind = "video" }, ref) {
     const [mediaError, setMediaError] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const mediaRef = useRef<HTMLMediaElement | null>(null);
+    const frameRef = useRef<HTMLDivElement | null>(null);
     const activeTrackIdRef = useRef<string | null>(null);
     const loadedTrackIdRef = useRef<string | null>(null);
 
@@ -86,8 +88,29 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
       return () => window.clearInterval(timer);
     }, [playback]);
 
+    useEffect(() => {
+      const handleFullscreenChange = () => {
+        setIsFullscreen(document.fullscreenElement === frameRef.current);
+      };
+
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+      return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, []);
+
+    function toggleFullscreen() {
+      if (document.fullscreenElement) {
+        void document.exitFullscreen();
+        return;
+      }
+
+      void frameRef.current?.requestFullscreen();
+    }
+
     return (
-      <div className="syncplay-player-frame relative isolate aspect-[16/8] min-h-[168px] overflow-hidden rounded-[20px] border border-white/10 bg-black sm:min-h-[200px] lg:min-h-[220px]">
+      <div
+        ref={frameRef}
+        className="syncplay-player-frame relative isolate aspect-[16/8] min-h-[168px] overflow-hidden rounded-[20px] border border-white/10 bg-black sm:min-h-[200px] lg:min-h-[220px]"
+      >
         {mediaKind === "audio" ? (
           <div className="syncplay-audio-player-art absolute inset-0 flex flex-col items-center justify-center gap-3 text-center" aria-hidden="true">
             <div className="text-5xl text-emerald-300">♫</div>
@@ -125,6 +148,16 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
           <div className="syncplay-direct-video-error absolute inset-0 flex items-center justify-center p-6 text-center text-sm">
             This link is not a direct playable media file. Use a supported MP4, WebM, OGG, MP3, WAV, or upload a local file.
           </div>
+        ) : null}
+        {mediaKind === "video" ? (
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="absolute right-3 top-3 z-10 rounded-lg bg-black/70 px-3 py-2 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/90"
+            aria-label={isFullscreen ? "Minimize video" : "View video fullscreen"}
+          >
+            {isFullscreen ? "Minimize" : "Fullscreen"}
+          </button>
         ) : null}
       </div>
     );
