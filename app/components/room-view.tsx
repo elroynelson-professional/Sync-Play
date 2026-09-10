@@ -12,6 +12,8 @@ import { VoiceChat } from "./voice-chat";
 import { VideoChat } from "./video-chat";
 import { AdOverlay } from "./ad-overlay";
 
+const AD_DISPLAY_CHANCE = 0.5;
+
 type RoomViewProps = {
   roomId: string;
   initialName: string;
@@ -473,6 +475,11 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   }
 
   function triggerAd(action: () => void) {
+    if (Math.random() >= AD_DISPLAY_CHANCE) {
+      action();
+      return;
+    }
+
     setPendingAdAction(() => action);
     setIsAdOpen(true);
   }

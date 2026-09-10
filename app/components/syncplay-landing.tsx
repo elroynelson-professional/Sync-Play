@@ -4,6 +4,8 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AdOverlay } from "./ad-overlay";
 
+const AD_DISPLAY_CHANCE = 0.5;
+
 function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
@@ -29,6 +31,11 @@ export function SyncPlayLanding() {
   }
 
   function triggerAd(action: () => void) {
+    if (Math.random() >= AD_DISPLAY_CHANCE) {
+      action();
+      return;
+    }
+
     setPendingAction(() => action);
     setIsAdOpen(true);
   }
