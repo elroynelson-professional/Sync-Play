@@ -67,7 +67,7 @@ export function AdOverlay({
         {canSkip ? "Skip ad" : `Skip ad in ${Math.max(1, Math.ceil(remainingMs / 1000))}s`}
       </button>
       <div className="syncplay-ad-progress" aria-label="Advertisement progress">
-        <span style={{ animationDuration: `${durationMs}ms` }} />
+        <span style={{ animationDuration: `${skipDelayMs}ms` }} />
       </div>
     </div>
   );
