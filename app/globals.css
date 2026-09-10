@@ -219,6 +219,187 @@ a {
   color: var(--muted);
 }
 
+.syncplay-ad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(4, 7, 12, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+.syncplay-ad-panel {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.5rem, 4vw, 4rem);
+  border: none;
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(8, 15, 23, 0.96) 100%);
+  box-shadow: none;
+  color: #e2e8f0;
+}
+
+.syncplay-ad-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.12);
+  color: #bbf7d0;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.syncplay-ad-visual {
+  position: relative;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  min-height: 12rem;
+  max-width: 100%;
+  margin-top: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2rem);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), transparent 35%),
+    linear-gradient(135deg, rgba(22, 101, 52, 0.9) 0%, rgba(9, 18, 13, 0.92) 45%, rgba(2, 6, 23, 0.96) 100%);
+  overflow: hidden;
+}
+
+.syncplay-ad-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.syncplay-ad-visual::before {
+  content: "";
+  position: absolute;
+  right: -3rem;
+  bottom: -2rem;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.18);
+  filter: blur(14px);
+}
+
+.syncplay-ad-brand {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #f0fdf4;
+}
+
+.syncplay-ad-brand-tag {
+  position: relative;
+  z-index: 1;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  background: rgba(22, 101, 52, 0.4);
+  color: #d1fae5;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.syncplay-ad-copy {
+  margin-top: 1.25rem;
+  max-width: 52rem;
+}
+
+.syncplay-ad-kicker {
+  margin: 0 0 0.4rem;
+  color: #86efac;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.syncplay-ad-copy h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1.1;
+}
+
+.syncplay-ad-copy p {
+  margin: 0.75rem 0 0;
+  color: #cbd5e1;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.syncplay-ad-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 0;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.syncplay-ad-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 0;
+  background: linear-gradient(90deg, #38bdf8 0%, #60a5fa 45%, #8b5cf6 100%);
+  transition: width 0.12s linear;
+}
+
+.syncplay-ad-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: auto;
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: not-allowed;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.syncplay-ad-button.is-active {
+  color: rgba(255, 255, 255, 0.98);
+  cursor: pointer;
+  opacity: 1;
+}
+
+.syncplay-ad-button.is-active:hover {
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+
 /* Live chat elements */
 .syncplay-chat-list {
   max-height: 22rem;

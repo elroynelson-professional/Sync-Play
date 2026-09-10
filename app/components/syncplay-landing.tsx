@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AdOverlay } from "./ad-overlay";
 
 function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -17,6 +18,8 @@ export function SyncPlayLanding() {
   const [roomCode, setRoomCode] = useState("");
   const [message, setMessage] = useState("Create a private room or join an invite link.");
   const [isPending, startTransition] = useTransition();
+  const [isAdOpen, setIsAdOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const canSubmit = useMemo(() => displayName.trim().length >= 2, [displayName]);
 
@@ -25,25 +28,43 @@ export function SyncPlayLanding() {
     router.push(`/room/${code}?name=${normalizedName}&role=${role}&action=${action}`);
   }
 
+  function triggerAd(action: () => void) {
+    setPendingAction(() => action);
+    setIsAdOpen(true);
+  }
+
+  function handleAdComplete() {
+    const nextAction = pendingAction;
+    setPendingAction(null);
+    setIsAdOpen(false);
+    nextAction?.();
+  }
+
   function handleCreateRoom() {
-    if (!canSubmit) {
-      setMessage("Add a display name first.");
+    if (!canSubmit || isAdOpen) {
+      if (!canSubmit) {
+        setMessage("Add a display name first.");
+      }
       return;
     }
 
     const code = makeRoomCode();
     setMessage(`Room ${code} created. Opening the shared room...`);
 
-    startTransition(() => {
-      goToRoom(code, "host", "create");
+    triggerAd(() => {
+      startTransition(() => {
+        goToRoom(code, "host", "create");
+      });
     });
   }
 
   function handleJoinRoom() {
     const code = normalizeRoomCode(roomCode);
 
-    if (!canSubmit) {
-      setMessage("Add a display name first.");
+    if (!canSubmit || isAdOpen) {
+      if (!canSubmit) {
+        setMessage("Add a display name first.");
+      }
       return;
     }
 
@@ -54,13 +75,19 @@ export function SyncPlayLanding() {
 
     setMessage(`Joining room ${code}...`);
 
-    startTransition(() => {
-      goToRoom(code, "guest", "join");
+    triggerAd(() => {
+      startTransition(() => {
+        goToRoom(code, "guest", "join");
+      });
     });
   }
 
   return (
     <main className="syncplay-landing relative min-h-screen overflow-hidden px-5 py-8 text-white sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+      <AdOverlay
+        isOpen={isAdOpen}
+        onSkip={handleAdComplete}
+      />
       <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl items-center">
         <div className="grid w-full gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
           <section className="syncplay-panel syncplay-landing-hero flex flex-col justify-center gap-8 rounded-3xl p-7 sm:p-9 lg:p-11">
@@ -126,7 +153,7 @@ export function SyncPlayLanding() {
                   <button
                     type="button"
                     onClick={handleCreateRoom}
-                    disabled={isPending || !canSubmit}
+                    disabled={isPending || isAdOpen || !canSubmit}
                     className="syncplay-button-primary rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Create room
@@ -134,7 +161,7 @@ export function SyncPlayLanding() {
                   <button
                     type="button"
                     onClick={handleJoinRoom}
-                    disabled={isPending || !canSubmit}
+                    disabled={isPending || isAdOpen || !canSubmit}
                     className="syncplay-button-secondary rounded-2xl border border-white/12 bg-white/6 px-4 py-3 font-semibold text-slate-100 transition hover:border-emerald-300/40 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Join room
