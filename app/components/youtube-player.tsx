@@ -62,6 +62,7 @@ type YouTubePlayerOptions = {
 type YouTubePlayerProps = {
   playback: PlaybackState;
   onTrackEnd?: (trackId: string) => void;
+  onToggleFullscreen?: (nextState: boolean) => void;
 };
 
 export type YouTubePlayerHandle = {
@@ -105,7 +106,7 @@ function getExpectedPosition(playback: PlaybackState) {
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  function YouTubePlayer({ playback, onTrackEnd }, ref) {
+  function YouTubePlayer({ playback, onTrackEnd, onToggleFullscreen }, ref) {
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
@@ -269,28 +270,16 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
     return () => window.clearInterval(timer);
   }, [isReady, playback]);
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === frameRef.current);
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
-
   function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-      return;
-    }
-
-    void frameRef.current?.requestFullscreen();
+    const nextState = !isFullscreen;
+    setIsFullscreen(nextState);
+    onToggleFullscreen?.(nextState);
   }
 
     return (
       <div
         ref={frameRef}
-        className="syncplay-player-frame relative isolate aspect-[16/8] min-h-[168px] overflow-hidden rounded-[20px] border border-white/10 bg-black sm:min-h-[200px] lg:min-h-[220px]"
+        className={`syncplay-player-frame relative isolate aspect-[16/8] min-h-[168px] overflow-hidden rounded-[20px] border border-white/10 bg-black sm:min-h-[200px] lg:min-h-[220px] ${isFullscreen ? "syncplay-player-frame--fullscreen" : ""}`}
       >
         <div id={containerId} className="absolute inset-0 h-full w-full" />
         <button

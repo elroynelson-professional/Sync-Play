@@ -176,6 +176,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [localPosition, setLocalPosition] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
+  const [isMediaFullscreen, setIsMediaFullscreen] = useState(false);
   const [isAdOpen, setIsAdOpen] = useState(false);
   const [pendingAdAction, setPendingAdAction] = useState<(() => void) | null>(null);
   const playerRef = useRef<YouTubePlayerHandle | null>(null);
@@ -492,7 +493,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   }
 
   return (
-    <main className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+    <main className={`syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8 ${isMediaFullscreen ? "syncplay-room--fullscreen" : ""}`}>
       <AdOverlay
         isOpen={isAdOpen}
         onSkip={handleAdComplete}
@@ -537,11 +538,11 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
 
                 <div className="syncplay-video-shell mt-4 rounded-[24px] bg-zinc-950 p-3 sm:p-4">
                   {getEffectiveMediaType(playback.mediaType, playback.url) === "audio" ? (
-                    <DirectMediaPlayer ref={playerRef} playback={playback} mediaKind="audio" onTrackEnd={handleTrackEnd} />
+                    <DirectMediaPlayer ref={playerRef} playback={playback} mediaKind="audio" onTrackEnd={handleTrackEnd} onToggleFullscreen={setIsMediaFullscreen} />
                   ) : getEffectiveMediaType(playback.mediaType, playback.url) === "direct" ? (
-                    <DirectMediaPlayer ref={playerRef} playback={playback} onTrackEnd={handleTrackEnd} />
+                    <DirectMediaPlayer ref={playerRef} playback={playback} onTrackEnd={handleTrackEnd} onToggleFullscreen={setIsMediaFullscreen} />
                   ) : (
-                    <YouTubePlayer ref={playerRef} playback={playback} onTrackEnd={handleTrackEnd} />
+                    <YouTubePlayer ref={playerRef} playback={playback} onTrackEnd={handleTrackEnd} onToggleFullscreen={setIsMediaFullscreen} />
                   )}
 
                   <div className="syncplay-transport-bar mt-3 flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/20 p-2">

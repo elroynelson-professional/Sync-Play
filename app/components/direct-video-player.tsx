@@ -8,6 +8,7 @@ type DirectMediaPlayerProps = {
   playback: PlaybackState;
   onTrackEnd?: (trackId: string) => void;
   mediaKind?: "video" | "audio";
+  onToggleFullscreen?: (nextState: boolean) => void;
 };
 
 function getExpectedPosition(playback: PlaybackState) {
@@ -17,7 +18,7 @@ function getExpectedPosition(playback: PlaybackState) {
 }
 
 export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlayerProps>(
-  function DirectMediaPlayer({ playback, onTrackEnd, mediaKind = "video" }, ref) {
+  function DirectMediaPlayer({ playback, onTrackEnd, mediaKind = "video", onToggleFullscreen }, ref) {
     const [mediaError, setMediaError] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const mediaRef = useRef<HTMLMediaElement | null>(null);
@@ -88,28 +89,16 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
       return () => window.clearInterval(timer);
     }, [playback]);
 
-    useEffect(() => {
-      const handleFullscreenChange = () => {
-        setIsFullscreen(document.fullscreenElement === frameRef.current);
-      };
-
-      document.addEventListener("fullscreenchange", handleFullscreenChange);
-      return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    }, []);
-
     function toggleFullscreen() {
-      if (document.fullscreenElement) {
-        void document.exitFullscreen();
-        return;
-      }
-
-      void frameRef.current?.requestFullscreen();
+      const nextState = !isFullscreen;
+      setIsFullscreen(nextState);
+      onToggleFullscreen?.(nextState);
     }
 
     return (
       <div
         ref={frameRef}
-        className="syncplay-player-frame relative isolate aspect-[16/8] min-h-[168px] overflow-hidden rounded-[20px] border border-white/10 bg-black sm:min-h-[200px] lg:min-h-[220px]"
+        className={`syncplay-player-frame relative isolate aspect-[16/8] min-h-[168px] overflow-hidden rounded-[20px] border border-white/10 bg-black sm:min-h-[200px] lg:min-h-[220px] ${isFullscreen ? "syncplay-player-frame--fullscreen" : ""}`}
       >
         {mediaKind === "audio" ? (
           <div className="syncplay-audio-player-art absolute inset-0 flex flex-col items-center justify-center gap-3 text-center" aria-hidden="true">
