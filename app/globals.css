@@ -139,6 +139,41 @@ a {
   background: var(--soft-background) !important;
 }
 
+.syncplay-room-theme-row {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.syncplay-theme-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.syncplay-theme-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.25rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #f8fafc;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.syncplay-theme-option:hover {
+  transform: translateY(-1px);
+}
+
+.syncplay-theme-option.is-active {
+  opacity: 1;
+}
+
 /* Room playback and playlist elements */
 .syncplay-playback-status,
 .syncplay-role-badge {

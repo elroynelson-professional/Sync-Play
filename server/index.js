@@ -106,6 +106,7 @@ function createRoom(roomId, hostId, name) {
     queue: [],
     history: [],
     messages: [],
+    theme: "midnight",
     createdAt: Date.now(),
   };
 }
@@ -380,6 +381,17 @@ io.on("connection", (socket) => {
 
     socket.emit("room-state", room);
     io.to(normalizedRoomId).emit("room-state", room);
+  });
+
+  socket.on("set-room-theme", ({ theme }) => {
+    const roomId = socket.data.roomId;
+    const room = roomId ? getRoom(roomId) : null;
+
+    if (!room) return;
+
+    const nextTheme = typeof theme === "string" && theme.trim().length > 0 ? theme.trim() : "midnight";
+    room.theme = nextTheme;
+    broadcastRoom(io, roomId);
   });
 
   socket.on("change-track", ({ videoId, title, url, mediaType }) => {

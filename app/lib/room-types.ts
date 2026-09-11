@@ -41,5 +41,6 @@ export type RoomState = {
   queue: QueueTrack[];
   history: QueueTrack[];
   messages: ChatMessage[];
+  theme: string;
   createdAt: number;
 };
