@@ -45,7 +45,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={`Switch to ${nextThemeLabel} mode`}
       title={`Switch to ${nextThemeLabel} mode`}
-      className="syncplay-theme-toggle fixed right-5 top-5 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border text-xs font-semibold transition sm:right-7 sm:top-7"
+      className="syncplay-theme-toggle"
     >
       <span aria-hidden="true" className="text-lg leading-none">
         {theme === "dark" ? "☾" : "☀"}

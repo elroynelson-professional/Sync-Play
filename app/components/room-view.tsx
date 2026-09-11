@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { socket, socketUrl } from "../lib/socket";
 import { FLOATING_PANEL_EVENT, openFloatingPanel, type FloatingPanelName } from "../lib/floating-panel";
@@ -13,84 +13,6 @@ import { VideoChat } from "./video-chat";
 import { AdOverlay } from "./ad-overlay";
 
 const AD_DISPLAY_CHANCE = 0.5;
-
-const ROOM_THEMES = {
-  lilac: {
-    name: "Lilac",
-    background: "#f5f3ff",
-    foreground: "#1f2937",
-    muted: "#6b7280",
-    surface: "#ffffff",
-    panel: "rgba(255, 255, 255, 0.78)",
-    accent: "#8b5cf6",
-    accentStrong: "#7c3aed",
-    accentSoft: "#ddd6fe",
-    border: "rgba(139, 92, 246, 0.18)",
-    input: "#f8f5ff",
-    softBackground: "rgba(139, 92, 246, 0.08)",
-    softBorder: "rgba(139, 92, 246, 0.15)",
-  },
-  sky: {
-    name: "Sky",
-    background: "#edf7ff",
-    foreground: "#102033",
-    muted: "#4b5563",
-    surface: "#ffffff",
-    panel: "rgba(255, 255, 255, 0.8)",
-    accent: "#38bdf8",
-    accentStrong: "#0ea5e9",
-    accentSoft: "#bae6fd",
-    border: "rgba(14, 165, 233, 0.18)",
-    input: "#f3fbff",
-    softBackground: "rgba(14, 165, 233, 0.08)",
-    softBorder: "rgba(14, 165, 233, 0.12)",
-  },
-  peach: {
-    name: "Peach",
-    background: "#fff7ed",
-    foreground: "#3f2d20",
-    muted: "#7c5d46",
-    surface: "#ffffff",
-    panel: "rgba(255, 255, 255, 0.8)",
-    accent: "#f59e0b",
-    accentStrong: "#ea580c",
-    accentSoft: "#fed7aa",
-    border: "rgba(245, 158, 11, 0.18)",
-    input: "#fffaf2",
-    softBackground: "rgba(245, 158, 11, 0.08)",
-    softBorder: "rgba(245, 158, 11, 0.14)",
-  },
-  mint: {
-    name: "Mint",
-    background: "#ecfdf5",
-    foreground: "#123024",
-    muted: "#4d8068",
-    surface: "#ffffff",
-    panel: "rgba(255, 255, 255, 0.8)",
-    accent: "#34d399",
-    accentStrong: "#10b981",
-    accentSoft: "#a7f3d0",
-    border: "rgba(16, 185, 129, 0.18)",
-    input: "#f1fff9",
-    softBackground: "rgba(16, 185, 129, 0.08)",
-    softBorder: "rgba(16, 185, 129, 0.14)",
-  },
-  blush: {
-    name: "Blush",
-    background: "#fff1f2",
-    foreground: "#3d2230",
-    muted: "#7a556a",
-    surface: "#ffffff",
-    panel: "rgba(255, 255, 255, 0.78)",
-    accent: "#f472b6",
-    accentStrong: "#ec4899",
-    accentSoft: "#fbcfe8",
-    border: "rgba(244, 114, 182, 0.18)",
-    input: "#fff6f9",
-    softBackground: "rgba(244, 114, 182, 0.08)",
-    softBorder: "rgba(244, 114, 182, 0.14)",
-  },
-} as const;
 
 type RoomViewProps = {
   roomId: string;
@@ -277,22 +199,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
     : null;
 
   const livePosition = useMemo(() => derivePosition(playback), [playback]);
-  const activeRoomTheme = ROOM_THEMES[(room?.theme as keyof typeof ROOM_THEMES) ?? "lilac"] ?? ROOM_THEMES.lilac;
-  const roomThemeStyle: CSSProperties = {
-    ["--background" as any]: activeRoomTheme.background,
-    ["--foreground" as any]: activeRoomTheme.foreground,
-    ["--muted" as any]: activeRoomTheme.muted,
-    ["--surface" as any]: activeRoomTheme.surface,
-    ["--panel-background" as any]: activeRoomTheme.panel,
-    ["--accent" as any]: activeRoomTheme.accent,
-    ["--accent-strong" as any]: activeRoomTheme.accentStrong,
-    ["--accent-soft" as any]: activeRoomTheme.accentSoft,
-    ["--border" as any]: activeRoomTheme.border,
-    ["--input-background" as any]: activeRoomTheme.input,
-    ["--soft-background" as any]: activeRoomTheme.softBackground,
-    ["--soft-border" as any]: activeRoomTheme.softBorder,
-  };
-
   useEffect(() => {
     socket.connect();
 
@@ -578,10 +484,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
     setIsAdOpen(true);
   }
 
-  function handleRoomThemeChange(nextTheme: keyof typeof ROOM_THEMES) {
-    socket.emit("set-room-theme", { theme: nextTheme });
-  }
-
   function handleAdComplete() {
     const nextAction = pendingAdAction;
     setPendingAdAction(null);
@@ -590,7 +492,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   }
 
   return (
-    <main className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8" style={roomThemeStyle}>
+    <main className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8">
       <AdOverlay
         isOpen={isAdOpen}
         onSkip={handleAdComplete}
@@ -616,28 +518,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
               >
                 Leave room
               </button>
-            </div>
-          </div>
-
-          <div className="syncplay-room-theme-row mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
-            <div className="text-[10px] uppercase tracking-[0.22em] text-slate-400">Room theme</div>
-            <div className="syncplay-theme-picker flex flex-wrap gap-2">
-              {Object.entries(ROOM_THEMES).map(([themeKey, theme]) => (
-                <button
-                  key={themeKey}
-                  type="button"
-                  onClick={() => handleRoomThemeChange(themeKey as keyof typeof ROOM_THEMES)}
-                  className={`syncplay-theme-option ${room?.theme === themeKey ? "is-active" : ""}`}
-                  aria-label={`Apply ${theme.name} theme`}
-                  title={theme.name}
-                  style={{
-                    background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentSoft} 100%)`,
-                    boxShadow: room?.theme === themeKey ? `0 0 0 2px ${theme.accentSoft}` : "none",
-                  }}
-                >
-                  <span>{theme.name}</span>
-                </button>
-              ))}
             </div>
           </div>
         </header>
