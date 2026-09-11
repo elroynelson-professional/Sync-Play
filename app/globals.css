@@ -400,6 +400,65 @@ a {
   transition: width 0.12s linear;
 }
 
+.syncplay-ad-info {
+  position: absolute;
+  left: clamp(1rem, 4vw, 3rem);
+  bottom: clamp(2.25rem, 5vw, 4rem);
+  z-index: 2;
+  max-width: min(30rem, calc(100% - 2.5rem));
+  padding: 1.1rem 1.2rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 1rem;
+  background: rgba(2, 6, 23, 0.58);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.34);
+}
+
+.syncplay-ad-kicker {
+  margin: 0 0 0.45rem;
+  color: #7dd3fc;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.syncplay-ad-info h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(1.7rem, 3vw, 2.8rem);
+  line-height: 1.05;
+}
+
+.syncplay-ad-info p {
+  margin: 0.7rem 0 0;
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.syncplay-ad-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  padding: 0.75rem 1.1rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, #22c55e 0%, #3b82f6 100%);
+  color: #04130d;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.syncplay-ad-cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
 .syncplay-ad-button {
   position: absolute;
   top: 1rem;

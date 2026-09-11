@@ -8,15 +8,63 @@ type AdOverlayProps = {
   onSkip: () => void;
 };
 
-const adVideos = [
-  "/ads/vid1.mp4",
-  "/ads/vid2.mp4",
-  "/ads/vid3.mp4",
-  "/ads/dc.mp4",
-  "/ads/lays.mp4",
-  "/ads/product.mp4",
-  "/ads/redbull.mp4",
-  "/ads/info.mp4",
+const adCampaigns = [
+  {
+    videoUrl: "/ads/vid1.mp4",
+    name: "Aether Energy",
+    description: "Clean power for the next era of everyday living.",
+    cta: "Learn more",
+    link: "https://example.com/aether-energy",
+  },
+  {
+    videoUrl: "/ads/vid2.mp4",
+    name: "Northstar Labs",
+    description: "Smarter devices built for people who move fast and think bigger.",
+    cta: "Explore now",
+    link: "https://example.com/northstar-labs",
+  },
+  {
+    videoUrl: "/ads/vid3.mp4",
+    name: "Summit Studio",
+    description: "Creative tools and production systems for high-impact storytelling.",
+    cta: "Discover more",
+    link: "https://example.com/summit-studio",
+  },
+  {
+    videoUrl: "/ads/dc.mp4",
+    name: "DC Travel",
+    description: "Book smarter, longer stays and more memorable journeys.",
+    cta: "Book today",
+    link: "https://example.com/dc-travel",
+  },
+  {
+    videoUrl: "/ads/lays.mp4",
+    name: "Lay's Bites",
+    description: "Bold flavor, irresistible crunch, and just one more bite.",
+    cta: "Taste now",
+    link: "https://example.com/lays-bites",
+  },
+  {
+    videoUrl: "/ads/product.mp4",
+    name: "Nova Goods",
+    description: "Everyday essentials designed with better materials and better intent.",
+    cta: "Shop collection",
+    link: "https://example.com/nova-goods",
+  },
+  {
+    videoUrl: "/ads/redbull.mp4",
+    name: "Red Bull Motion",
+    description: "Fueling fast decisions, hard work, and big moments in motion.",
+    cta: "Get charged",
+    link: "https://example.com/redbull-motion",
+  },
+  {
+    videoUrl: "/ads/info.mp4",
+    name: "Signal One",
+    description: "Actionable information systems for teams that want clarity and momentum.",
+    cta: "See platform",
+    link: "https://example.com/signal-one",
+  },
 ];
 
 export function AdOverlay({
@@ -28,17 +76,17 @@ export function AdOverlay({
   const [remainingMs, setRemainingMs] = useState(skipDelayMs);
   const [canSkip, setCanSkip] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
-  const videoUrl = adVideos[videoIndex] ?? adVideos[0];
+  const activeAd = adCampaigns[videoIndex] ?? adCampaigns[0];
 
   useEffect(() => {
     if (!isOpen) return;
 
     const frameId = window.requestAnimationFrame(() => {
       setVideoIndex((currentIndex) => {
-        if (adVideos.length < 2) return 0;
+        if (adCampaigns.length < 2) return 0;
 
-        const nextIndex = Math.floor(Math.random() * adVideos.length);
-        return nextIndex === currentIndex ? (nextIndex + 1) % adVideos.length : nextIndex;
+        const nextIndex = Math.floor(Math.random() * adCampaigns.length);
+        return nextIndex === currentIndex ? (nextIndex + 1) % adCampaigns.length : nextIndex;
       });
     });
 
@@ -69,7 +117,7 @@ export function AdOverlay({
     <div className="syncplay-ad-overlay" role="dialog" aria-modal="true" aria-label="Advertisement">
       <video
         className="syncplay-ad-video"
-        src={videoUrl}
+        src={activeAd.videoUrl}
         autoPlay
         muted
         playsInline
@@ -82,6 +130,21 @@ export function AdOverlay({
           }
         }}
       />
+
+      <div className="syncplay-ad-info">
+        <div className="syncplay-ad-kicker">Sponsored</div>
+        <h2>{activeAd.name}</h2>
+        <p>{activeAd.description}</p>
+        <a
+          className="syncplay-ad-cta"
+          href={activeAd.link}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {activeAd.cta}
+        </a>
+      </div>
+
       <button
         type="button"
         className={`syncplay-ad-button ${canSkip ? "is-active" : ""}`}
