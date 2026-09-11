@@ -100,7 +100,7 @@ export function SyncPlayLanding() {
           <section className="syncplay-panel syncplay-landing-hero flex flex-col justify-center gap-8 rounded-3xl p-7 sm:p-9 lg:p-11">
             <div className="syncplay-caps flex items-center gap-3 text-xs text-zinc-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              SyncPlay v0.1
+              SyncPlay
             </div>
 
             <div className="space-y-4">
