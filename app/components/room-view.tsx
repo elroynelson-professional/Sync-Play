@@ -512,7 +512,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
               </span>
               <button
                 type="button"
-                onClick={() => triggerAd(() => router.push("/"))}
+                onClick={() => triggerAd(() => router.push("/dashboard"))}
                 disabled={isAdOpen}
                 className="syncplay-button-secondary rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
               >

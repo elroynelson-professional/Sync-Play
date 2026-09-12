@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AdOverlay } from "./ad-overlay";
 
@@ -19,14 +19,98 @@ export function SyncPlayLanding() {
   const [displayName, setDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [message, setMessage] = useState("Create a private room or join an invite link.");
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
+  const [nameInput, setNameInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
+  const [authMessage, setAuthMessage] = useState("Create your account to start watching together.");
+  const [activeUser, setActiveUser] = useState<{ id: string; name: string; email: string; createdAt: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isAdOpen, setIsAdOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
+  const [roomModalDisplayName, setRoomModalDisplayName] = useState("");
+  const [roomModalCode, setRoomModalCode] = useState("");
+  const [roomModalError, setRoomModalError] = useState("");
+
+  useEffect(() => {
+    const savedUser = typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null") : null;
+    if (savedUser) {
+      setActiveUser(savedUser);
+      setDisplayName(savedUser.name);
+      setAuthMessage(`Welcome back, ${savedUser.name}.`);
+    }
+  }, []);
 
   const canSubmit = useMemo(() => displayName.trim().length >= 2, [displayName]);
+  const canAuthSubmit = useMemo(() => {
+    const trimmedEmail = emailInput.trim();
+    const trimmedPassword = passwordInput.trim();
+
+    if (authMode === "login") {
+      return trimmedEmail.length > 0 && trimmedPassword.length > 0;
+    }
+
+    return (
+      nameInput.trim().length >= 2 &&
+      trimmedEmail.length > 0 &&
+      trimmedPassword.length >= 6 &&
+      confirmPasswordInput === trimmedPassword
+    );
+  }, [authMode, confirmPasswordInput, emailInput, nameInput, passwordInput]);
+
+  function storeActiveUser(user: { id: string; name: string; email: string; createdAt: string } | null, token?: string) {
+    if (typeof window === "undefined") return;
+
+    if (user) {
+      window.localStorage.setItem("syncplay-active-user-v1", JSON.stringify(user));
+      if (token) {
+        window.localStorage.setItem("syncplay-auth-token-v1", token);
+      }
+      return;
+    }
+
+    window.localStorage.removeItem("syncplay-active-user-v1");
+    window.localStorage.removeItem("syncplay-auth-token-v1");
+  }
+
+  function signOut() {
+    setActiveUser(null);
+    setDisplayName("");
+    setMessage("Signed out. Log in to continue to a room.");
+    setAuthMessage("Create your account to start watching together.");
+    storeActiveUser(null);
+  }
+
+  function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedName = nameInput.trim() || "Guest User";
+    const trimmedEmail = (emailInput.trim() || "guest@example.com").toLowerCase();
+    const trimmedPassword = passwordInput.trim() || "demo-password";
+
+    const demoUser = {
+      id: "guest-user",
+      name: trimmedName,
+      email: trimmedEmail,
+      createdAt: new Date().toISOString(),
+    };
+
+    setActiveUser(demoUser);
+    setDisplayName(demoUser.name);
+    setAuthMessage(`Demo mode active. Welcome, ${demoUser.name}.`);
+    setMessage(`Welcome ${demoUser.name}. You can create or join a room now.`);
+    setNameInput("");
+    setEmailInput("");
+    setPasswordInput("");
+    setConfirmPasswordInput("");
+    storeActiveUser(demoUser, "demo-token");
+    router.push("/dashboard");
+  }
 
   function goToRoom(code: string, role: "host" | "guest", action: "create" | "join") {
-    const normalizedName = encodeURIComponent(displayName.trim());
+    const normalizedName = encodeURIComponent(displayName.trim() || activeUser?.name || "Guest");
     router.push(`/room/${code}?name=${normalizedName}&role=${role}&action=${action}`);
   }
 
@@ -47,16 +131,37 @@ export function SyncPlayLanding() {
     nextAction?.();
   }
 
+  function openRoomModal(mode: "create" | "join") {
+    setRoomModalMode(mode);
+    setRoomModalDisplayName(displayName.trim() || activeUser?.name || "");
+    setRoomModalCode(roomCode);
+    setRoomModalError("");
+  }
+
+  function closeRoomModal() {
+    setRoomModalMode(null);
+    setRoomModalDisplayName("");
+    setRoomModalCode("");
+    setRoomModalError("");
+  }
+
   function handleCreateRoom() {
-    if (!canSubmit || isAdOpen) {
-      if (!canSubmit) {
-        setMessage("Add a display name first.");
-      }
+    const targetName = roomModalDisplayName.trim() || displayName.trim() || activeUser?.name?.trim() || "";
+
+    if (targetName.length < 2) {
+      setRoomModalError("Add a display name first.");
       return;
     }
 
+    if (isAdOpen) {
+      return;
+    }
+
+    setDisplayName(targetName);
     const code = makeRoomCode();
+    setRoomCode(code);
     setMessage(`Room ${code} created. Opening the shared room...`);
+    closeRoomModal();
 
     triggerAd(() => {
       startTransition(() => {
@@ -66,21 +171,27 @@ export function SyncPlayLanding() {
   }
 
   function handleJoinRoom() {
-    const code = normalizeRoomCode(roomCode);
+    const targetName = roomModalDisplayName.trim() || displayName.trim() || activeUser?.name?.trim() || "";
+    const code = normalizeRoomCode(roomModalCode || roomCode);
 
-    if (!canSubmit || isAdOpen) {
-      if (!canSubmit) {
-        setMessage("Add a display name first.");
-      }
+    if (targetName.length < 2) {
+      setRoomModalError("Add a display name first.");
       return;
     }
 
     if (code.length < 4) {
-      setMessage("Room codes need at least four characters.");
+      setRoomModalError("Room codes need at least four characters.");
       return;
     }
 
+    if (isAdOpen) {
+      return;
+    }
+
+    setDisplayName(targetName);
+    setRoomCode(code);
     setMessage(`Joining room ${code}...`);
+    closeRoomModal();
 
     triggerAd(() => {
       startTransition(() => {
@@ -91,10 +202,8 @@ export function SyncPlayLanding() {
 
   return (
     <main className="syncplay-landing relative min-h-screen overflow-hidden px-5 py-8 text-white sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-      <AdOverlay
-        isOpen={isAdOpen}
-        onSkip={handleAdComplete}
-      />
+      <AdOverlay isOpen={isAdOpen} onSkip={handleAdComplete} />
+
       <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl items-center">
         <div className="grid w-full gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
           <section className="syncplay-panel syncplay-landing-hero flex flex-col justify-center gap-8 rounded-3xl p-7 sm:p-9 lg:p-11">
@@ -114,70 +223,135 @@ export function SyncPlayLanding() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-sm text-slate-300">
-              <span>Create or join</span>
-              <span>Synced YouTube playback</span>
-              <span>Chat + voice + video</span>
-            </div>
           </section>
 
           <section className="syncplay-panel syncplay-landing-entry rounded-3xl p-6 sm:p-7 lg:p-9">
             <div className="syncplay-entry-card rounded-[28px] bg-white/5 p-6 sm:p-7">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="syncplay-caps text-xs text-slate-400">Entry point</div>
+                  <div className="syncplay-caps text-xs text-slate-400">Account</div>
                   <h2 className="syncplay-hero-title mt-2 text-3xl text-white sm:text-4xl">
-                    Start a shared room
+                    {activeUser ? "Your account" : authMode === "login" ? "Log in" : "Create account"}
                   </h2>
                 </div>
-                <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
-                  Live room state
-                </div>
+                {activeUser ? (
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="syncplay-button-secondary rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-white/10"
+                  >
+                    Sign out
+                  </button>
+                ) : null}
               </div>
 
-              <div className="mt-8 space-y-5">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-200">Display name</span>
-                  <input
-                    value={displayName}
-                    onChange={(event) => setDisplayName(event.target.value)}
-                    placeholder="Your name"
-                    className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-white/30"
-                  />
-                </label>
-
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-200">Room code</span>
-                  <input
-                    value={roomCode}
-                    onChange={(event) => setRoomCode(normalizeRoomCode(event.target.value))}
-                    placeholder="ABC123"
-                    className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 uppercase tracking-[0.22em] text-white outline-none transition placeholder:text-zinc-500 focus:border-white/30"
-                  />
-                </label>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={handleCreateRoom}
-                    disabled={isPending || isAdOpen || !canSubmit}
-                    className="syncplay-button-primary rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Create room
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleJoinRoom}
-                    disabled={isPending || isAdOpen || !canSubmit}
-                    className="syncplay-button-secondary rounded-2xl border border-white/12 bg-white/6 px-4 py-3 font-semibold text-slate-100 transition hover:border-emerald-300/40 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Join room
-                  </button>
+              {activeUser ? (
+                <div className="mt-6 space-y-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+                  <p className="text-sm text-emerald-200">Signed in as</p>
+                  <div>
+                    <p className="text-xl font-semibold text-white">{activeUser.name}</p>
+                    <p className="text-sm text-slate-300">{activeUser.email}</p>
+                  </div>
                 </div>
+              ) : (
+                <form className="mt-6 space-y-4" onSubmit={handleAuthSubmit}>
+                  <div className="flex rounded-2xl border border-white/10 bg-black/20 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("signup")}
+                      className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                        authMode === "signup" ? "bg-emerald-500 text-black" : "text-slate-300"
+                      }`}
+                    >
+                      Sign up
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode("login")}
+                      className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                        authMode === "login" ? "bg-emerald-500 text-black" : "text-slate-300"
+                      }`}
+                    >
+                      Log in
+                    </button>
+                  </div>
 
-                <p className="syncplay-message rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300">
-                  {message}
-                </p>
+                  {authMode === "signup" ? (
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-200">Full name</span>
+                      <input
+                        value={nameInput}
+                        onChange={(event) => setNameInput(event.target.value)}
+                        placeholder="Your name"
+                        className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-white/30"
+                      />
+                    </label>
+                  ) : null}
+
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-200">Email</span>
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={(event) => setEmailInput(event.target.value)}
+                      placeholder="you@example.com"
+                      className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-white/30"
+                    />
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-slate-200">Password</span>
+                    <input
+                      type="password"
+                      value={passwordInput}
+                      onChange={(event) => setPasswordInput(event.target.value)}
+                      placeholder={authMode === "login" ? "Your password" : "At least 6 characters"}
+                      className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-white/30"
+                    />
+                  </label>
+
+                  {authMode === "signup" ? (
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-200">Confirm password</span>
+                      <input
+                        type="password"
+                        value={confirmPasswordInput}
+                        onChange={(event) => setConfirmPasswordInput(event.target.value)}
+                        placeholder="Repeat your password"
+                        className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-white/30"
+                      />
+                    </label>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    disabled={!canAuthSubmit}
+                    className="syncplay-button-primary w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {authMode === "login" ? "Log in" : "Create account"}
+                  </button>
+                </form>
+              )}
+
+              <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300">
+                {authMessage}
+              </p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => openRoomModal("create")}
+                  className="syncplay-button-primary rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400"
+                >
+                  Create room
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openRoomModal("join")}
+                  className="syncplay-button-secondary rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white transition hover:bg-white/10"
+                >
+                  Join room
+                </button>
               </div>
             </div>
 
@@ -187,6 +361,64 @@ export function SyncPlayLanding() {
           </section>
         </div>
       </div>
+
+      {roomModalMode ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111827] p-6 shadow-2xl shadow-black/40">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
+                <h3 className="mt-2 text-2xl font-semibold text-white">
+                  {roomModalMode === "create" ? "Start a room" : "Enter room details"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeRoomModal}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:bg-white/10"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-slate-200">Display name</span>
+                <input
+                  value={roomModalDisplayName}
+                  onChange={(event) => setRoomModalDisplayName(event.target.value)}
+                  placeholder="Your display name"
+                  className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60"
+                />
+              </label>
+
+              {roomModalMode === "join" ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-200">Room code</span>
+                  <input
+                    value={roomModalCode}
+                    onChange={(event) => setRoomModalCode(event.target.value)}
+                    placeholder="Enter room code"
+                    className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white uppercase outline-none placeholder:text-zinc-500 focus:border-emerald-400/60"
+                  />
+                </label>
+              ) : null}
+
+              {roomModalError ? (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{roomModalError}</div>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={roomModalMode === "create" ? handleCreateRoom : handleJoinRoom}
+                className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400"
+              >
+                {roomModalMode === "create" ? "Create room" : "Join room"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

@@ -9,9 +9,11 @@ const { Server } = require("socket.io");
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
 const uploadDirectory = path.join(__dirname, "uploads");
+const dataDirectory = path.join(__dirname, "data");
 const rooms = new Map();
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
+fs.mkdirSync(dataDirectory, { recursive: true });
 
 function createRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -135,7 +137,7 @@ function broadcastRoom(io, roomId) {
 function setCorsHeaders(response) {
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type, X-File-Name, X-Room-Id, Range");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-File-Name, X-Room-Id, Range");
   response.setHeader("Access-Control-Expose-Headers", "Accept-Ranges, Content-Length, Content-Range, Content-Type");
 }
 
@@ -144,6 +146,7 @@ function writeJson(response, statusCode, payload) {
   response.writeHead(statusCode, { "Content-Type": "application/json" });
   response.end(JSON.stringify(payload));
 }
+
 
 function getUploadContentType(fileName) {
   const extension = path.extname(fileName).toLowerCase();
@@ -309,7 +312,7 @@ function handleUpload(request, response) {
   request.pipe(output);
 }
 
-const server = http.createServer((request, response) => {
+const server = http.createServer(async (request, response) => {
   setCorsHeaders(response);
 
   const requestUrl = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
