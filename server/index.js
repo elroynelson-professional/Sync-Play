@@ -333,6 +333,19 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname.startsWith("/api/rooms/")) {
+    const roomPath = requestUrl.pathname.replace(/^\/api\/rooms\//, "").replace(/\/exists$/, "");
+    const roomId = decodeURIComponent(roomPath || "").toUpperCase();
+
+    if (!/^[A-Z0-9]{4,8}$/.test(roomId)) {
+      writeJson(response, 400, { valid: false, message: "Invalid room code format." });
+      return;
+    }
+
+    writeJson(response, 200, { valid: rooms.has(roomId), roomId });
+    return;
+  }
+
   response.writeHead(200, { "Content-Type": "text/plain" });
   response.end("SyncPlay Socket.IO server is running.");
 });

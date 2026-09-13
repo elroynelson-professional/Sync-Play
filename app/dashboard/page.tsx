@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 
 type AccountUser = {
@@ -127,7 +128,7 @@ export default function DashboardPage() {
     router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create`);
   }
 
-  function submitJoinRoom() {
+  async function submitJoinRoom() {
     const name = roomDisplayName.trim();
     const code = normalizeRoomCode(roomCode);
 
@@ -142,6 +143,19 @@ export default function DashboardPage() {
     }
 
     if (!isRoomCodeValid(code)) {
+      setRoomError("Invalid code, try again.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${socketUrl}/api/rooms/${encodeURIComponent(code)}/exists`);
+      const payload = (await response.json()) as { valid?: boolean };
+
+      if (!response.ok || !payload.valid) {
+        setRoomError("Invalid code, try again.");
+        return;
+      }
+    } catch {
       setRoomError("Invalid code, try again.");
       return;
     }
