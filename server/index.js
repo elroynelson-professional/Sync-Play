@@ -14,7 +14,10 @@ const uploadDirectory = path.join(__dirname, "uploads");
 const dataDirectory = path.join(__dirname, "data");
 const rooms = new Map();
 const database = new sqlite3.Database(path.join(dataDirectory, "syncplay.sqlite"));
-const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+const allowedFrontendOrigins = (process.env.FRONTEND_ORIGINS || process.env.FRONTEND_ORIGIN || "http://localhost:3000,https://sync-play-blue.vercel.app")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 const SESSION_COOKIE = "syncplay-session";
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
@@ -264,16 +267,22 @@ function broadcastRoom(io, roomId) {
   }
 }
 
-function setCorsHeaders(response) {
-  response.setHeader("Access-Control-Allow-Origin", frontendOrigin);
+function setCorsHeaders(response, request) {
+  const requestOrigin = request?.headers.origin;
+  const responseOrigin = requestOrigin && allowedFrontendOrigins.includes(requestOrigin)
+    ? requestOrigin
+    : allowedFrontendOrigins[0];
+
+  response.setHeader("Access-Control-Allow-Origin", responseOrigin);
   response.setHeader("Access-Control-Allow-Credentials", "true");
+  response.setHeader("Vary", "Origin");
   response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-File-Name, X-Room-Id, Range");
   response.setHeader("Access-Control-Expose-Headers", "Accept-Ranges, Content-Length, Content-Range, Content-Type");
 }
 
-function writeJson(response, statusCode, payload) {
-  setCorsHeaders(response);
+function writeJson(response, statusCode, payload, request) {
+  setCorsHeaders(response, request);
   response.writeHead(statusCode, { "Content-Type": "application/json" });
   response.end(JSON.stringify(payload));
 }
@@ -444,7 +453,7 @@ function handleUpload(request, response) {
 }
 
 const server = http.createServer(async (request, response) => {
-  setCorsHeaders(response);
+  setCorsHeaders(response, request);
 
   const requestUrl = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
 
@@ -462,19 +471,19 @@ const server = http.createServer(async (request, response) => {
       const name = typeof payload.name === "string" ? payload.name.trim() : "";
 
       if (!/^\S+@\S+\.\S+$/.test(email) || password.length < 6) {
-        writeJson(response, 400, { error: "Enter a valid email and a password with at least 6 characters." });
+        writeJson(response, 400, { error: "Enter a valid email and a password with at least 6 characters." }, request);
         return;
       }
 
       if (requestUrl.pathname === "/api/auth/signup") {
         if (name.length < 2) {
-          writeJson(response, 400, { error: "Your name must be at least 2 characters." });
+          writeJson(response, 400, { error: "Your name must be at least 2 characters." }, request);
           return;
         }
 
         const existingUser = await databaseGet("SELECT id FROM users WHERE email = ?", [email]);
         if (existingUser) {
-          writeJson(response, 409, { error: "An account with that email already exists." });
+          writeJson(response, 409, { error: "An account with that email already exists." }, request);
           return;
         }
 
@@ -490,13 +499,13 @@ const server = http.createServer(async (request, response) => {
           [user.id, user.name, user.email, passwordHash, user.createdAt]
         );
         await createSession(user.id, response);
-        writeJson(response, 201, { user });
+        writeJson(response, 201, { user }, request);
         return;
       }
 
       const storedUser = await databaseGet("SELECT id, name, email, password_hash, created_at AS createdAt FROM users WHERE email = ?", [email]);
       if (!storedUser || !(await bcrypt.compare(password, storedUser.password_hash))) {
-        writeJson(response, 401, { error: "Email or password is incorrect." });
+        writeJson(response, 401, { error: "Email or password is incorrect." }, request);
         return;
       }
 
@@ -508,11 +517,11 @@ const server = http.createServer(async (request, response) => {
           email: storedUser.email,
           createdAt: storedUser.createdAt,
         },
-      });
+      }, request);
       return;
     } catch (error) {
       console.error("Authentication request failed:", error);
-      writeJson(response, 500, { error: "Authentication service is unavailable." });
+      writeJson(response, 500, { error: "Authentication service is unavailable." }, request);
       return;
     }
   }
@@ -521,14 +530,14 @@ const server = http.createServer(async (request, response) => {
     try {
       const user = await getAuthenticatedUser(request);
       if (!user) {
-        writeJson(response, 401, { error: "You are not signed in." });
+        writeJson(response, 401, { error: "You are not signed in." }, request);
         return;
       }
 
-      writeJson(response, 200, { user });
+      writeJson(response, 200, { user }, request);
     } catch (error) {
       console.error("Session lookup failed:", error);
-      writeJson(response, 500, { error: "Authentication service is unavailable." });
+      writeJson(response, 500, { error: "Authentication service is unavailable." }, request);
     }
     return;
   }
@@ -539,7 +548,7 @@ const server = http.createServer(async (request, response) => {
       await databaseRun("DELETE FROM sessions WHERE token_hash = ?", [hashSessionToken(token)]);
     }
     clearSessionCookie(response);
-    writeJson(response, 200, { ok: true });
+    writeJson(response, 200, { ok: true }, request);
     return;
   }
 
