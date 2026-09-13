@@ -169,9 +169,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#070b0d] p-0 text-white">
-      <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#0b1014]">
-        <aside className="hidden w-[220px] flex-col border-r border-white/10 bg-[#0d1217] px-4 py-5 md:flex">
+    <main className="min-h-screen bg-black p-0 text-white">
+      <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
+        <aside className="hidden w-[220px] flex-col border-r border-white/10 bg-[#090909] px-4 py-5 md:flex">
           <div className="mb-6 flex items-center gap-3 px-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/10 text-base font-semibold text-emerald-300">◔</div>
             <div className="text-[1.7rem] font-semibold tracking-[-0.06em] text-white">SyncPlay</div>
@@ -234,9 +234,9 @@ export default function DashboardPage() {
           </div>
         </aside>
 
-        <div className="flex-1 bg-[#0a0f12] px-4 py-4 md:px-5 md:py-5">
+        <div className="flex-1 bg-[#050505] px-4 py-4 md:px-5 md:py-5">
           <header className="flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-[#111820] px-3 py-2.5 shadow-inner shadow-black/30">
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-[#0d0d0d] px-3 py-2.5 shadow-inner shadow-black/30">
               <span className="text-base text-slate-400">⌕</span>
               <input
                 type="text"
@@ -251,7 +251,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">✉</button>
               <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#f2c0ad] to-[#cfa4d3] text-[11px] font-semibold text-[#0e151a]">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[11px] font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
                 <div className="pr-1">
                   <div className="text-[14px] font-medium text-white">{user.name}</div>
                   <div className="text-[10px] text-slate-400">{user.email}</div>
@@ -277,7 +277,7 @@ export default function DashboardPage() {
               {metricCards.map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-[20px] border border-white/10 bg-[#111820] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
+                  className="rounded-[20px] border border-white/10 bg-[#0d0d0d] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
                 >
                   <div className="text-[12px] font-medium uppercase tracking-[0.14em] text-slate-400">{card.label}</div>
                   <div className="mt-3 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">{card.value}</div>
@@ -300,7 +300,7 @@ export default function DashboardPage() {
                         key={room.name}
                         type="button"
                         onClick={() => openRoomModal("join", room.code)}
-                        className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0d141a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#101a22]"
+                        className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0a0a0a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#111111]"
                       >
                         <div>
                           <div className="text-[14px] font-medium text-white">{room.name}</div>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
                       </button>
                     ))
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#0d141a] p-4 text-sm text-slate-400">
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-4 text-sm text-slate-400">
                       No rooms match your search.
                     </div>
                   )}
@@ -345,7 +345,7 @@ export default function DashboardPage() {
 
       {roomModalMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111820] p-6 shadow-2xl shadow-black/40">
+          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
@@ -369,7 +369,7 @@ export default function DashboardPage() {
                   value={roomDisplayName}
                   onChange={(event) => setRoomDisplayName(event.target.value)}
                   placeholder="Your display name"
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d141a] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/60"
+                  className="w-full rounded-2xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/60"
                 />
               </label>
 
@@ -380,7 +380,7 @@ export default function DashboardPage() {
                     value={roomCode}
                     onChange={(event) => setRoomCode(event.target.value)}
                     placeholder="Enter room code"
-                    className="w-full rounded-2xl border border-white/10 bg-[#0d141a] px-4 py-3 text-white uppercase outline-none placeholder:text-slate-500 focus:border-emerald-400/60"
+                    className="w-full rounded-2xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white uppercase outline-none placeholder:text-slate-500 focus:border-emerald-400/60"
                   />
                 </label>
               ) : null}
