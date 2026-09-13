@@ -5,7 +5,6 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
-const sqlite3 = require("sqlite3").verbose();
 const { Server } = require("socket.io");
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3002;
@@ -13,7 +12,7 @@ const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
 const uploadDirectory = path.join(__dirname, "uploads");
 const dataDirectory = path.join(__dirname, "data");
 const rooms = new Map();
-const database = new sqlite3.Database(path.join(dataDirectory, "syncplay.sqlite"));
+const authDataPath = path.join(dataDirectory, "auth.json");
 const allowedFrontendOrigins = (process.env.FRONTEND_ORIGINS || process.env.FRONTEND_ORIGIN || "http://localhost:3000,https://sync-play-blue.vercel.app")
   .split(",")
   .map((origin) => origin.trim())
@@ -24,50 +23,30 @@ const SESSION_COOKIE = "syncplay-session";
 fs.mkdirSync(uploadDirectory, { recursive: true });
 fs.mkdirSync(dataDirectory, { recursive: true });
 
-database.serialize(() => {
-  database.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    )
-  `);
-  database.run(`
-    CREATE TABLE IF NOT EXISTS sessions (
-      token_hash TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      expires_at INTEGER NOT NULL,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
-});
-
-function databaseRun(sql, parameters = []) {
-  return new Promise((resolve, reject) => {
-    database.run(sql, parameters, function onRun(error) {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      resolve(this);
-    });
-  });
+function readAuthData() {
+  try {
+    const raw = fs.readFileSync(authDataPath, "utf8");
+    const data = JSON.parse(raw);
+    return {
+      users: Array.isArray(data.users) ? data.users : [],
+      sessions: Array.isArray(data.sessions) ? data.sessions : [],
+    };
+  } catch {
+    return { users: [], sessions: [] };
+  }
 }
 
-function databaseGet(sql, parameters = []) {
-  return new Promise((resolve, reject) => {
-    database.get(sql, parameters, (error, row) => {
-      if (error) {
-        reject(error);
-        return;
-      }
+function writeAuthData(data) {
+  const temporaryPath = `${authDataPath}.tmp`;
+  fs.writeFileSync(temporaryPath, JSON.stringify(data, null, 2));
+  fs.renameSync(temporaryPath, authDataPath);
+}
 
-      resolve(row);
-    });
-  });
+function updateAuthData(update) {
+  const data = readAuthData();
+  update(data);
+  writeAuthData(data);
+  return data;
 }
 
 function parseCookies(request) {
@@ -123,30 +102,35 @@ async function getAuthenticatedUser(request) {
   const token = parseCookies(request)[SESSION_COOKIE];
   if (!token) return null;
 
-  const session = await databaseGet(
-    `SELECT users.id, users.name, users.email, users.created_at AS createdAt, sessions.expires_at AS expiresAt
-     FROM sessions JOIN users ON users.id = sessions.user_id
-     WHERE sessions.token_hash = ?`,
-    [hashSessionToken(token)]
-  );
+  const data = readAuthData();
+  const tokenHash = hashSessionToken(token);
+  const session = data.sessions.find((entry) => entry.tokenHash === tokenHash);
+  const sessionUser = session ? data.users.find((entry) => entry.id === session.userId) : null;
 
-  if (!session || session.expiresAt < Date.now()) {
-    if (session) await databaseRun("DELETE FROM sessions WHERE token_hash = ?", [hashSessionToken(token)]);
+  if (!session || !sessionUser || session.expiresAt < Date.now()) {
+    if (session) {
+      updateAuthData((current) => {
+        current.sessions = current.sessions.filter((entry) => entry.tokenHash !== tokenHash);
+      });
+    }
     return null;
   }
 
   return {
-    id: session.id,
-    name: session.name,
-    email: session.email,
-    createdAt: session.createdAt,
+    id: sessionUser.id,
+    name: sessionUser.name,
+    email: sessionUser.email,
+    createdAt: sessionUser.createdAt,
   };
 }
 
 async function createSession(userId, response) {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = Date.now() + 1000 * 60 * 60 * 24 * 30;
-  await databaseRun("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)", [hashSessionToken(token), userId, expiresAt]);
+  updateAuthData((data) => {
+    data.sessions = data.sessions.filter((session) => session.userId !== userId && session.expiresAt >= Date.now());
+    data.sessions.push({ tokenHash: hashSessionToken(token), userId, expiresAt });
+  });
   setSessionCookie(response, token, 60 * 60 * 24 * 30);
 }
 
@@ -483,7 +467,8 @@ const server = http.createServer(async (request, response) => {
           return;
         }
 
-        const existingUser = await databaseGet("SELECT id FROM users WHERE email = ?", [email]);
+        const authData = readAuthData();
+        const existingUser = authData.users.find((user) => user.email === email);
         if (existingUser) {
           writeJson(response, 409, { error: "An account with that email already exists." }, request);
           return;
@@ -496,17 +481,22 @@ const server = http.createServer(async (request, response) => {
           createdAt: new Date().toISOString(),
         };
         const passwordHash = await bcrypt.hash(password, 12);
-        await databaseRun(
-          "INSERT INTO users (id, name, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
-          [user.id, user.name, user.email, passwordHash, user.createdAt]
-        );
+        updateAuthData((data) => {
+          data.users.push({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            passwordHash,
+            createdAt: user.createdAt,
+          });
+        });
         await createSession(user.id, response);
         writeJson(response, 201, { user }, request);
         return;
       }
 
-      const storedUser = await databaseGet("SELECT id, name, email, password_hash, created_at AS createdAt FROM users WHERE email = ?", [email]);
-      if (!storedUser || !(await bcrypt.compare(password, storedUser.password_hash))) {
+      const storedUser = readAuthData().users.find((user) => user.email === email);
+      if (!storedUser || !(await bcrypt.compare(password, storedUser.passwordHash))) {
         writeJson(response, 401, { error: "Email or password is incorrect." }, request);
         return;
       }
@@ -547,7 +537,10 @@ const server = http.createServer(async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/auth/logout") {
     const token = parseCookies(request)[SESSION_COOKIE];
     if (token) {
-      await databaseRun("DELETE FROM sessions WHERE token_hash = ?", [hashSessionToken(token)]);
+      const tokenHash = hashSessionToken(token);
+      updateAuthData((data) => {
+        data.sessions = data.sessions.filter((session) => session.tokenHash !== tokenHash);
+      });
     }
     clearSessionCookie(response);
     writeJson(response, 200, { ok: true }, request);
