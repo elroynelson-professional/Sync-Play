@@ -345,23 +345,27 @@ export default function DashboardPage() {
                   </div>
 
                   <div>
-                    <div className="mb-4 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">Password</div>
-                    <p className="mb-6 text-[1.1rem] text-slate-300">Modify your current password.</p>
+                    <div className="mb-4 text-[2.25rem] font-semibold tracking-[-0.06em] text-white">Password</div>
+                    <p className="mb-6 text-[1.15rem] text-slate-300">Modify your current password.</p>
 
                     <div className="grid gap-6 md:grid-cols-2">
                       <label className="block">
-                        <span className="mb-3 block text-[1.1rem] text-slate-100">Current password</span>
-                        <div className="flex items-center gap-3 rounded-[1.3rem] border border-white/10 bg-[#0a0a0a] px-4 py-3.5">
-                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1rem] text-white outline-none" />
-                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1rem] text-slate-300">◌</button>
+                        <span className="mb-3 block text-[1.2rem] font-medium text-slate-100">Current password</span>
+                        <div className="flex items-center gap-3 rounded-[1.4rem] border border-white/12 bg-[#0b0b0b] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1.05rem] text-white outline-none" />
+                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1.05rem] text-slate-300 transition hover:text-white">
+                            ◌
+                          </button>
                         </div>
                       </label>
 
                       <label className="block">
-                        <span className="mb-3 block text-[1.1rem] text-slate-100">New password</span>
-                        <div className="flex items-center gap-3 rounded-[1.3rem] border border-white/10 bg-[#0a0a0a] px-4 py-3.5">
-                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1rem] text-white outline-none" />
-                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1rem] text-slate-300">◌</button>
+                        <span className="mb-3 block text-[1.2rem] font-medium text-slate-100">New password</span>
+                        <div className="flex items-center gap-3 rounded-[1.4rem] border border-white/12 bg-[#0b0b0b] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1.05rem] text-white outline-none" />
+                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1.05rem] text-slate-300 transition hover:text-white">
+                            ◌
+                          </button>
                         </div>
                       </label>
                     </div>
