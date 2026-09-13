@@ -210,6 +210,13 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
 
     function handleRoomError(message: string) {
       setStatus(message);
+
+      if (message.toLowerCase().includes("not found") || message.toLowerCase().includes("invalid")) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem("syncplay-room-error", "Invalid code, try again.");
+        }
+        router.replace("/dashboard");
+      }
     }
 
     function handleChatMessage(nextMessage: ChatMessage) {

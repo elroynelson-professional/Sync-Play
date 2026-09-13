@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 
 type AccountUser = {
   id: string;
@@ -24,16 +26,15 @@ function readActiveUser(): AccountUser | null {
 }
 
 const navItems = [
-  { label: "Dashboard", active: true, icon: "▣" },
-  { label: "Friends", active: false, icon: "◫" },
-  { label: "History", active: false, icon: "◌" },
+  { label: "Dashboard", href: "/dashboard", icon: "▣" },
+  { label: "Friends", href: "/friends", icon: "◫" },
+  { label: "History", href: "/history", icon: "◌" },
 ];
 
 const metricCards = [
-  { label: "Active rooms", value: "12", accent: true, change: "6 created today" },
-  { label: "Live viewers", value: "340", accent: false, change: "+28% this week" },
-  { label: "Shared watch time", value: "8h 42m", accent: false, change: "Across 24 sessions" },
-  { label: "Avg room duration", value: "23m", accent: false, change: "Up from 18m" },
+  { label: "Active rooms", value: "12", change: "6 created today" },
+  { label: "Live viewers", value: "340", change: "+28% this week" },
+  { label: "Watch time", value: "8h 42m", change: "Across 24 sessions" },
 ];
 
 const roomList = [
@@ -55,8 +56,8 @@ const activityBars = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<AccountUser | null>(null);
-  const [activeNav, setActiveNav] = useState("Dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
@@ -70,6 +71,12 @@ export default function DashboardPage() {
       email: "tmichael20@mail.com",
       createdAt: new Date().toISOString(),
     };
+
+    const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
+    if (invalidCodeMessage) {
+      setRoomError(invalidCodeMessage);
+      window.sessionStorage.removeItem("syncplay-room-error");
+    }
 
     setUser(activeUser);
   }, []);
@@ -122,7 +129,7 @@ export default function DashboardPage() {
 
   function submitJoinRoom() {
     const name = roomDisplayName.trim();
-    const code = roomCode.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase();
+    const code = normalizeRoomCode(roomCode);
 
     if (name.length < 2) {
       setRoomError("Add a valid display name first.");
@@ -131,6 +138,11 @@ export default function DashboardPage() {
 
     if (code.length < 4) {
       setRoomError("Room code needs at least 4 characters.");
+      return;
+    }
+
+    if (!isRoomCodeValid(code)) {
+      setRoomError("Invalid code, try again.");
       return;
     }
 
@@ -143,8 +155,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#070b0d] p-3 text-white md:p-4">
-      <div className="mx-auto flex max-w-[1280px] overflow-hidden rounded-[28px] border border-white/10 bg-[#0b1014] shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+    <main className="min-h-screen bg-[#070b0d] p-0 text-white">
+      <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#0b1014]">
         <aside className="hidden w-[220px] flex-col border-r border-white/10 bg-[#0d1217] px-4 py-5 md:flex">
           <div className="mb-6 flex items-center gap-3 px-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/10 text-base font-semibold text-emerald-300">◔</div>
@@ -153,19 +165,22 @@ export default function DashboardPage() {
 
           <div className="space-y-1.5 text-sm">
             <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">Menu</div>
-            {navItems.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => setActiveNav(item.label)}
-                className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${
-                  activeNav === item.label ? "bg-white/6 text-emerald-300 shadow-inner shadow-emerald-500/5" : "text-slate-300 hover:bg-white/4"
-                }`}
-              >
-                <span className={`flex h-4 w-4 items-center justify-center text-[10px] ${activeNav === item.label ? "text-emerald-300" : "text-slate-400"}`}>{item.icon}</span>
-                <span className="text-[15px] font-medium">{item.label}</span>
-              </button>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${
+                    isActive ? "bg-white/6 text-emerald-300 shadow-inner shadow-emerald-500/5" : "text-slate-300 hover:bg-white/4"
+                  }`}
+                >
+                  <span className={`flex h-4 w-4 items-center justify-center text-[10px] ${isActive ? "text-emerald-300" : "text-slate-400"}`}>{item.icon}</span>
+                  <span className="text-[15px] font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
 
             <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
               <button
@@ -221,7 +236,6 @@ export default function DashboardPage() {
 
             <div className="flex items-center gap-3">
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">✉</button>
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">◔</button>
               <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#f2c0ad] to-[#cfa4d3] text-[11px] font-semibold text-[#0e151a]">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
                 <div className="pr-1">
@@ -232,106 +246,82 @@ export default function DashboardPage() {
             </div>
           </header>
 
-          <section className="pt-5">
+          <section className="pt-5 pb-2">
             <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
-                <h1 className="text-[2.1rem] font-semibold tracking-[-0.06em] text-white">Overview</h1>
-                <p className="mt-1 text-sm text-slate-400">Monitor room activity and your synced watch sessions.</p>
+                <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-300">Overview</p>
+                <h1 className="mt-2 text-[2.1rem] font-semibold tracking-[-0.06em] text-white">Welcome back</h1>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => openRoomModal("create")} className="rounded-[14px] bg-emerald-500 px-4 py-2.5 text-[14px] font-medium text-[#03150a] shadow-sm shadow-emerald-900/40">+ Create room</button>
+                <button type="button" onClick={() => openRoomModal("create")} className="rounded-[14px] bg-emerald-500 px-4 py-2.5 text-[14px] font-medium text-[#03150a] shadow-sm shadow-emerald-900/40">Create room</button>
                 <button type="button" onClick={() => openRoomModal("join")} className="rounded-[14px] border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] font-medium text-white">Join room</button>
               </div>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-3">
               {metricCards.map((card) => (
                 <div
                   key={card.label}
-                  className={`rounded-[18px] border p-3.5 ${
-                    card.accent ? "border-emerald-400/30 bg-[linear-gradient(180deg,#1a5a45_0%,#0f2b25_100%)] text-white" : "border-white/10 bg-[#111820] text-white"
-                  }`}
+                  className="rounded-[20px] border border-white/10 bg-[#111820] p-4"
                 >
-                  <div className="mb-2.5 flex items-center justify-between">
-                    <div className="text-[15px] font-semibold">{card.label}</div>
-                    <button type="button" className={`flex h-7 w-7 items-center justify-center rounded-full border ${card.accent ? "border-white/30 bg-white/10 text-white" : "border-white/10 bg-transparent text-slate-300"}`}>
-                      ↗
-                    </button>
-                  </div>
-                  <div className="text-[2.8rem] font-semibold tracking-[-0.06em] leading-none">{card.value}</div>
-                  <div className={`mt-2.5 text-[12px] ${card.accent ? "text-emerald-100" : "text-slate-400"}`}>
-                    {card.change}
-                  </div>
+                  <div className="text-[12px] font-medium uppercase tracking-[0.14em] text-slate-400">{card.label}</div>
+                  <div className="mt-3 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">{card.value}</div>
+                  <div className="mt-2 text-[12px] text-slate-400">{card.change}</div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 grid gap-4 xl:grid-cols-[1.35fr_0.9fr]">
-              <div className="space-y-4">
-                <div className="rounded-[20px] border border-white/10 bg-[#111820] p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-[1.5rem] font-semibold tracking-[-0.05em] text-white">Live rooms</h2>
-                    <button type="button" onClick={() => setActiveNav("Friends")} className="text-xs font-medium text-emerald-300">View all</button>
-                  </div>
+            <div className="mt-5 grid gap-4 xl:grid-cols-[1.5fr_0.9fr]">
+              <div className="rounded-[22px] border border-white/10 bg-[#111820] p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-[1.4rem] font-semibold tracking-[-0.04em] text-white">Live rooms</h2>
+                  <Link href="/friends" className="text-xs font-medium text-emerald-300">View all</Link>
+                </div>
 
-                  <div className="space-y-2.5">
-                    {filteredRooms.length > 0 ? (
-                      filteredRooms.map((room) => (
-                        <button
-                          key={room.name}
-                          type="button"
-                          onClick={() => openRoomModal("join", room.code)}
-                          className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0d141a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#101a22]"
-                        >
-                          <div>
-                            <div className="text-[14px] font-medium text-white">{room.name}</div>
-                            <div className="text-[11px] text-slate-400">Host: {room.host}</div>
-                          </div>
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-[11px] text-slate-400">{room.viewers}</span>
-                            <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-300" : "bg-amber-500/10 text-amber-300"}`}>
-                              {room.status}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="rounded-2xl border border-dashed border-white/10 bg-[#0d141a] p-4 text-sm text-slate-400">
-                        No rooms match your search.
-                      </div>
-                    )}
-                  </div>
+                <div className="space-y-2.5">
+                  {filteredRooms.length > 0 ? (
+                    filteredRooms.map((room) => (
+                      <button
+                        key={room.name}
+                        type="button"
+                        onClick={() => openRoomModal("join", room.code)}
+                        className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0d141a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#101a22]"
+                      >
+                        <div>
+                          <div className="text-[14px] font-medium text-white">{room.name}</div>
+                          <div className="text-[11px] text-slate-400">Host: {room.host}</div>
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-[11px] text-slate-400">{room.viewers}</span>
+                          <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-300" : "bg-amber-500/10 text-amber-300"}`}>
+                            {room.status}
+                          </span>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#0d141a] p-4 text-sm text-slate-400">
+                      No rooms match your search.
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="rounded-[20px] border border-white/10 bg-[#111820] p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-[1.45rem] font-semibold tracking-[-0.05em] text-white">Watch activity</h3>
-                  </div>
-
-                  <div className="flex h-40 items-end justify-between gap-2">
-                    {activityBars.map((bar) => (
-                      <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
-                        <div className="flex w-full items-end justify-center rounded-t-xl bg-white/6" style={{ height: `${bar.value}%` }}>
-                          <div className="w-full rounded-t-xl bg-emerald-500" style={{ height: "100%" }} />
-                        </div>
-                        <span className="text-[10px] uppercase text-slate-400">{bar.label}</span>
-                      </div>
-                    ))}
-                  </div>
+              <div className="rounded-[22px] border border-white/10 bg-[#111820] p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-[1.2rem] font-semibold tracking-[-0.04em] text-white">Activity</h3>
                 </div>
 
-                <div className="rounded-[20px] border border-white/10 bg-[#111820] p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-[1.45rem] font-semibold tracking-[-0.05em] text-white">Quick actions</h3>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    <button type="button" onClick={() => openRoomModal("create")} className="w-full rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-medium text-[#03150a]">Create room</button>
-                    <button type="button" onClick={() => openRoomModal("join")} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-white">Join room</button>
-                  </div>
+                <div className="flex h-40 items-end justify-between gap-2">
+                  {activityBars.map((bar) => (
+                    <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
+                      <div className="flex w-full items-end justify-center rounded-t-xl bg-white/6" style={{ height: `${bar.value}%` }}>
+                        <div className="w-full rounded-t-xl bg-emerald-500" style={{ height: "100%" }} />
+                      </div>
+                      <span className="text-[10px] uppercase text-slate-400">{bar.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
