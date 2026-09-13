@@ -18,6 +18,7 @@ const allowedFrontendOrigins = (process.env.FRONTEND_ORIGINS || process.env.FRON
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
 const SESSION_COOKIE = "syncplay-session";
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
@@ -110,7 +111,8 @@ function hashSessionToken(token) {
 }
 
 function setSessionCookie(response, token, maxAge) {
-  response.setHeader("Set-Cookie", `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}`);
+  const crossSiteAttributes = isProduction ? "SameSite=None; Secure" : "SameSite=Lax";
+  response.setHeader("Set-Cookie", `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; ${crossSiteAttributes}; Path=/; Max-Age=${maxAge}`);
 }
 
 function clearSessionCookie(response) {
