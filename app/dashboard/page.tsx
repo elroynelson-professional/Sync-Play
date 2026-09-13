@@ -366,39 +366,6 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Integrated account</div>
-                    <p className="mb-4 text-sm text-slate-400">Manage your current integrated accounts.</p>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1f2937] text-sm font-bold text-emerald-300">▣</div>
-                          <div>
-                            <div className="text-[1.05rem] font-semibold text-white">Google analytics</div>
-                            <div className="text-sm text-slate-400">Navigate the Google Analytics interface and reports.</div>
-                          </div>
-                        </div>
-                        <button type="button" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200">
-                          Connected
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1f2937] text-sm font-bold text-white">G</div>
-                          <div>
-                            <div className="text-[1.05rem] font-semibold text-white">Google</div>
-                            <div className="text-sm text-slate-400">Use Google for the faster login methods in your account.</div>
-                          </div>
-                        </div>
-                        <button type="button" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200">
-                          Connected
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="pt-2">
                     <div className="mb-3 text-[1.05rem] font-semibold text-white">Account security</div>
                     <p className="mb-4 text-sm text-slate-400">Manage your account security.</p>
