@@ -40,8 +40,15 @@ export function SyncPlayLanding() {
       setActiveUser(savedUser);
       setDisplayName(savedUser.name);
       setAuthMessage(`Welcome back, ${savedUser.name}.`);
+      router.replace("/dashboard");
     }
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    if (activeUser) {
+      router.replace("/dashboard");
+    }
+  }, [activeUser, router]);
 
   const canSubmit = useMemo(() => displayName.trim().length >= 2, [displayName]);
   const canAuthSubmit = useMemo(() => {
@@ -81,6 +88,7 @@ export function SyncPlayLanding() {
     setMessage("Signed out. Log in to continue to a room.");
     setAuthMessage("Create your account to start watching together.");
     storeActiveUser(null);
+    router.replace("/");
   }
 
   function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -106,7 +114,7 @@ export function SyncPlayLanding() {
     setPasswordInput("");
     setConfirmPasswordInput("");
     storeActiveUser(demoUser, "demo-token");
-    router.push("/dashboard");
+    router.replace("/dashboard");
   }
 
   function goToRoom(code: string, role: "host" | "guest", action: "create" | "join") {
@@ -337,22 +345,6 @@ export function SyncPlayLanding() {
                 {authMessage}
               </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => openRoomModal("create")}
-                  className="syncplay-button-primary rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400"
-                >
-                  Create room
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openRoomModal("join")}
-                  className="syncplay-button-secondary rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white transition hover:bg-white/10"
-                >
-                  Join room
-                </button>
-              </div>
             </div>
 
             <div className="syncplay-note mt-6 rounded-[24px] bg-white/5 p-5 text-sm leading-7 text-slate-300">

@@ -182,7 +182,7 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-black p-0 text-white">
       <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
-        <aside className="hidden w-[220px] flex-col border-r border-white/10 bg-[#090909] px-4 py-5 md:flex">
+        <aside className="hidden w-[240px] flex-col border-r border-white/10 bg-[#090909] px-4 py-5 md:flex">
           <div className="mb-6 flex items-center gap-3 px-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/10 text-base font-semibold text-emerald-300">◔</div>
             <div className="text-[1.7rem] font-semibold tracking-[-0.06em] text-white">SyncPlay</div>
@@ -219,18 +219,25 @@ export default function HistoryPage() {
 
           <div className="mt-auto space-y-3 text-sm">
             <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">General</div>
-            <button
-              type="button"
-              onClick={signOut}
-              className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-300 transition hover:bg-white/4"
-            >
-              <span className="flex h-4 w-4 items-center justify-center text-[10px] text-slate-400">◌</span>
-              <span className="text-[15px]">Logout</span>
-            </button>
+            {[
+              { label: "Account settings", action: () => router.push("/account-settings") },
+              { label: "Help", action: () => undefined },
+              { label: "Logout", action: signOut },
+            ].map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={item.action}
+                className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-300 transition hover:bg-white/4"
+              >
+                <span className="flex h-4 w-4 items-center justify-center text-[10px] text-slate-400">◌</span>
+                <span className="text-[15px]">{item.label}</span>
+              </button>
+            ))}
           </div>
         </aside>
 
-        <div className="flex-1 bg-[#050505] px-4 py-4 md:px-5 md:py-5">
+        <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">
           <header className="flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-[#0d0d0d] px-3 py-2.5 shadow-inner shadow-black/30">
               <span className="text-base text-slate-400">⌕</span>
@@ -247,13 +254,13 @@ export default function HistoryPage() {
             <div className="flex items-center gap-3">
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">✉</button>
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">◔</button>
-              <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1">
+              <button type="button" onClick={() => router.push("/dashboard")} className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1 transition hover:bg-white/10">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[11px] font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
-                <div className="pr-1">
+                <div className="pr-1 text-left">
                   <div className="text-[14px] font-medium text-white">{user.name}</div>
                   <div className="text-[10px] text-slate-400">{user.email}</div>
                 </div>
-              </div>
+              </button>
             </div>
           </header>
 

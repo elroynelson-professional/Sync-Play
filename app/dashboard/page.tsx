@@ -64,6 +64,7 @@ export default function DashboardPage() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [roomError, setRoomError] = useState("");
+  const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
 
   useEffect(() => {
     const activeUser = readActiveUser() ?? {
@@ -216,25 +217,25 @@ export default function DashboardPage() {
 
           <div className="mt-auto space-y-3 text-sm">
             <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">General</div>
-            {['Help', 'Logout'].map((item) => (
+            {[
+              { label: "Account settings", action: () => router.push("/account-settings") },
+              { label: "Help", action: () => undefined },
+              { label: "Logout", action: signOut },
+            ].map((item) => (
               <button
-                key={item}
+                key={item.label}
                 type="button"
-                onClick={() => {
-                  if (item === "Logout") {
-                    signOut();
-                  }
-                }}
+                onClick={item.action}
                 className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-300 transition hover:bg-white/4"
               >
                 <span className="flex h-4 w-4 items-center justify-center text-[10px] text-slate-400">◌</span>
-                <span className="text-[15px]">{item}</span>
+                <span className="text-[15px]">{item.label}</span>
               </button>
             ))}
           </div>
         </aside>
 
-        <div className="flex-1 bg-[#050505] px-4 py-4 md:px-5 md:py-5">
+        <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">
           <header className="flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-[#0d0d0d] px-3 py-2.5 shadow-inner shadow-black/30">
               <span className="text-base text-slate-400">⌕</span>
@@ -250,96 +251,253 @@ export default function DashboardPage() {
 
             <div className="flex items-center gap-3">
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">✉</button>
-              <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1">
+              <button
+                type="button"
+                onClick={() => router.push("/account-settings")}
+                className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1 transition hover:bg-white/10"
+              >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[11px] font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
                 <div className="pr-1">
                   <div className="text-[14px] font-medium text-white">{user.name}</div>
                   <div className="text-[10px] text-slate-400">{user.email}</div>
                 </div>
-              </div>
+              </button>
             </div>
           </header>
 
-          <section className="pt-5 pb-2">
-            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-300">Overview</p>
-                <h1 className="mt-2 text-[2.1rem] font-semibold tracking-[-0.06em] text-white">Welcome back</h1>
-              </div>
+          <div className="mt-4 flex-1 overflow-y-auto pr-1 pb-2">
+          {isAccountSettingsOpen ? (
+            <section className="pt-5 pb-2">
+              <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <h1 className="text-[2.2rem] font-semibold tracking-[-0.06em] text-white">Account</h1>
+                  <p className="mt-2 text-sm text-slate-300">Real-time information and activities of your property.</p>
+                </div>
 
-              <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => openRoomModal("create")} className="rounded-[14px] bg-emerald-500 px-4 py-2.5 text-[14px] font-medium text-[#03150a] shadow-sm shadow-emerald-900/40">Create room</button>
-                <button type="button" onClick={() => openRoomModal("join")} className="rounded-[14px] border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] font-medium text-white">Join room</button>
-              </div>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-3">
-              {metricCards.map((card) => (
-                <div
-                  key={card.label}
-                  className="rounded-[20px] border border-white/10 bg-[#0d0d0d] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
+                <button
+                  type="button"
+                  onClick={() => setIsAccountSettingsOpen(false)}
+                  className="rounded-[14px] border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] font-medium text-white"
                 >
-                  <div className="text-[12px] font-medium uppercase tracking-[0.14em] text-slate-400">{card.label}</div>
-                  <div className="mt-3 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">{card.value}</div>
-                  <div className="mt-2 text-[12px] text-slate-400">{card.change}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5 grid gap-4 xl:grid-cols-[1.5fr_0.9fr]">
-              <div className="rounded-[22px] border border-white/10 bg-[#111820] p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-[1.4rem] font-semibold tracking-[-0.04em] text-white">Live rooms</h2>
-                  <Link href="/friends" className="text-xs font-medium text-emerald-300">View all</Link>
-                </div>
-
-                <div className="space-y-2.5">
-                  {filteredRooms.length > 0 ? (
-                    filteredRooms.map((room) => (
-                      <button
-                        key={room.name}
-                        type="button"
-                        onClick={() => openRoomModal("join", room.code)}
-                        className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0a0a0a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#111111]"
-                      >
-                        <div>
-                          <div className="text-[14px] font-medium text-white">{room.name}</div>
-                          <div className="text-[11px] text-slate-400">Host: {room.host}</div>
-                        </div>
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-[11px] text-slate-400">{room.viewers}</span>
-                          <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-300" : "bg-amber-500/10 text-amber-300"}`}>
-                            {room.status}
-                          </span>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-4 text-sm text-slate-400">
-                      No rooms match your search.
-                    </div>
-                  )}
-                </div>
+                  Back to dashboard
+                </button>
               </div>
 
-              <div className="rounded-[22px] border border-white/10 bg-[#111820] p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-[1.2rem] font-semibold tracking-[-0.04em] text-white">Activity</h3>
+              <div className="space-y-8">
+                <div className="flex items-center justify-between border-b border-white/10 pb-5">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,_#f0d0b7,_#9c6a43_40%,_#2e2a2f_100%)] text-xl font-semibold text-white shadow-inner shadow-black/40">
+                      {(user.name || "G").slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-[1.05rem] font-semibold text-white">Profile picture</div>
+                      <div className="text-sm text-slate-400">PNG, JPEG under 15MB</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button type="button" className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10">
+                      Upload new picture
+                    </button>
+                    <button type="button" className="rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5">
+                      Delete
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex h-40 items-end justify-between gap-2">
-                  {activityBars.map((bar) => (
-                    <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
-                      <div className="flex w-full items-end justify-center rounded-t-xl bg-white/6" style={{ height: `${bar.value}%` }}>
-                        <div className="w-full rounded-t-xl bg-emerald-500" style={{ height: "100%" }} />
+                <div className="space-y-5">
+                  <div>
+                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Full name</div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-2 block text-sm text-slate-300">First name</span>
+                        <input
+                          value={user.name.split(" ")[0] || "Bryan"}
+                          readOnly
+                          className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-2 block text-sm text-slate-300">Last name</span>
+                        <input
+                          value={user.name.split(" ").slice(1).join(" ") || "Cranston"}
+                          readOnly
+                          className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Contact email</div>
+                    <p className="mb-3 text-sm text-slate-400">Manage your accounts email address for the invoices.</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-1 items-center rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3">
+                        <span className="mr-2 text-slate-300">✉</span>
+                        <span className="text-white">{user.email}</span>
                       </div>
-                      <span className="text-[10px] uppercase text-slate-400">{bar.label}</span>
+                      <button type="button" className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-3 text-sm font-medium text-emerald-200 transition hover:bg-emerald-500/15">
+                        <span className="text-base">＋</span>
+                        Add another email
+                      </button>
                     </div>
-                  ))}
+                  </div>
+
+                  <div>
+                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Password</div>
+                    <p className="mb-3 text-sm text-slate-400">Modify your current password.</p>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-2 block text-sm text-slate-300">Current password</span>
+                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white">
+                          <span className="tracking-[0.32em]">••••••••</span>
+                          <span className="ml-auto text-slate-400">◌</span>
+                        </div>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-2 block text-sm text-slate-300">New password</span>
+                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white">
+                          <span className="tracking-[0.32em]">••••••••</span>
+                          <span className="ml-auto text-slate-400">◌</span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Integrated account</div>
+                    <p className="mb-4 text-sm text-slate-400">Manage your current integrated accounts.</p>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1f2937] text-sm font-bold text-emerald-300">▣</div>
+                          <div>
+                            <div className="text-[1.05rem] font-semibold text-white">Google analytics</div>
+                            <div className="text-sm text-slate-400">Navigate the Google Analytics interface and reports.</div>
+                          </div>
+                        </div>
+                        <button type="button" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200">
+                          Connected
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1f2937] text-sm font-bold text-white">G</div>
+                          <div>
+                            <div className="text-[1.05rem] font-semibold text-white">Google</div>
+                            <div className="text-sm text-slate-400">Use Google for the faster login methods in your account.</div>
+                          </div>
+                        </div>
+                        <button type="button" className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200">
+                          Connected
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Account security</div>
+                    <p className="mb-4 text-sm text-slate-400">Manage your account security.</p>
+                    <div className="flex items-center gap-3">
+                      <button type="button" className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-sm font-medium text-white transition hover:bg-white/5">
+                        <span>⎋</span>
+                        Log out
+                      </button>
+                      <button type="button" onClick={signOut} className="rounded-xl border border-rose-400/35 bg-rose-500/10 px-3 py-2.5 text-sm font-medium text-rose-200 transition hover:bg-rose-500/15">
+                        Delete my account
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : (
+            <section className="pt-5 pb-2">
+              <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-300">Overview</p>
+                  <h1 className="mt-2 text-[2.1rem] font-semibold tracking-[-0.06em] text-white">Welcome back</h1>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button type="button" onClick={() => openRoomModal("create")} className="rounded-[14px] bg-emerald-500 px-4 py-2.5 text-[14px] font-medium text-[#03150a] shadow-sm shadow-emerald-900/40">Create room</button>
+                  <button type="button" onClick={() => openRoomModal("join")} className="rounded-[14px] border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] font-medium text-white">Join room</button>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                {metricCards.map((card) => (
+                  <div
+                    key={card.label}
+                    className="rounded-[20px] border border-white/10 bg-[#0d0d0d] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
+                  >
+                    <div className="text-[12px] font-medium uppercase tracking-[0.14em] text-slate-400">{card.label}</div>
+                    <div className="mt-3 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">{card.value}</div>
+                    <div className="mt-2 text-[12px] text-slate-400">{card.change}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 grid gap-4 xl:grid-cols-[1.5fr_0.9fr]">
+                <div className="rounded-[22px] border border-white/10 bg-[#0d0d0d] p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-[1.4rem] font-semibold tracking-[-0.04em] text-white">Live rooms</h2>
+                    <Link href="/friends" className="text-xs font-medium text-emerald-300">View all</Link>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {filteredRooms.length > 0 ? (
+                      filteredRooms.map((room) => (
+                        <button
+                          key={room.name}
+                          type="button"
+                          onClick={() => openRoomModal("join", room.code)}
+                          className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0a0a0a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#111111]"
+                        >
+                          <div>
+                            <div className="text-[14px] font-medium text-white">{room.name}</div>
+                            <div className="text-[11px] text-slate-400">Host: {room.host}</div>
+                          </div>
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-[11px] text-slate-400">{room.viewers}</span>
+                            <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-300" : "bg-amber-500/10 text-amber-300"}`}>
+                              {room.status}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-4 text-sm text-slate-400">
+                        No rooms match your search.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-[22px] border border-white/10 bg-[#0d0d0d] p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-[1.2rem] font-semibold tracking-[-0.04em] text-white">Activity</h3>
+                  </div>
+
+                  <div className="flex h-40 items-end justify-between gap-2">
+                    {activityBars.map((bar) => (
+                      <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
+                        <div className="flex w-full items-end justify-center rounded-t-xl bg-white/6" style={{ height: `${bar.value}%` }}>
+                          <div className="w-full rounded-t-xl bg-emerald-500" style={{ height: "100%" }} />
+                        </div>
+                        <span className="text-[10px] uppercase text-slate-400">{bar.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+          </div>
         </div>
       </div>
 
