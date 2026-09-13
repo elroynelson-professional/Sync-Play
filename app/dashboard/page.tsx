@@ -218,7 +218,7 @@ export default function DashboardPage() {
           <div className="mt-auto space-y-3 text-sm">
             <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">General</div>
             {[
-              { label: "Account settings", action: () => router.push("/account-settings") },
+              { label: "Account settings", action: () => setIsAccountSettingsOpen(true) },
               { label: "Help", action: () => undefined },
               { label: "Logout", action: signOut },
             ].map((item) => (
@@ -253,7 +253,7 @@ export default function DashboardPage() {
               <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">✉</button>
               <button
                 type="button"
-                onClick={() => router.push("/account-settings")}
+                onClick={() => setIsAccountSettingsOpen(true)}
                 className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1 transition hover:bg-white/10"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[11px] font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>

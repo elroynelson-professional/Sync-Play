@@ -202,52 +202,49 @@ export default function AccountSettingsPage() {
             </div>
 
             <div>
-              <div className="mb-3 text-[1.05rem] font-semibold text-white">Password</div>
-              <p className="mb-3 text-sm text-slate-400">Update your password securely.</p>
-              <div className="space-y-4">
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]">
-                  <label className="block">
-                    <span className="mb-2 block text-sm text-slate-300">Current password</span>
-                    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3">
-                      <input
-                        type={showCurrentPassword ? "text" : "password"}
-                        value={currentPassword}
-                        onChange={(event) => setCurrentPassword(event.target.value)}
-                        className="w-full bg-transparent text-white outline-none placeholder:text-slate-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrentPassword((value) => !value)}
-                        className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400 transition hover:text-white"
-                      >
-                        {showCurrentPassword ? "Hide" : "Show"}
-                      </button>
-                    </div>
-                  </label>
+              <div className="mb-4 text-[2.5rem] font-semibold tracking-[-0.06em] text-white">Password</div>
+              <p className="mb-6 text-[1.35rem] text-slate-300">Modify your current password.</p>
 
-                  <div className="flex items-end justify-end">
+              <div className="grid gap-8 lg:grid-cols-2">
+                <label className="block">
+                  <span className="mb-3 block text-[1.4rem] text-slate-100">Current password</span>
+                  <div className="flex items-center gap-3 rounded-[1.5rem] border border-white/10 bg-[#0a0a0a] px-5 py-4">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(event) => setCurrentPassword(event.target.value)}
+                      className="w-full bg-transparent text-[1.15rem] text-white outline-none placeholder:text-slate-500"
+                    />
                     <button
                       type="button"
-                      onClick={handleChangePasswordClick}
-                      className="shrink-0 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400"
+                      onClick={() => setShowCurrentPassword((value) => !value)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1.05rem] text-slate-300 transition hover:text-white"
+                      aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
                     >
-                      Change password
+                      {showCurrentPassword ? "◉" : "◌"}
                     </button>
                   </div>
-                </div>
+                </label>
 
-                {showNewPasswordField && (
-                  <div className="w-full">
-                    <span className="mb-2 block text-sm text-slate-300">New password</span>
+                <label className="block">
+                  <span className="mb-3 block text-[1.4rem] text-slate-100">New password</span>
+                  <div className="flex items-center gap-3 rounded-[1.5rem] border border-white/10 bg-[#0a0a0a] px-5 py-4">
                     <input
-                      type="password"
+                      type={showCurrentPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
-                      placeholder="Enter new password"
-                      className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500"
+                      className="w-full bg-transparent text-[1.15rem] text-white outline-none placeholder:text-slate-500"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword((value) => !value)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1.05rem] text-slate-300 transition hover:text-white"
+                      aria-label={showCurrentPassword ? "Hide new password" : "Show new password"}
+                    >
+                      {showCurrentPassword ? "◉" : "◌"}
+                    </button>
                   </div>
-                )}
+                </label>
               </div>
             </div>
 
