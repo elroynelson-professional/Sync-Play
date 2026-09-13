@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AdOverlay } from "./ad-overlay";
+import { socketUrl } from "../lib/socket";
 
 const AD_DISPLAY_CHANCE = 0.5;
 
@@ -35,13 +36,20 @@ export function SyncPlayLanding() {
   const [roomModalError, setRoomModalError] = useState("");
 
   useEffect(() => {
-    const savedUser = typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null") : null;
-    if (savedUser) {
-      setActiveUser(savedUser);
-      setDisplayName(savedUser.name);
-      setAuthMessage(`Welcome back, ${savedUser.name}.`);
-      router.replace("/dashboard");
-    }
+    fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as { user?: { id: string; name: string; email: string; createdAt: string } };
+        if (!payload.user) return;
+
+        setActiveUser(payload.user);
+        setDisplayName(payload.user.name);
+        setAuthMessage(`Welcome back, ${payload.user.name}.`);
+        window.localStorage.setItem("syncplay-active-user-v1", JSON.stringify(payload.user));
+        router.replace("/dashboard");
+      })
+      .catch(() => undefined);
   }, [router]);
 
   useEffect(() => {
@@ -82,7 +90,12 @@ export function SyncPlayLanding() {
     window.localStorage.removeItem("syncplay-auth-token-v1");
   }
 
-  function signOut() {
+  async function signOut() {
+    await fetch(`${socketUrl}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => undefined);
+
     setActiveUser(null);
     setDisplayName("");
     setMessage("Signed out. Log in to continue to a room.");
@@ -91,30 +104,42 @@ export function SyncPlayLanding() {
     router.replace("/");
   }
 
-  function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const trimmedName = nameInput.trim() || "Guest User";
-    const trimmedEmail = (emailInput.trim() || "guest@example.com").toLowerCase();
-    const trimmedPassword = passwordInput.trim() || "demo-password";
+    setAuthMessage(authMode === "login" ? "Signing you in..." : "Creating your account...");
 
-    const demoUser = {
-      id: "guest-user",
-      name: trimmedName,
-      email: trimmedEmail,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const response = await fetch(`${socketUrl}/api/auth/${authMode === "login" ? "login" : "signup"}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: nameInput.trim(),
+          email: emailInput.trim().toLowerCase(),
+          password: passwordInput,
+        }),
+      });
+      const payload = (await response.json()) as { user?: { id: string; name: string; email: string; createdAt: string }; error?: string };
 
-    setActiveUser(demoUser);
-    setDisplayName(demoUser.name);
-    setAuthMessage(`Demo mode active. Welcome, ${demoUser.name}.`);
-    setMessage(`Welcome ${demoUser.name}. You can create or join a room now.`);
-    setNameInput("");
-    setEmailInput("");
-    setPasswordInput("");
-    setConfirmPasswordInput("");
-    storeActiveUser(demoUser, "demo-token");
-    router.replace("/dashboard");
+      if (!response.ok || !payload.user) {
+        setAuthMessage(payload.error || "We could not authenticate you. Try again.");
+        return;
+      }
+
+      setActiveUser(payload.user);
+      setDisplayName(payload.user.name);
+      setAuthMessage(`Welcome back, ${payload.user.name}.`);
+      setMessage(`Welcome ${payload.user.name}. You can create or join a room now.`);
+      setNameInput("");
+      setEmailInput("");
+      setPasswordInput("");
+      setConfirmPasswordInput("");
+      storeActiveUser(payload.user);
+      router.replace("/dashboard");
+    } catch {
+      setAuthMessage("The authentication server is unavailable. Start the SyncPlay server and try again.");
+    }
   }
 
   function goToRoom(code: string, role: "host" | "guest", action: "create" | "join") {

@@ -13,7 +13,39 @@ type AccountUser = {
   createdAt: string;
 };
 
+type DirectMessage = {
+  id: string;
+  senderId: string;
+  senderName: string;
+  recipientId: string;
+  text: string;
+  createdAt: number;
+  read: boolean;
+};
+
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
+const INBOX_MESSAGES_KEY = "syncplay-inbox-messages-v1";
+
+const initialInboxMessages: DirectMessage[] = [
+  {
+    id: "message-ava-1",
+    senderId: "friend-ava",
+    senderName: "Ava Brooks",
+    recipientId: "guest-user",
+    text: "Movie night is starting soon. Want to join us?",
+    createdAt: Date.now() - 1000 * 60 * 18,
+    read: false,
+  },
+  {
+    id: "message-kai-1",
+    senderId: "friend-kai",
+    senderName: "Kai Chen",
+    recipientId: "guest-user",
+    text: "I found a great episode for our next watch party.",
+    createdAt: Date.now() - 1000 * 60 * 95,
+    read: true,
+  },
+];
 
 function readActiveUser(): AccountUser | null {
   if (typeof window === "undefined") return null;
@@ -65,23 +97,58 @@ export default function DashboardPage() {
   const [roomCode, setRoomCode] = useState("");
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
+  const [inboxMessages, setInboxMessages] = useState<DirectMessage[]>(initialInboxMessages);
+  const [messageDraft, setMessageDraft] = useState("");
+  const [messageRecipient, setMessageRecipient] = useState("Ava Brooks");
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [preferences, setPreferences] = useState({
+    emailAlerts: true,
+    pushNotifications: true,
+    twoFactor: false,
+    sessionActivity: true,
+  });
 
   useEffect(() => {
-    const activeUser = readActiveUser() ?? {
-      id: "guest-user",
-      name: "Totok Michael",
-      email: "tmichael20@mail.com",
-      createdAt: new Date().toISOString(),
-    };
-
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
     if (invalidCodeMessage) {
       setRoomError(invalidCodeMessage);
       window.sessionStorage.removeItem("syncplay-room-error");
     }
 
-    setUser(activeUser);
-  }, []);
+    const storedMessages = window.localStorage.getItem(INBOX_MESSAGES_KEY);
+    if (storedMessages) {
+      try {
+        setInboxMessages(JSON.parse(storedMessages) as DirectMessage[]);
+      } catch {
+        window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(initialInboxMessages));
+      }
+    } else {
+      window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(initialInboxMessages));
+    }
+
+    fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) {
+          router.replace("/");
+          return;
+        }
+
+        const payload = (await response.json()) as { user?: AccountUser };
+        if (!payload.user) {
+          router.replace("/");
+          return;
+        }
+
+        setUser(payload.user);
+        window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(payload.user));
+      })
+      .catch(() => router.replace("/"));
+  }, [router]);
 
   const filteredRooms = roomList.filter((room) => {
     const query = searchTerm.trim().toLowerCase();
@@ -94,13 +161,54 @@ export default function DashboardPage() {
     );
   });
 
-  function signOut() {
+  async function signOut() {
+    await fetch(`${socketUrl}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => undefined);
+
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(ACTIVE_USER_KEY);
     }
 
     setUser(null);
     router.push("/");
+  }
+
+  function openInbox() {
+    setIsInboxOpen(true);
+    setSelectedConversation(null);
+    setInboxMessages((current) => {
+      const nextMessages = current.map((message) => (
+        message.recipientId === user?.id ? { ...message, read: true } : message
+      ));
+      window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(nextMessages));
+      return nextMessages;
+    });
+  }
+
+  function sendDirectMessage() {
+    const text = messageDraft.trim();
+    if (!text || !user) return;
+
+    const friend = messageRecipient === "Kai Chen"
+      ? { id: "friend-kai", name: "Kai Chen" }
+      : { id: "friend-ava", name: "Ava Brooks" };
+    const nextMessage: DirectMessage = {
+      id: `message-${Date.now()}`,
+      senderId: user.id,
+      senderName: user.name,
+      recipientId: friend.id,
+      text,
+      createdAt: Date.now(),
+      read: true,
+    };
+    setInboxMessages((current) => {
+      const nextMessages = [...current, nextMessage];
+      window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(nextMessages));
+      return nextMessages;
+    });
+    setMessageDraft("");
   }
 
   function openRoomModal(mode: "create" | "join", prefilledCode = "") {
@@ -236,7 +344,7 @@ export default function DashboardPage() {
         </aside>
 
         <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">
-          <header className="flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
+          <header className="relative flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-[#0d0d0d] px-3 py-2.5 shadow-inner shadow-black/30">
               <span className="text-base text-slate-400">⌕</span>
               <input
@@ -250,7 +358,17 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">✉</button>
+              <button
+                type="button"
+                onClick={() => isInboxOpen ? setIsInboxOpen(false) : openInbox()}
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200 transition hover:bg-white/10"
+                aria-label="Open inbox"
+              >
+                ✉
+                {inboxMessages.some((message) => !message.read && message.recipientId === user.id) ? (
+                  <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#050505] bg-emerald-400" />
+                ) : null}
+              </button>
               <button
                 type="button"
                 onClick={() => setIsAccountSettingsOpen(true)}
@@ -266,124 +384,234 @@ export default function DashboardPage() {
           </header>
 
           <div className="mt-4 flex-1 overflow-y-auto pr-1 pb-2">
-          {isAccountSettingsOpen ? (
-            <section className="pt-5 pb-2">
-              <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">
-                <div>
-                  <h1 className="text-[2.2rem] font-semibold tracking-[-0.06em] text-white">Account</h1>
-                  <p className="mt-2 text-sm text-slate-300">Real-time information and activities of your property.</p>
+          {isInboxOpen ? (
+            <section className="fixed inset-0 z-50 flex justify-end bg-black/70">
+              <div className="flex h-full min-h-[560px] w-full max-w-[820px] flex-col overflow-hidden rounded-l-[22px] border-y border-l border-white/10 bg-[#0b0b0c] shadow-2xl shadow-black/60 md:flex-row">
+                <aside className="w-full border-b border-white/10 bg-[#101011] md:w-[310px] md:border-b-0 md:border-r">
+                  <div className="flex items-center gap-2 border-b border-white/10 p-4">
+                    <div className="flex flex-1 items-center gap-2 rounded-xl bg-[#1a1a1c] px-3 py-2.5">
+                      <span className="text-slate-500">⌕</span>
+                      <input placeholder="Search" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500" />
+                    </div>
+                    <button type="button" onClick={() => setSelectedConversation("Ava Brooks")} className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-lg text-slate-300" aria-label="New message">
+                      +
+                    </button>
+                  </div>
+
+                  <div className="p-4 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Messages</div>
+                  <div className="space-y-1 px-2 pb-4">
+                    {["Ava Brooks", "Kai Chen"].map((friendName) => {
+                      const friendId = friendName === "Ava Brooks" ? "friend-ava" : "friend-kai";
+                      const friendMessages = inboxMessages.filter((message) => message.senderName === friendName || (message.senderId === user.id && message.recipientId === friendId));
+                      const latestMessage = friendMessages[friendMessages.length - 1];
+                      const unread = inboxMessages.some((message) => message.senderName === friendName && !message.read);
+
+                      return (
+                        <button
+                          key={friendName}
+                          type="button"
+                          onClick={() => {
+                            setSelectedConversation(friendName);
+                            setMessageRecipient(friendName);
+                            setInboxMessages((current) => {
+                              const nextMessages = current.map((message) => message.senderName === friendName ? { ...message, read: true } : message);
+                              window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(nextMessages));
+                              return nextMessages;
+                            });
+                          }}
+                          className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${selectedConversation === friendName ? "bg-emerald-500/15" : "hover:bg-white/5"}`}
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-semibold text-[#03150a]">{friendName.split(" ").map((part) => part[0]).join("")}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="truncate text-sm font-semibold text-white">{friendName}</span>
+                              {latestMessage ? <span className="text-[10px] text-slate-500">{new Date(latestMessage.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}</span> : null}
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate text-xs text-slate-400">{latestMessage?.text || "Start a conversation"}</p>
+                              {unread ? <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" /> : null}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </aside>
+
+                <div className="flex min-w-0 flex-1 flex-col bg-[#0b0b0c]">
+                  <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                    {selectedConversation ? (
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-semibold text-[#03150a]">{selectedConversation.split(" ").map((part) => part[0]).join("")}</div>
+                        <div>
+                          <h2 className="font-semibold text-white">{selectedConversation}</h2>
+                          <p className="text-xs text-emerald-300">Friend</p>
+                        </div>
+                      </div>
+                    ) : <h2 className="text-lg font-semibold text-white">Messages</h2>}
+                    <button type="button" onClick={() => setIsInboxOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full text-2xl text-slate-400 transition hover:bg-white/5 hover:text-white" aria-label="Close inbox">×</button>
+                  </div>
+
+                  {selectedConversation ? (
+                    <>
+                      <div className="flex-1 space-y-3 overflow-y-auto p-5">
+                        {inboxMessages
+                          .filter((message) => message.senderName === selectedConversation || (message.senderId === user.id && message.recipientId === (selectedConversation === "Ava Brooks" ? "friend-ava" : "friend-kai")))
+                          .map((message) => (
+                            <div key={message.id} className={`flex ${message.senderId === user.id ? "justify-end" : "justify-start"}`}>
+                              <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm ${message.senderId === user.id ? "bg-emerald-500 text-[#03150a]" : "bg-[#181819] text-slate-200"}`}>
+                                {message.text}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                      <div className="border-t border-white/10 p-4">
+                        <div className="flex gap-2">
+                          <input value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") sendDirectMessage(); }} placeholder="Write a message..." className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#121212] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/50" />
+                          <button type="button" onClick={sendDirectMessage} className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400">Send</button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5 text-2xl text-slate-400">✉</div>
+                      <h2 className="mt-4 text-lg font-semibold text-white">Select a chat to start messaging</h2>
+                      <p className="mt-2 max-w-sm text-sm text-slate-500">Choose a friend from your messages to view the conversation.</p>
+                    </div>
+                  )}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsAccountSettingsOpen(false)}
-                  className="rounded-[14px] border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] font-medium text-white"
-                >
-                  Back to dashboard
-                </button>
               </div>
-
-              <div className="space-y-8">
-                <div className="flex items-center justify-between border-b border-white/10 pb-5">
+            </section>
+          ) : isAccountSettingsOpen ? (
+            <section className="pt-5 pb-2">
+              <div className="mx-auto max-w-[1280px] overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0b0c] p-4 sm:p-5">
+                <div className="mb-7 flex items-center justify-between gap-4 border-b border-white/10 pb-5">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,_#f0d0b7,_#9c6a43_40%,_#2e2a2f_100%)] text-xl font-semibold text-white shadow-inner shadow-black/40">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[radial-gradient(circle_at_30%_30%,_#f3d6b1,_#b4815d_38%,_#2d2b2b_100%)] text-[2rem] font-semibold text-white shadow-inner shadow-black/40 sm:h-[72px] sm:w-[72px]">
                       {(user.name || "G").slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-[1.05rem] font-semibold text-white">Profile picture</div>
-                      <div className="text-sm text-slate-400">PNG, JPEG under 15MB</div>
+                      <h2 className="text-[2.7rem] font-semibold tracking-[-0.06em] text-white sm:text-[3rem]">{user.name}</h2>
+                      <p className="text-[1.7rem] leading-none text-slate-300 sm:text-[1.9rem]">Account owner</p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    <button type="button" className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10">
-                      Upload new picture
-                    </button>
-                    <button type="button" className="rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5">
-                      Delete
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsAccountSettingsOpen(false)}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#121212] text-[1.8rem] text-white transition hover:bg-white/5"
+                    aria-label="Close account settings"
+                  >
+                    ×
+                  </button>
                 </div>
 
-                <div className="space-y-5">
-                  <div>
-                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Full name</div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="block">
-                        <span className="mb-2 block text-sm text-slate-300">First name</span>
-                        <input
-                          value={user.name.split(" ")[0] || "Bryan"}
-                          readOnly
-                          className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500"
-                        />
-                      </label>
-
-                      <label className="block">
-                        <span className="mb-2 block text-sm text-slate-300">Last name</span>
-                        <input
-                          value={user.name.split(" ").slice(1).join(" ") || "Cranston"}
-                          readOnly
-                          className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500"
-                        />
-                      </label>
+                <div className="space-y-10">
+                  <section className="space-y-5">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Profile</p>
+                      <h3 className="mt-1 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">Personal information</h3>
                     </div>
-                  </div>
-
-                  <div>
-                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Contact email</div>
-                    <p className="mb-3 text-sm text-slate-400">Manage your accounts email address for the invoices.</p>
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-1 items-center rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3">
-                        <span className="mr-2 text-slate-300">✉</span>
-                        <span className="text-white">{user.email}</span>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="space-y-2">
+                        <span className="text-sm text-slate-400">First name</span>
+                        <input value={user.name.split(" ")[0] || user.name} readOnly className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 text-white outline-none" />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-sm text-slate-400">Last name</span>
+                        <input value={user.name.split(" ").slice(1).join(" ") || "Not set"} readOnly className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 text-white outline-none" />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-sm text-slate-400">Email address</span>
+                        <input value={user.email} readOnly className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 text-white outline-none" />
+                      </label>
+                      <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#121212] px-4 py-3">
+                        <span className="text-sm text-slate-400">Member since</span>
+                        <span className="text-sm text-white">
+                          {new Date(user.createdAt || Date.now()).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                        </span>
                       </div>
-                      <button type="button" className="flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-3 text-sm font-medium text-emerald-200 transition hover:bg-emerald-500/15">
-                        <span className="text-base">＋</span>
-                        Add another email
-                      </button>
                     </div>
-                  </div>
+                  </section>
 
-                  <div>
-                    <div className="mb-4 text-[2.25rem] font-semibold tracking-[-0.06em] text-white">Password</div>
-                    <p className="mb-6 text-[1.15rem] text-slate-300">Modify your current password.</p>
-
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <label className="block">
-                        <span className="mb-3 block text-[1.2rem] font-medium text-slate-100">Current password</span>
-                        <div className="flex items-center gap-3 rounded-[1.4rem] border border-white/12 bg-[#0b0b0b] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1.05rem] text-white outline-none" />
-                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1.05rem] text-slate-300 transition hover:text-white">
-                            ◌
-                          </button>
-                        </div>
-                      </label>
-
-                      <label className="block">
-                        <span className="mb-3 block text-[1.2rem] font-medium text-slate-100">New password</span>
-                        <div className="flex items-center gap-3 rounded-[1.4rem] border border-white/12 bg-[#0b0b0b] px-4 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1.05rem] text-white outline-none" />
-                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1.05rem] text-slate-300 transition hover:text-white">
-                            ◌
-                          </button>
-                        </div>
-                      </label>
+                  <section className="space-y-5 border-t border-white/10 pt-8">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Security</p>
+                      <h3 className="mt-1 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">Change password</h3>
                     </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Account security</div>
-                    <p className="mb-4 text-sm text-slate-400">Manage your account security.</p>
-                    <div className="flex items-center gap-3">
-                      <button type="button" onClick={signOut} className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-sm font-medium text-white transition hover:bg-white/5">
-                        <span>⎋</span>
-                        Log out
-                      </button>
-                      <button type="button" onClick={signOut} className="rounded-xl border border-rose-400/35 bg-rose-500/10 px-3 py-2.5 text-sm font-medium text-rose-200 transition hover:bg-rose-500/15">
-                        Delete my account
-                      </button>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {[
+                        { label: "Current password", key: "currentPassword", visible: showCurrentPassword, toggle: setShowCurrentPassword },
+                        { label: "New password", key: "newPassword", visible: showNewPassword, toggle: setShowNewPassword },
+                      ].map((field) => (
+                        <label key={field.key} className="space-y-2">
+                          <span className="text-sm text-slate-400">{field.label}</span>
+                          <span className="flex items-center rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 focus-within:border-emerald-400/50">
+                            <input
+                              type={field.visible ? "text" : "password"}
+                              value={passwordForm[field.key as keyof typeof passwordForm]}
+                              onChange={(event) => setPasswordForm((current) => ({ ...current, [field.key]: event.target.value }))}
+                              className="w-full bg-transparent text-white outline-none"
+                            />
+                            <button type="button" onClick={() => field.toggle((value) => !value)} className="ml-2 text-slate-400 hover:text-white" aria-label={`Show ${field.label.toLowerCase()}`}>
+                              {field.visible ? "◉" : "◌"}
+                            </button>
+                          </span>
+                        </label>
+                      ))}
                     </div>
-                  </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (passwordForm.currentPassword && passwordForm.newPassword.length >= 8) {
+                          setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                          setShowCurrentPassword(false);
+                          setShowNewPassword(false);
+                        }
+                      }}
+                      className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400"
+                    >
+                      Change password
+                    </button>
+                  </section>
+
+                  <section className="space-y-5 border-t border-white/10 pt-8">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Preferences</p>
+                      <h3 className="mt-1 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">Notifications and privacy</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {[
+                        { key: "emailAlerts", label: "Email alerts", description: "Receive account and product updates." },
+                        { key: "pushNotifications", label: "Push notifications", description: "Get alerts for room activity and mentions." },
+                        { key: "twoFactor", label: "Two-factor authentication", description: "Add another layer of account security." },
+                      ].map((item) => {
+                        const enabled = preferences[item.key as keyof typeof preferences];
+                        return (
+                          <div key={item.key} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#121212] p-4">
+                            <div>
+                              <p className="font-medium text-white">{item.label}</p>
+                              <p className="mt-1 text-sm text-slate-400">{item.description}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setPreferences((current) => ({ ...current, [item.key]: !enabled }))}
+                              className={`relative h-7 w-12 shrink-0 rounded-full border transition ${enabled ? "border-emerald-400/50 bg-emerald-500/20" : "border-white/10 bg-white/5"}`}
+                              aria-label={`Toggle ${item.label}`}
+                            >
+                              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${enabled ? "left-6" : "left-1"}`} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  <section className="border-t border-white/10 pt-8">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm text-slate-300">Account status</div>
+                      <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200">Active</span>
+                    </div>
+                  </section>
                 </div>
               </div>
             </section>
