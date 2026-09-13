@@ -277,7 +277,7 @@ export default function DashboardPage() {
               {metricCards.map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-[20px] border border-white/10 bg-[#111820] p-4"
+                  className="rounded-[20px] border border-white/10 bg-[#111820] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
                 >
                   <div className="text-[12px] font-medium uppercase tracking-[0.14em] text-slate-400">{card.label}</div>
                   <div className="mt-3 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">{card.value}</div>
