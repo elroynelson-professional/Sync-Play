@@ -6,7 +6,7 @@ const path = require("path");
 const crypto = require("crypto");
 const { Server } = require("socket.io");
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3002;
 const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
 const uploadDirectory = path.join(__dirname, "uploads");
 const dataDirectory = path.join(__dirname, "data");
