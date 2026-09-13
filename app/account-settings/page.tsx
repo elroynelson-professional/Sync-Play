@@ -32,7 +32,7 @@ export default function AccountSettingsPage() {
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPasswordField, setShowNewPasswordField] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [status, setStatus] = useState("");
 
@@ -86,18 +86,8 @@ export default function AccountSettingsPage() {
 
     setCurrentPassword("");
     setNewPassword("");
-    setShowNewPasswordField(false);
+    setShowNewPassword(false);
     setStatus("Password changed successfully.");
-  }
-
-  function handleChangePasswordClick() {
-    if (!showNewPasswordField) {
-      setShowNewPasswordField(true);
-      setStatus("");
-      return;
-    }
-
-    changePassword();
   }
 
   function signOut() {
@@ -230,18 +220,18 @@ export default function AccountSettingsPage() {
                   <span className="mb-3 block text-[1.4rem] text-slate-100">New password</span>
                   <div className="flex items-center gap-3 rounded-[1.5rem] border border-white/10 bg-[#0a0a0a] px-5 py-4">
                     <input
-                      type={showCurrentPassword ? "text" : "password"}
+                      type={showNewPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
                       className="w-full bg-transparent text-[1.15rem] text-white outline-none placeholder:text-slate-500"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowCurrentPassword((value) => !value)}
+                      onClick={() => setShowNewPassword((value) => !value)}
                       className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1.05rem] text-slate-300 transition hover:text-white"
-                      aria-label={showCurrentPassword ? "Hide new password" : "Show new password"}
+                      aria-label={showNewPassword ? "Hide new password" : "Show new password"}
                     >
-                      {showCurrentPassword ? "◉" : "◌"}
+                      {showNewPassword ? "◉" : "◌"}
                     </button>
                   </div>
                 </label>
@@ -252,7 +242,7 @@ export default function AccountSettingsPage() {
               <div className="mb-3 text-[1.05rem] font-semibold text-white">Account security</div>
               <p className="mb-4 text-sm text-slate-400">Manage your account security.</p>
               <div className="flex items-center gap-3">
-                <button type="button" className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-sm font-medium text-white transition hover:bg-white/5">
+                <button type="button" onClick={signOut} className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-sm font-medium text-white transition hover:bg-white/5">
                   <span>⎋</span>
                   Log out
                 </button>

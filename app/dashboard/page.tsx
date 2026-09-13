@@ -345,22 +345,23 @@ export default function DashboardPage() {
                   </div>
 
                   <div>
-                    <div className="mb-3 text-[1.05rem] font-semibold text-white">Password</div>
-                    <p className="mb-3 text-sm text-slate-400">Modify your current password.</p>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="mb-4 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">Password</div>
+                    <p className="mb-6 text-[1.1rem] text-slate-300">Modify your current password.</p>
+
+                    <div className="grid gap-6 md:grid-cols-2">
                       <label className="block">
-                        <span className="mb-2 block text-sm text-slate-300">Current password</span>
-                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white">
-                          <span className="tracking-[0.32em]">••••••••</span>
-                          <span className="ml-auto text-slate-400">◌</span>
+                        <span className="mb-3 block text-[1.1rem] text-slate-100">Current password</span>
+                        <div className="flex items-center gap-3 rounded-[1.3rem] border border-white/10 bg-[#0a0a0a] px-4 py-3.5">
+                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1rem] text-white outline-none" />
+                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1rem] text-slate-300">◌</button>
                         </div>
                       </label>
 
                       <label className="block">
-                        <span className="mb-2 block text-sm text-slate-300">New password</span>
-                        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white">
-                          <span className="tracking-[0.32em]">••••••••</span>
-                          <span className="ml-auto text-slate-400">◌</span>
+                        <span className="mb-3 block text-[1.1rem] text-slate-100">New password</span>
+                        <div className="flex items-center gap-3 rounded-[1.3rem] border border-white/10 bg-[#0a0a0a] px-4 py-3.5">
+                          <input type="password" value="" readOnly className="w-full bg-transparent text-[1rem] text-white outline-none" />
+                          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[1rem] text-slate-300">◌</button>
                         </div>
                       </label>
                     </div>
@@ -370,7 +371,7 @@ export default function DashboardPage() {
                     <div className="mb-3 text-[1.05rem] font-semibold text-white">Account security</div>
                     <p className="mb-4 text-sm text-slate-400">Manage your account security.</p>
                     <div className="flex items-center gap-3">
-                      <button type="button" className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-sm font-medium text-white transition hover:bg-white/5">
+                      <button type="button" onClick={signOut} className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2.5 text-sm font-medium text-white transition hover:bg-white/5">
                         <span>⎋</span>
                         Log out
                       </button>
