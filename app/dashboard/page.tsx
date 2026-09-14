@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { socketUrl } from "../lib/socket";
+import { socket, socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 
 type AccountUser = {
@@ -21,6 +21,7 @@ type DirectMessage = {
   text: string;
   createdAt: number;
   read: boolean;
+  recipientName?: string;
 };
 
 type DashboardRoom = {
@@ -42,28 +43,6 @@ type DashboardData = {
 };
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
-const INBOX_MESSAGES_KEY = "syncplay-inbox-messages-v1";
-
-const initialInboxMessages: DirectMessage[] = [
-  {
-    id: "message-ava-1",
-    senderId: "friend-ava",
-    senderName: "Ava Brooks",
-    recipientId: "guest-user",
-    text: "Movie night is starting soon. Want to join us?",
-    createdAt: Date.now() - 1000 * 60 * 18,
-    read: false,
-  },
-  {
-    id: "message-kai-1",
-    senderId: "friend-kai",
-    senderName: "Kai Chen",
-    recipientId: "guest-user",
-    text: "I found a great episode for our next watch party.",
-    createdAt: Date.now() - 1000 * 60 * 95,
-    read: true,
-  },
-];
 
 function readActiveUser(): AccountUser | null {
   if (typeof window === "undefined") return null;
@@ -94,7 +73,7 @@ export default function DashboardPage() {
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
-  const [inboxMessages, setInboxMessages] = useState<DirectMessage[]>(initialInboxMessages);
+  const [inboxMessages, setInboxMessages] = useState<DirectMessage[]>([]);
   const [messageDraft, setMessageDraft] = useState("");
   const [messageRecipient, setMessageRecipient] = useState("Ava Brooks");
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -117,17 +96,6 @@ export default function DashboardPage() {
       window.sessionStorage.removeItem("syncplay-room-error");
     }
 
-    const storedMessages = window.localStorage.getItem(INBOX_MESSAGES_KEY);
-    if (storedMessages) {
-      try {
-        setInboxMessages(JSON.parse(storedMessages) as DirectMessage[]);
-      } catch {
-        window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(initialInboxMessages));
-      }
-    } else {
-      window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(initialInboxMessages));
-    }
-
     fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
       .then(async (response) => {
         if (!response.ok) {
@@ -143,6 +111,11 @@ export default function DashboardPage() {
 
         setUser(payload.user);
         window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(payload.user));
+        const messagesResponse = await fetch(`${socketUrl}/api/messages`, { credentials: "include" });
+        if (messagesResponse.ok) {
+          const messagesPayload = (await messagesResponse.json()) as { messages?: DirectMessage[] };
+          setInboxMessages(messagesPayload.messages || []);
+        }
         const dashboardResponse = await fetch(`${socketUrl}/api/dashboard`, { credentials: "include" });
         if (dashboardResponse.ok) {
           setDashboardData((await dashboardResponse.json()) as DashboardData);
@@ -150,6 +123,25 @@ export default function DashboardPage() {
       })
       .catch(() => router.replace("/"));
   }, [router]);
+
+  useEffect(() => {
+    function handleDirectMessage(event: Event) {
+      const message = (event as CustomEvent<DirectMessage>).detail;
+      setInboxMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
+    }
+
+    if (!socket.connected) socket.connect();
+    if (user) socket.emit("identify", { userId: user.id });
+    window.addEventListener("syncplay-direct-message", handleDirectMessage);
+    socket.on("direct-message", (message: DirectMessage) => {
+      setInboxMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
+    });
+
+    return () => {
+      window.removeEventListener("syncplay-direct-message", handleDirectMessage);
+      socket.off("direct-message");
+    };
+  }, [user]);
 
   const filteredRooms = (dashboardData?.rooms ?? []).filter((room) => {
     const query = searchTerm.trim().toLowerCase();
@@ -179,36 +171,15 @@ export default function DashboardPage() {
   function openInbox() {
     setIsInboxOpen(true);
     setSelectedConversation(null);
-    setInboxMessages((current) => {
-      const nextMessages = current.map((message) => (
-        message.recipientId === user?.id ? { ...message, read: true } : message
-      ));
-      window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(nextMessages));
-      return nextMessages;
-    });
   }
 
   function sendDirectMessage() {
     const text = messageDraft.trim();
     if (!text || !user) return;
 
-    const friend = messageRecipient === "Kai Chen"
-      ? { id: "friend-kai", name: "Kai Chen" }
-      : { id: "friend-ava", name: "Ava Brooks" };
-    const nextMessage: DirectMessage = {
-      id: `message-${Date.now()}`,
-      senderId: user.id,
-      senderName: user.name,
-      recipientId: friend.id,
-      text,
-      createdAt: Date.now(),
-      read: true,
-    };
-    setInboxMessages((current) => {
-      const nextMessages = [...current, nextMessage];
-      window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(nextMessages));
-      return nextMessages;
-    });
+    const recipient = inboxMessages.find((message) => message.senderName === messageRecipient)?.senderId;
+    if (!recipient) return;
+    socket.emit("direct-message", { recipientId: recipient, text });
     setMessageDraft("");
   }
 
@@ -401,9 +372,8 @@ export default function DashboardPage() {
 
                   <div className="p-4 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Messages</div>
                   <div className="space-y-1 px-2 pb-4">
-                    {["Ava Brooks", "Kai Chen"].map((friendName) => {
-                      const friendId = friendName === "Ava Brooks" ? "friend-ava" : "friend-kai";
-                      const friendMessages = inboxMessages.filter((message) => message.senderName === friendName || (message.senderId === user.id && message.recipientId === friendId));
+                    {[...new Set(inboxMessages.map((message) => message.senderId === user.id ? message.recipientName : message.senderName).filter((name): name is string => Boolean(name)))].map((friendName) => {
+                      const friendMessages = inboxMessages.filter((message) => message.senderName === friendName || message.recipientName === friendName);
                       const latestMessage = friendMessages[friendMessages.length - 1];
                       const unread = inboxMessages.some((message) => message.senderName === friendName && !message.read);
 
@@ -414,11 +384,6 @@ export default function DashboardPage() {
                           onClick={() => {
                             setSelectedConversation(friendName);
                             setMessageRecipient(friendName);
-                            setInboxMessages((current) => {
-                              const nextMessages = current.map((message) => message.senderName === friendName ? { ...message, read: true } : message);
-                              window.localStorage.setItem(INBOX_MESSAGES_KEY, JSON.stringify(nextMessages));
-                              return nextMessages;
-                            });
                           }}
                           className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${selectedConversation === friendName ? "bg-emerald-500/15" : "hover:bg-white/5"}`}
                         >

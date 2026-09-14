@@ -718,6 +718,28 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/messages") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      const messages = await database.collection("directMessages")
+        .find({ $or: [{ senderId: user.id }, { recipientId: user.id }] })
+        .sort({ createdAt: 1 })
+        .limit(500)
+        .toArray();
+      writeJson(response, 200, { messages: messages.map(({ _id, ...message }) => ({ ...message, id: message.id || String(_id) })) }, request);
+    } catch (error) {
+      console.error("Messages data request failed:", error);
+      writeJson(response, 503, { error: "Messages are temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/api/friends/requests") {
     try {
       const user = await getAuthenticatedUser(request);
@@ -864,6 +886,12 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
+  socket.on("identify", ({ userId }) => {
+    if (typeof userId === "string" && userId) {
+      socket.data.userId = userId;
+    }
+  });
+
   socket.on("create-room", ({ roomId, name, userId }) => {
     const normalizedRoomId = (roomId || createRoomCode()).toUpperCase();
     let room = getRoom(normalizedRoomId);
@@ -1168,6 +1196,38 @@ io.on("connection", (socket) => {
     }
 
     io.to(roomId).emit("chat-message", message);
+  });
+
+  socket.on("direct-message", async ({ recipientId, text }) => {
+    const senderId = socket.data.userId;
+    const normalizedText = typeof text === "string" ? text.trim().slice(0, 1000) : "";
+    if (!senderId || typeof recipientId !== "string" || !normalizedText) return;
+
+    try {
+      const database = await getAuthDatabase();
+      const [sender, recipient] = await Promise.all([
+        database.collection("users").findOne({ id: senderId }, { projection: { name: 1 } }),
+        database.collection("users").findOne({ id: recipientId }, { projection: { name: 1 } }),
+      ]);
+      if (!sender || !recipient) return;
+
+      const message = {
+        id: crypto.randomUUID(),
+        senderId,
+        senderName: sender.name,
+        recipientId,
+        recipientName: recipient.name,
+        text: normalizedText,
+        createdAt: Date.now(),
+        read: false,
+      };
+      await database.collection("directMessages").insertOne(message);
+      const targetSockets = [...io.sockets.sockets.values()].filter((connectedSocket) => connectedSocket.data.userId === recipientId);
+      socket.emit("direct-message", message);
+      targetSockets.forEach((targetSocket) => targetSocket.emit("direct-message", message));
+    } catch (error) {
+      console.error("Direct message failed:", error);
+    }
   });
 
   socket.on("track-ended", ({ trackId, videoId }) => {
