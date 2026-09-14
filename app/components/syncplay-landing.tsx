@@ -25,6 +25,9 @@ export function SyncPlayLanding() {
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
+  const [otpInput, setOtpInput] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpPending, setIsOtpPending] = useState(false);
   const [authMessage, setAuthMessage] = useState("Create your account to start watching together.");
   const [activeUser, setActiveUser] = useState<{ id: string; name: string; email: string; createdAt: string } | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -71,9 +74,10 @@ export function SyncPlayLanding() {
       nameInput.trim().length >= 2 &&
       trimmedEmail.length > 0 &&
       trimmedPassword.length >= 6 &&
-      confirmPasswordInput === trimmedPassword
+      confirmPasswordInput === trimmedPassword &&
+      otpInput.trim().length === 6
     );
-  }, [authMode, confirmPasswordInput, emailInput, nameInput, passwordInput]);
+  }, [authMode, confirmPasswordInput, emailInput, nameInput, otpInput, passwordInput]);
 
   function storeActiveUser(user: { id: string; name: string; email: string; createdAt: string } | null, token?: string) {
     if (typeof window === "undefined") return;
@@ -104,6 +108,25 @@ export function SyncPlayLanding() {
     router.replace("/");
   }
 
+  async function requestVerificationCode() {
+    setIsOtpPending(true);
+    try {
+      const response = await fetch(`${socketUrl}/api/auth/request-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: emailInput.trim().toLowerCase() }),
+      });
+      const payload = (await response.json()) as { error?: string; message?: string };
+      setAuthMessage(payload.error || payload.message || "Verification code sent.");
+      if (response.ok) setIsOtpSent(true);
+    } catch {
+      setAuthMessage("The authentication server is unavailable. Try again shortly.");
+    } finally {
+      setIsOtpPending(false);
+    }
+  }
+
   async function handleAuthSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -118,6 +141,7 @@ export function SyncPlayLanding() {
           name: nameInput.trim(),
           email: emailInput.trim().toLowerCase(),
           password: passwordInput,
+          otp: otpInput,
         }),
       });
       const payload = (await response.json()) as { user?: { id: string; name: string; email: string; createdAt: string }; error?: string };
@@ -135,6 +159,8 @@ export function SyncPlayLanding() {
       setEmailInput("");
       setPasswordInput("");
       setConfirmPasswordInput("");
+      setOtpInput("");
+      setIsOtpSent(false);
       storeActiveUser(payload.user);
       router.replace("/dashboard");
     } catch {
@@ -332,6 +358,30 @@ export function SyncPlayLanding() {
                     />
                   </label>
 
+                  {authMode === "signup" ? (
+                    <div className="space-y-2">
+                      <span className="text-sm font-medium text-slate-200">Email verification</span>
+                      <div className="flex gap-2">
+                        <input
+                          value={otpInput}
+                          onChange={(event) => setOtpInput(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                          inputMode="numeric"
+                          placeholder="6-digit code"
+                          className="syncplay-input min-w-0 flex-1 rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-white/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={requestVerificationCode}
+                          disabled={isOtpPending || !/^\S+@\S+\.\S+$/.test(emailInput.trim())}
+                          className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isOtpPending ? "Sending..." : isOtpSent ? "Resend code" : "Send code"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-400">We will send a verification code to confirm this email belongs to you.</p>
+                    </div>
+                  ) : null}
+
                   <label className="block space-y-2">
                     <span className="text-sm font-medium text-slate-200">Password</span>
                     <input
@@ -363,6 +413,16 @@ export function SyncPlayLanding() {
                   >
                     {authMode === "login" ? "Log in" : "Create account"}
                   </button>
+
+                  {authMode === "login" ? (
+                    <button
+                      type="button"
+                      onClick={() => { window.location.href = `${socketUrl}/api/auth/google`; }}
+                      className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 font-semibold text-black transition hover:bg-slate-200"
+                    >
+                      Continue with Google
+                    </button>
+                  ) : null}
                 </form>
               )}
 

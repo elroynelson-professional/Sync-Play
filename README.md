@@ -52,6 +52,26 @@ NEXT_PUBLIC_SOCKET_URL=https://your-socket-server.example.com
 
 The Socket.IO server also needs a public URL and must allow cross-origin traffic from the frontend.
 
+### Authentication environment variables
+
+The server-backed authentication flow uses MongoDB Atlas, Gmail SMTP, and Google OAuth. Configure these variables on the realtime server (Render):
+
+```bash
+MONGODB_URI=mongodb+srv://...
+MONGODB_DB=syncplay
+GMAIL_USER=your-address@gmail.com
+GMAIL_APP_PASSWORD=your-16-character-app-password
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI=https://syncplay-server-mk3e.onrender.com/api/auth/google/callback
+FRONTEND_ORIGIN=https://sync-play-blue.vercel.app
+NODE_ENV=production
+```
+
+Create a Google OAuth web application and add the callback URL above as an authorized redirect URI. For Gmail, enable 2-Step Verification and create an App Password; do not use your normal Gmail password. Add the Vercel origin to the Google OAuth authorized JavaScript origins if the provider requests it.
+
+Signup sends a six-digit email verification code through Gmail. Codes expire after ten minutes and accounts cannot be created until the code is verified. Google sign-in uses Google-verified email addresses and does not require a separate OTP.
+
 ### Simple deployment layout
 
 - Deploy the Next.js app to Vercel or similar.

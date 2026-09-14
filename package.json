@@ -12,8 +12,11 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "google-auth-library": "^11.0.2",
+    "mongodb": "^7.6.0",
     "mysql2": "^3.24.4",
     "next": "16.3.4",
+    "nodemailer": "^10.0.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "socket.io": "^4.8.3",

@@ -5,6 +5,9 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const { MongoClient } = require("mongodb");
+const nodemailer = require("nodemailer");
+const { OAuth2Client } = require("google-auth-library");
 const { Server } = require("socket.io");
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3002;
@@ -12,7 +15,9 @@ const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
 const uploadDirectory = path.join(__dirname, "uploads");
 const dataDirectory = path.join(__dirname, "data");
 const rooms = new Map();
-const authDataPath = path.join(dataDirectory, "auth.json");
+const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+const mongoClient = process.env.MONGODB_URI ? new MongoClient(process.env.MONGODB_URI) : null;
+let mongoDatabasePromise = null;
 const allowedFrontendOrigins = (process.env.FRONTEND_ORIGINS || process.env.FRONTEND_ORIGIN || "http://localhost:3000,https://sync-play-blue.vercel.app")
   .split(",")
   .map((origin) => origin.trim())
@@ -23,30 +28,48 @@ const SESSION_COOKIE = "syncplay-session";
 fs.mkdirSync(uploadDirectory, { recursive: true });
 fs.mkdirSync(dataDirectory, { recursive: true });
 
-function readAuthData() {
-  try {
-    const raw = fs.readFileSync(authDataPath, "utf8");
-    const data = JSON.parse(raw);
-    return {
-      users: Array.isArray(data.users) ? data.users : [],
-      sessions: Array.isArray(data.sessions) ? data.sessions : [],
-    };
-  } catch {
-    return { users: [], sessions: [] };
+async function getAuthDatabase() {
+  if (!mongoClient) {
+    throw new Error("MONGODB_URI is not configured.");
   }
+
+  if (!mongoDatabasePromise) {
+    mongoDatabasePromise = mongoClient.connect().then((client) => {
+      const database = client.db(process.env.MONGODB_DB || "syncplay");
+      database.collection("users").createIndex({ email: 1 }, { unique: true }).catch(() => undefined);
+      database.collection("sessions").createIndex({ tokenHash: 1 }, { unique: true }).catch(() => undefined);
+      database.collection("otpRequests").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }).catch(() => undefined);
+      return database;
+    });
+  }
+
+  return mongoDatabasePromise;
 }
 
-function writeAuthData(data) {
-  const temporaryPath = `${authDataPath}.tmp`;
-  fs.writeFileSync(temporaryPath, JSON.stringify(data, null, 2));
-  fs.renameSync(temporaryPath, authDataPath);
+function createMailer() {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    throw new Error("GMAIL_USER and GMAIL_APP_PASSWORD are not configured.");
+  }
+
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
 }
 
-function updateAuthData(update) {
-  const data = readAuthData();
-  update(data);
-  writeAuthData(data);
-  return data;
+function getGoogleClient() {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
+    throw new Error("Google OAuth environment variables are not configured.");
+  }
+
+  return new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
 }
 
 function parseCookies(request) {
@@ -102,16 +125,14 @@ async function getAuthenticatedUser(request) {
   const token = parseCookies(request)[SESSION_COOKIE];
   if (!token) return null;
 
-  const data = readAuthData();
+  const database = await getAuthDatabase();
   const tokenHash = hashSessionToken(token);
-  const session = data.sessions.find((entry) => entry.tokenHash === tokenHash);
-  const sessionUser = session ? data.users.find((entry) => entry.id === session.userId) : null;
+  const session = await database.collection("sessions").findOne({ tokenHash });
+  const sessionUser = session ? await database.collection("users").findOne({ id: session.userId }) : null;
 
   if (!session || !sessionUser || session.expiresAt < Date.now()) {
     if (session) {
-      updateAuthData((current) => {
-        current.sessions = current.sessions.filter((entry) => entry.tokenHash !== tokenHash);
-      });
+      await database.collection("sessions").deleteOne({ tokenHash });
     }
     return null;
   }
@@ -127,10 +148,9 @@ async function getAuthenticatedUser(request) {
 async function createSession(userId, response) {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = Date.now() + 1000 * 60 * 60 * 24 * 30;
-  updateAuthData((data) => {
-    data.sessions = data.sessions.filter((session) => session.userId !== userId && session.expiresAt >= Date.now());
-    data.sessions.push({ tokenHash: hashSessionToken(token), userId, expiresAt });
-  });
+  const database = await getAuthDatabase();
+  await database.collection("sessions").deleteMany({ userId });
+  await database.collection("sessions").insertOne({ tokenHash: hashSessionToken(token), userId, expiresAt });
   setSessionCookie(response, token, 60 * 60 * 24 * 30);
 }
 
@@ -449,12 +469,112 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/auth/google") {
+    try {
+      const googleClient = getGoogleClient();
+      const authorizationUrl = googleClient.generateAuthUrl({
+        access_type: "offline",
+        scope: ["openid", "email", "profile"],
+        prompt: "select_account",
+      });
+      response.writeHead(302, { Location: authorizationUrl });
+      response.end();
+    } catch (error) {
+      writeJson(response, 503, { error: error.message }, request);
+    }
+    return;
+  }
+
+  if (request.method === "GET" && requestUrl.pathname === "/api/auth/google/callback") {
+    try {
+      const code = requestUrl.searchParams.get("code");
+      if (!code) {
+        response.writeHead(302, { Location: `${frontendOrigin}/?authError=google_cancelled` });
+        response.end();
+        return;
+      }
+
+      const googleClient = getGoogleClient();
+      const { tokens } = await googleClient.getToken(code);
+      const ticket = await googleClient.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const profile = ticket.getPayload();
+      if (!profile?.email || !profile.email_verified) {
+        throw new Error("Google did not provide a verified email address.");
+      }
+
+      const database = await getAuthDatabase();
+      const user = {
+        id: `google-${profile.sub}`,
+        name: profile.name || profile.email.split("@")[0],
+        email: profile.email.toLowerCase(),
+        createdAt: new Date().toISOString(),
+        provider: "google",
+      };
+      await database.collection("users").updateOne(
+        { email: user.email },
+        { $set: { name: user.name, provider: user.provider }, $setOnInsert: user },
+        { upsert: true }
+      );
+      const savedUser = await database.collection("users").findOne({ email: user.email });
+      await createSession(savedUser.id, response);
+      response.writeHead(302, { Location: `${frontendOrigin}/?auth=google-success` });
+      response.end();
+    } catch (error) {
+      console.error("Google authentication failed:", error);
+      response.writeHead(302, { Location: `${frontendOrigin}/?authError=google_failed` });
+      response.end();
+    }
+    return;
+  }
+
+  if (request.method === "POST" && requestUrl.pathname === "/api/auth/request-otp") {
+    try {
+      const payload = await readJsonBody(request);
+      const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        writeJson(response, 400, { error: "Enter a valid email address." }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      const existingUser = await database.collection("users").findOne({ email });
+      if (existingUser) {
+        writeJson(response, 409, { error: "An account with that email already exists." }, request);
+        return;
+      }
+
+      const code = String(crypto.randomInt(100000, 1000000));
+      const codeHash = await bcrypt.hash(code, 10);
+      await database.collection("otpRequests").replaceOne(
+        { email },
+        { email, codeHash, expiresAt: Date.now() + 10 * 60 * 1000 },
+        { upsert: true }
+      );
+      await createMailer().sendMail({
+        from: process.env.GMAIL_USER,
+        to: email,
+        subject: "Your SyncPlay verification code",
+        text: `Your SyncPlay verification code is ${code}. It expires in 10 minutes.`,
+        html: `<p>Your SyncPlay verification code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`,
+      });
+      writeJson(response, 200, { message: "Verification code sent." }, request);
+    } catch (error) {
+      console.error("OTP request failed:", error);
+      writeJson(response, 503, { error: "We could not send a verification code. Check the email service configuration." }, request);
+    }
+    return;
+  }
+
   if (request.method === "POST" && ["/api/auth/signup", "/api/auth/login"].includes(requestUrl.pathname)) {
     try {
       const payload = await readJsonBody(request);
       const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
       const password = typeof payload.password === "string" ? payload.password : "";
       const name = typeof payload.name === "string" ? payload.name.trim() : "";
+      const otp = typeof payload.otp === "string" ? payload.otp.trim() : "";
 
       if (!/^\S+@\S+\.\S+$/.test(email) || password.length < 6) {
         writeJson(response, 400, { error: "Enter a valid email and a password with at least 6 characters." }, request);
@@ -467,10 +587,16 @@ const server = http.createServer(async (request, response) => {
           return;
         }
 
-        const authData = readAuthData();
-        const existingUser = authData.users.find((user) => user.email === email);
+        const database = await getAuthDatabase();
+        const existingUser = await database.collection("users").findOne({ email });
         if (existingUser) {
           writeJson(response, 409, { error: "An account with that email already exists." }, request);
+          return;
+        }
+
+        const otpRequest = await database.collection("otpRequests").findOne({ email });
+        if (!otpRequest || otpRequest.expiresAt < Date.now() || !(await bcrypt.compare(otp, otpRequest.codeHash))) {
+          writeJson(response, 400, { error: "Enter the valid verification code sent to your email." }, request);
           return;
         }
 
@@ -481,21 +607,15 @@ const server = http.createServer(async (request, response) => {
           createdAt: new Date().toISOString(),
         };
         const passwordHash = await bcrypt.hash(password, 12);
-        updateAuthData((data) => {
-          data.users.push({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            passwordHash,
-            createdAt: user.createdAt,
-          });
-        });
+        await database.collection("users").insertOne({ ...user, passwordHash, provider: "password" });
+        await database.collection("otpRequests").deleteOne({ email });
         await createSession(user.id, response);
         writeJson(response, 201, { user }, request);
         return;
       }
 
-      const storedUser = readAuthData().users.find((user) => user.email === email);
+      const database = await getAuthDatabase();
+      const storedUser = await database.collection("users").findOne({ email });
       if (!storedUser || !(await bcrypt.compare(password, storedUser.passwordHash))) {
         writeJson(response, 401, { error: "Email or password is incorrect." }, request);
         return;
@@ -538,9 +658,8 @@ const server = http.createServer(async (request, response) => {
     const token = parseCookies(request)[SESSION_COOKIE];
     if (token) {
       const tokenHash = hashSessionToken(token);
-      updateAuthData((data) => {
-        data.sessions = data.sessions.filter((session) => session.tokenHash !== tokenHash);
-      });
+      const database = await getAuthDatabase();
+      await database.collection("sessions").deleteOne({ tokenHash });
     }
     clearSessionCookie(response);
     writeJson(response, 200, { ok: true }, request);
