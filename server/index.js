@@ -458,10 +458,12 @@ const server = http.createServer(async (request, response) => {
 
   if (request.method === "POST" && requestUrl.pathname === "/api/auth/request-otp") {
     let database;
+    let email = "";
+    let code = "";
 
     try {
       const payload = await readJsonBody(request);
-      const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
+      email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
       if (!/^\S+@\S+\.\S+$/.test(email)) {
         writeJson(response, 400, { error: "Enter a valid email address." }, request);
         return;
@@ -474,7 +476,7 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const code = String(crypto.randomInt(100000, 1000000));
+      code = String(crypto.randomInt(100000, 1000000));
       const codeHash = await bcrypt.hash(code, 10);
       await database.collection("otpRequests").replaceOne(
         { email },
