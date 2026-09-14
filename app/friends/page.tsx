@@ -34,18 +34,6 @@ const navItems = [
   { label: "History", href: "/history", icon: "◌" },
 ];
 
-const initialFriends: FriendItem[] = [
-  { name: "Ava Brooks", status: "Online", mood: "Watching a new thriller", avatar: "AB", accent: "from-emerald-400 to-cyan-400" },
-  { name: "Kai Chen", status: "In room", mood: "Anime Sync • 11:15 PM", avatar: "KC", accent: "from-violet-400 to-indigo-500" },
-  { name: "Leo Grant", status: "Away", mood: "Queued a football match", avatar: "LG", accent: "from-amber-400 to-orange-500" },
-  { name: "Nina Patel", status: "Online", mood: "Studying with a room open", avatar: "NP", accent: "from-pink-400 to-rose-500" },
-];
-
-const initialFriendRequests: FriendRequest[] = [
-  { name: "Milo Reed", note: "Wants to join your watch list" },
-  { name: "Sophie Nguyen", note: "Sent a room invite" },
-];
-
 function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
@@ -65,8 +53,8 @@ export default function FriendsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<AccountUser | null>(null);
-  const [friends, setFriends] = useState<FriendItem[]>(initialFriends);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>(initialFriendRequests);
+  const [friends, setFriends] = useState<FriendItem[]>([]);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
@@ -75,22 +63,37 @@ export default function FriendsPage() {
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
 
   useEffect(() => {
-    const activeUser = readActiveUser() ?? {
-      id: "guest-user",
-      name: "Totok Michael",
-      email: "tmichael20@mail.com",
-      createdAt: new Date().toISOString(),
-    };
-
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
     if (invalidCodeMessage) {
       setRoomError(invalidCodeMessage);
       window.sessionStorage.removeItem("syncplay-room-error");
     }
 
-    setUser(activeUser);
-    setRoomDisplayName(activeUser.name);
-  }, []);
+    fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) {
+          router.replace("/");
+          return;
+        }
+
+        const payload = (await response.json()) as { user?: AccountUser };
+        if (!payload.user) {
+          router.replace("/");
+          return;
+        }
+
+        setUser(payload.user);
+        setRoomDisplayName(payload.user.name);
+        window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(payload.user));
+        const friendsResponse = await fetch(`${socketUrl}/api/friends`, { credentials: "include" });
+        if (friendsResponse.ok) {
+          const friendsPayload = (await friendsResponse.json()) as { friends?: FriendItem[]; requests?: FriendRequest[] };
+          setFriends(friendsPayload.friends || []);
+          setFriendRequests(friendsPayload.requests || []);
+        }
+      })
+      .catch(() => router.replace("/"));
+  }, [router]);
 
   const filteredFriends = friends.filter((friend) => {
     const query = searchTerm.trim().toLowerCase();
@@ -162,8 +165,7 @@ export default function FriendsPage() {
   }
 
   function handleAddFriend() {
-    const nextName = `New Friend ${friends.length + 1}`;
-    setFriendRequests((current) => [{ name: nextName, note: "Sent a watch invite" }, ...current]);
+    setRoomError("Friend requests will be available when friend search is connected to your account.");
   }
 
   function acceptFriendRequest(name: string) {
@@ -313,7 +315,7 @@ export default function FriendsPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {filteredFriends.map((friend) => (
+                  {filteredFriends.length > 0 ? filteredFriends.map((friend) => (
                     <div key={friend.name} className="flex items-center justify-between rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
                       <div className="flex items-center gap-3">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">
@@ -333,7 +335,11 @@ export default function FriendsPage() {
                         {friend.status}
                       </span>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-5 text-sm text-slate-400">
+                      You do not have any friends yet. Add friends to build your circle.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -343,7 +349,7 @@ export default function FriendsPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {friendRequests.map((request) => (
+                  {friendRequests.length > 0 ? friendRequests.map((request) => (
                     <div key={request.name} className="rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
                       <div className="text-[15px] font-medium text-white">{request.name}</div>
                       <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
@@ -356,7 +362,11 @@ export default function FriendsPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-5 text-sm text-slate-400">
+                      No pending friend requests.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

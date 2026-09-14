@@ -654,6 +654,40 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/friends") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      const account = await database.collection("users").findOne({ id: user.id }, { projection: { friends: 1, friendRequests: 1 } });
+      const friendIds = account?.friends || [];
+      const requestIds = account?.friendRequests || [];
+      const [friendUsers, requestUsers] = await Promise.all([
+        database.collection("users").find({ id: { $in: friendIds } }).project({ id: 1, name: 1, email: 1 }).toArray(),
+        database.collection("users").find({ id: { $in: requestIds } }).project({ id: 1, name: 1 }).toArray(),
+      ]);
+
+      writeJson(response, 200, {
+        friends: friendUsers.map((friend) => ({
+          name: friend.name,
+          status: "Away",
+          mood: "Ready to watch together",
+          avatar: friend.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase(),
+          accent: "from-emerald-400 to-teal-500",
+        })),
+        requests: requestUsers.map((request) => ({ name: request.name, note: "Sent you a friend request" })),
+      }, request);
+    } catch (error) {
+      console.error("Friends data request failed:", error);
+      writeJson(response, 503, { error: "Friends data is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/api/auth/logout") {
     const token = parseCookies(request)[SESSION_COOKIE];
     if (token) {
