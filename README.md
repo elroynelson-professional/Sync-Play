@@ -28,6 +28,8 @@ npm run dev
 
 Then open `http://localhost:3000`.
 
+For local authentication, copy `.env.example` to `.env`, fill in your MongoDB Atlas and Resend values, then restart `npm run server`. The `.env` file is ignored by Git and must never be committed.
+
 ## Test the flow
 
 1. Open the app in one browser window.
