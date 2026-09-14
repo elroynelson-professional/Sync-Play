@@ -22,6 +22,7 @@ type FriendItem = {
 };
 
 type FriendRequest = {
+  id: string;
   name: string;
   note: string;
 };
@@ -61,6 +62,8 @@ export default function FriendsPage() {
   const [roomCode, setRoomCode] = useState("");
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
+  const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
+  const [friendEmail, setFriendEmail] = useState("");
 
   useEffect(() => {
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
@@ -164,38 +167,37 @@ export default function FriendsPage() {
     router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=guest&action=join`);
   }
 
-  function handleAddFriend() {
-    setRoomError("Friend requests will be available when friend search is connected to your account.");
-  }
-
-  function acceptFriendRequest(name: string) {
-    setFriendRequests((current) => current.filter((request) => request.name !== name));
-    setFriends((current) => {
-      if (current.some((friend) => friend.name === name)) {
-        return current;
-      }
-
-      return [
-        {
-          name,
-          status: "Online",
-          mood: "Ready to watch together",
-          avatar: name
-            .split(" ")
-            .slice(0, 2)
-            .map((part) => part[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase(),
-          accent: "from-emerald-400 to-teal-500",
-        },
-        ...current,
-      ];
+  async function handleAddFriend() {
+    const response = await fetch(`${socketUrl}/api/friends/requests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email: friendEmail.trim().toLowerCase() }),
     });
+    const payload = (await response.json()) as { error?: string; message?: string };
+    setRoomError(payload.error || payload.message || "");
+    if (response.ok) {
+      setFriendEmail("");
+      setIsAddFriendOpen(false);
+    }
   }
 
-  function ignoreFriendRequest(name: string) {
-    setFriendRequests((current) => current.filter((request) => request.name !== name));
+  async function acceptFriendRequest(name: string) {
+    const request = friendRequests.find((item) => item.name === name);
+    if (!request) return;
+    const response = await fetch(`${socketUrl}/api/friends/requests/${encodeURIComponent(request.id)}/accept`, { method: "POST", credentials: "include" });
+    if (response.ok) {
+      setFriendRequests((current) => current.filter((item) => item.name !== name));
+    }
+  }
+
+  async function ignoreFriendRequest(name: string) {
+    const request = friendRequests.find((item) => item.name === name);
+    if (!request) return;
+    const response = await fetch(`${socketUrl}/api/friends/requests/${encodeURIComponent(request.id)}/ignore`, { method: "POST", credentials: "include" });
+    if (response.ok) {
+      setFriendRequests((current) => current.filter((item) => item.name !== name));
+    }
   }
 
   function signOut() {
@@ -302,7 +304,7 @@ export default function FriendsPage() {
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Community</p>
                 <h1 className="mt-2 text-[2.1rem] font-semibold tracking-[-0.06em] text-white">Friends</h1>
               </div>
-              <button type="button" onClick={handleAddFriend} className="rounded-[14px] bg-emerald-500 px-4 py-2.5 text-[14px] font-medium text-[#03150a]">
+              <button type="button" onClick={() => setIsAddFriendOpen(true)} className="rounded-[14px] bg-emerald-500 px-4 py-2.5 text-[14px] font-medium text-[#03150a]">
                 Add friend
               </button>
             </div>
@@ -373,6 +375,25 @@ export default function FriendsPage() {
           </section>
         </div>
       </div>
+
+      {isAddFriendOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <form onSubmit={(event) => { event.preventDefault(); void handleAddFriend(); }} className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Community</p>
+                <h2 className="mt-2 text-2xl font-semibold text-white">Add a friend</h2>
+              </div>
+              <button type="button" onClick={() => setIsAddFriendOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300" aria-label="Close add friend dialog">×</button>
+            </div>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-slate-200">Friend email</span>
+              <input type="email" value={friendEmail} onChange={(event) => setFriendEmail(event.target.value)} placeholder="friend@example.com" autoFocus className="w-full rounded-2xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/60" />
+            </label>
+            <button type="submit" disabled={!friendEmail.trim()} className="mt-5 w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">Send friend request</button>
+          </form>
+        </div>
+      ) : null}
 
       {roomModalMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">

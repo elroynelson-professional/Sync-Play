@@ -679,11 +679,72 @@ const server = http.createServer(async (request, response) => {
           avatar: friend.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase(),
           accent: "from-emerald-400 to-teal-500",
         })),
-        requests: requestUsers.map((request) => ({ name: request.name, note: "Sent you a friend request" })),
+        requests: requestUsers.map((request) => ({ id: request.id, name: request.name, note: "Sent you a friend request" })),
       }, request);
     } catch (error) {
       console.error("Friends data request failed:", error);
       writeJson(response, 503, { error: "Friends data is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
+  if (request.method === "POST" && requestUrl.pathname === "/api/friends/requests") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
+      const database = await getAuthDatabase();
+      const target = await database.collection("users").findOne({ email });
+
+      if (!target) {
+        writeJson(response, 404, { error: "No SyncPlay account uses that email." }, request);
+        return;
+      }
+      if (target.id === user.id) {
+        writeJson(response, 400, { error: "You cannot add yourself." }, request);
+        return;
+      }
+
+      await database.collection("users").updateOne(
+        { id: target.id },
+        { $addToSet: { friendRequests: user.id } }
+      );
+      writeJson(response, 200, { message: "Friend request sent." }, request);
+    } catch (error) {
+      console.error("Friend request failed:", error);
+      writeJson(response, 503, { error: "Friend requests are temporarily unavailable." }, request);
+    }
+    return;
+  }
+
+  const friendActionMatch = requestUrl.pathname.match(/^\/api\/friends\/requests\/([^/]+)\/(accept|ignore)$/);
+  if (request.method === "POST" && friendActionMatch) {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const requesterId = decodeURIComponent(friendActionMatch[1]);
+      const action = friendActionMatch[2];
+      const database = await getAuthDatabase();
+      await database.collection("users").updateOne({ id: user.id }, { $pull: { friendRequests: requesterId } });
+
+      if (action === "accept") {
+        await database.collection("users").updateOne({ id: user.id }, { $addToSet: { friends: requesterId } });
+        await database.collection("users").updateOne({ id: requesterId }, { $addToSet: { friends: user.id } });
+      }
+
+      writeJson(response, 200, { message: action === "accept" ? "Friend request accepted." : "Friend request ignored." }, request);
+    } catch (error) {
+      console.error("Friend request action failed:", error);
+      writeJson(response, 503, { error: "Friend request action is temporarily unavailable." }, request);
     }
     return;
   }
