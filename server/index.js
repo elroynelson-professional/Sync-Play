@@ -6,7 +6,6 @@ const path = require("path");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { MongoClient } = require("mongodb");
-const nodemailer = require("nodemailer");
 const { Server } = require("socket.io");
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3002;
@@ -45,25 +44,30 @@ async function getAuthDatabase() {
   return mongoDatabasePromise;
 }
 
-function createMailer() {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    throw new Error("GMAIL_USER and GMAIL_APP_PASSWORD are not configured.");
+async function sendVerificationEmail({ recipient, code }) {
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+    throw new Error("RESEND_API_KEY and EMAIL_FROM are not configured.");
   }
 
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    family: 4,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM,
+      to: [recipient],
+      subject: "Your SyncPlay verification code",
+      text: `Your SyncPlay verification code is ${code}. It expires in 10 minutes.`,
+      html: `<p>Your SyncPlay verification code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`,
+    }),
   });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Resend returned ${response.status}: ${errorBody.slice(0, 300)}`);
+  }
 }
 
 function parseCookies(request) {
@@ -497,17 +501,11 @@ const server = http.createServer(async (request, response) => {
     }
 
     try {
-      await createMailer().sendMail({
-        from: process.env.GMAIL_USER,
-        to: email,
-        subject: "Your SyncPlay verification code",
-        text: `Your SyncPlay verification code is ${code}. It expires in 10 minutes.`,
-        html: `<p>Your SyncPlay verification code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`,
-      });
+      await sendVerificationEmail({ recipient: email, code });
       writeJson(response, 200, { message: "Verification code sent." }, request);
     } catch (error) {
       console.error("OTP email delivery failed:", error);
-      writeJson(response, 503, { error: "The email service is unavailable. Check GMAIL_USER and GMAIL_APP_PASSWORD." }, request);
+      writeJson(response, 503, { error: "The email service is unavailable. Check RESEND_API_KEY and EMAIL_FROM." }, request);
     }
     return;
   }

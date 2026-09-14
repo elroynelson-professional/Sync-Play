@@ -54,18 +54,18 @@ The Socket.IO server also needs a public URL and must allow cross-origin traffic
 
 ### Authentication environment variables
 
-The server-backed authentication flow uses MongoDB Atlas and Gmail SMTP. Configure these variables on the realtime server (Render):
+The server-backed authentication flow uses MongoDB Atlas and Resend. Configure these variables on the realtime server (Render):
 
 ```bash
 MONGODB_URI=mongodb+srv://...
 MONGODB_DB=syncplay
-GMAIL_USER=your-address@gmail.com
-GMAIL_APP_PASSWORD=your-16-character-app-password
+RESEND_API_KEY=re_...
+EMAIL_FROM=onboarding@resend.dev
 FRONTEND_ORIGIN=https://sync-play-blue.vercel.app
 NODE_ENV=production
 ```
 
-For Gmail, enable 2-Step Verification and create an App Password; do not use your normal Gmail password.
+For initial Resend testing, `onboarding@resend.dev` can only send to the email address associated with your Resend account. Verify a domain in Resend to send OTPs to other recipients, then use an address on that verified domain for `EMAIL_FROM`.
 
 Signup sends a six-digit email verification code through Gmail. Codes expire after ten minutes and accounts cannot be created until the code is verified.
 
