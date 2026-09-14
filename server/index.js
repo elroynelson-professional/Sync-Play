@@ -240,7 +240,7 @@ function createRoom(roomId, hostId, name) {
   return {
     roomId,
     hostId,
-    users: [{ id: hostId, name }],
+    users: [{ id: hostId, userId: null, name }],
     playback: createPlaybackState(),
     queue: [],
     history: [],
@@ -249,19 +249,32 @@ function createRoom(roomId, hostId, name) {
   };
 }
 
+async function recordDashboardActivity(userId, roomId, type, metadata = {}) {
+  if (!userId) return;
+
+  const database = await getAuthDatabase();
+  await database.collection("activity").insertOne({
+    userId,
+    roomId,
+    type,
+    createdAt: Date.now(),
+    ...metadata,
+  });
+}
+
 function getRoom(roomId) {
   return rooms.get(roomId);
 }
 
-function upsertUser(room, socketId, name) {
+function upsertUser(room, socketId, name, userId = null) {
   const index = room.users.findIndex((user) => user.id === socketId);
 
   if (index >= 0) {
-    room.users[index] = { id: socketId, name };
+    room.users[index] = { id: socketId, userId, name };
     return;
   }
 
-  room.users.push({ id: socketId, name });
+  room.users.push({ id: socketId, userId, name });
 }
 
 function broadcastRoom(io, roomId) {
@@ -596,6 +609,50 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/dashboard") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      const activities = await database.collection("activity").find({ userId: user.id }).sort({ createdAt: -1 }).limit(500).toArray();
+      const userRoomIds = new Set(activities.map((activity) => activity.roomId));
+      const liveRooms = [...rooms.values()]
+        .filter((room) => room.users.some((member) => member.userId === user.id) || userRoomIds.has(room.roomId))
+        .map((room) => ({
+          name: room.title || `Room ${room.roomId}`,
+          host: room.users.find((member) => member.id === room.hostId)?.name || "Host",
+          viewers: `${room.users.length} online`,
+          status: room.playback.videoId ? "Live" : "Idle",
+          code: room.roomId,
+        }));
+      const watchTimeSeconds = activities.reduce((total, activity) => total + (activity.type === "watch" ? activity.durationSeconds || 0 : 0), 0);
+      const dayKeys = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const activityBars = dayKeys.map((label, dayIndex) => ({
+        label,
+        value: activities.filter((activity) => new Date(activity.createdAt).getDay() === dayIndex).length,
+      }));
+      const maxActivity = Math.max(...activityBars.map((bar) => bar.value), 1);
+
+      writeJson(response, 200, {
+        metrics: {
+          activeRooms: liveRooms.length,
+          liveViewers: liveRooms.reduce((total, room) => total + Number.parseInt(room.viewers, 10), 0),
+          watchTime: `${Math.floor(watchTimeSeconds / 3600)}h ${Math.floor((watchTimeSeconds % 3600) / 60)}m`,
+        },
+        rooms: liveRooms,
+        activityBars: activityBars.map((bar) => ({ ...bar, value: Math.round((bar.value / maxActivity) * 100) })),
+      }, request);
+    } catch (error) {
+      console.error("Dashboard data request failed:", error);
+      writeJson(response, 503, { error: "Dashboard data is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/api/auth/logout") {
     const token = parseCookies(request)[SESSION_COOKIE];
     if (token) {
@@ -642,28 +699,31 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  socket.on("create-room", ({ roomId, name }) => {
+  socket.on("create-room", ({ roomId, name, userId }) => {
     const normalizedRoomId = (roomId || createRoomCode()).toUpperCase();
     let room = getRoom(normalizedRoomId);
 
     if (!room) {
       room = createRoom(normalizedRoomId, socket.id, name || "Host");
+      room.users[0].userId = userId || null;
       rooms.set(normalizedRoomId, room);
     } else {
       room.hostId = socket.id;
-      upsertUser(room, socket.id, name || "Host");
+      upsertUser(room, socket.id, name || "Host", userId);
     }
 
     socket.join(normalizedRoomId);
     socket.data.roomId = normalizedRoomId;
     socket.data.name = name || "Host";
+    socket.data.userId = userId || null;
     socket.data.role = "host";
 
     socket.emit("room-state", room);
     io.to(normalizedRoomId).emit("room-state", room);
+    recordDashboardActivity(userId, normalizedRoomId, "room-created").catch((error) => console.error("Activity record failed:", error));
   });
 
-  socket.on("join-room", ({ roomId, name }) => {
+  socket.on("join-room", ({ roomId, name, userId }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     const room = getRoom(normalizedRoomId);
 
@@ -672,15 +732,17 @@ io.on("connection", (socket) => {
       return;
     }
 
-    upsertUser(room, socket.id, name || "Guest");
+    upsertUser(room, socket.id, name || "Guest", userId);
 
     socket.join(normalizedRoomId);
     socket.data.roomId = normalizedRoomId;
     socket.data.name = name || "Guest";
+    socket.data.userId = userId || null;
     socket.data.role = "guest";
 
     socket.emit("room-state", room);
     io.to(normalizedRoomId).emit("room-state", room);
+    recordDashboardActivity(userId, normalizedRoomId, "room-joined").catch((error) => console.error("Activity record failed:", error));
   });
 
   socket.on("change-track", ({ videoId, title, url, mediaType }) => {
@@ -967,6 +1029,10 @@ io.on("connection", (socket) => {
 
     if (!room) return;
 
+    if (!socket.data.watchStartedAt) {
+      socket.data.watchStartedAt = Date.now();
+    }
+
     room.playback = {
       ...room.playback,
       position,
@@ -982,6 +1048,13 @@ io.on("connection", (socket) => {
     const room = roomId ? getRoom(roomId) : null;
 
     if (!room) return;
+
+    if (socket.data.watchStartedAt) {
+      recordDashboardActivity(socket.data.userId, roomId, "watch", {
+        durationSeconds: Math.max(0, Math.round((Date.now() - socket.data.watchStartedAt) / 1000)),
+      }).catch((error) => console.error("Watch activity record failed:", error));
+      socket.data.watchStartedAt = null;
+    }
 
     room.playback = {
       ...room.playback,
@@ -1024,6 +1097,12 @@ io.on("connection", (socket) => {
 
     const room = getRoom(roomId);
     if (!room) return;
+
+    if (socket.data.watchStartedAt) {
+      recordDashboardActivity(socket.data.userId, roomId, "watch", {
+        durationSeconds: Math.max(0, Math.round((Date.now() - socket.data.watchStartedAt) / 1000)),
+      }).catch((error) => console.error("Watch activity record failed:", error));
+    }
 
     room.users = room.users.filter((user) => user.id !== socket.id);
 

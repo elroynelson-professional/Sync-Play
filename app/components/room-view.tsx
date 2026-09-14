@@ -272,6 +272,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
     const payload = {
       roomId,
       name,
+      userId: typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null")?.id || null : null,
     };
 
     if (action === "create") {

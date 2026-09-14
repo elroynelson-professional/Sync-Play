@@ -23,6 +23,24 @@ type DirectMessage = {
   read: boolean;
 };
 
+type DashboardRoom = {
+  name: string;
+  host: string;
+  viewers: string;
+  status: "Live" | "Idle";
+  code: string;
+};
+
+type DashboardData = {
+  metrics: {
+    activeRooms: number;
+    liveViewers: number;
+    watchTime: string;
+  };
+  rooms: DashboardRoom[];
+  activityBars: { label: string; value: number }[];
+};
+
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
 const INBOX_MESSAGES_KEY = "syncplay-inbox-messages-v1";
 
@@ -64,33 +82,11 @@ const navItems = [
   { label: "History", href: "/history", icon: "◌" },
 ];
 
-const metricCards = [
-  { label: "Active rooms", value: "12", change: "6 created today" },
-  { label: "Live viewers", value: "340", change: "+28% this week" },
-  { label: "Watch time", value: "8h 42m", change: "Across 24 sessions" },
-];
-
-const roomList = [
-  { name: "Movie Night", host: "Ava", viewers: "18 online", status: "Live", code: "MOVIE7" },
-  { name: "Anime Sync", host: "Kai", viewers: "11 online", status: "Live", code: "ANIME9" },
-  { name: "Football Watch Party", host: "Leo", viewers: "25 online", status: "Live", code: "GOAL22" },
-  { name: "Study Session", host: "Nina", viewers: "7 online", status: "Idle", code: "STUDY5" },
-];
-
-const activityBars = [
-  { label: "Mon", value: 40 },
-  { label: "Tue", value: 52 },
-  { label: "Wed", value: 66 },
-  { label: "Thu", value: 71 },
-  { label: "Fri", value: 82 },
-  { label: "Sat", value: 64 },
-  { label: "Sun", value: 76 },
-];
-
 export default function DashboardPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<AccountUser | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
@@ -146,11 +142,15 @@ export default function DashboardPage() {
 
         setUser(payload.user);
         window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(payload.user));
+        const dashboardResponse = await fetch(`${socketUrl}/api/dashboard`, { credentials: "include" });
+        if (dashboardResponse.ok) {
+          setDashboardData((await dashboardResponse.json()) as DashboardData);
+        }
       })
       .catch(() => router.replace("/"));
   }, [router]);
 
-  const filteredRooms = roomList.filter((room) => {
+  const filteredRooms = (dashboardData?.rooms ?? []).filter((room) => {
     const query = searchTerm.trim().toLowerCase();
     if (!query) return true;
 
@@ -630,7 +630,11 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
-                {metricCards.map((card) => (
+                {[
+                  { label: "Active rooms", value: String(dashboardData?.metrics.activeRooms ?? 0), change: "Rooms you created or joined" },
+                  { label: "Live viewers", value: String(dashboardData?.metrics.liveViewers ?? 0), change: "Currently in your rooms" },
+                  { label: "Watch time", value: dashboardData?.metrics.watchTime ?? "0h 0m", change: "From your watch sessions" },
+                ].map((card) => (
                   <div
                     key={card.label}
                     className="rounded-[20px] border border-white/10 bg-[#0d0d0d] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
@@ -672,7 +676,7 @@ export default function DashboardPage() {
                       ))
                     ) : (
                       <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-4 text-sm text-slate-400">
-                        No rooms match your search.
+                        {dashboardData ? "You have not created or joined any rooms yet." : "Loading your rooms..."}
                       </div>
                     )}
                   </div>
@@ -684,7 +688,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex h-40 items-end justify-between gap-2">
-                    {activityBars.map((bar) => (
+                    {(dashboardData?.activityBars ?? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label) => ({ label, value: 0 }))).map((bar) => (
                       <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
                         <div className="flex w-full items-end justify-center rounded-t-xl bg-white/6" style={{ height: `${bar.value}%` }}>
                           <div className="w-full rounded-t-xl bg-emerald-500" style={{ height: "100%" }} />
