@@ -98,6 +98,7 @@ export default function DashboardPage() {
   const [messageDraft, setMessageDraft] = useState("");
   const [messageRecipient, setMessageRecipient] = useState("Ava Brooks");
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -542,6 +543,7 @@ export default function DashboardPage() {
                       {[
                         { label: "Current password", key: "currentPassword", visible: showCurrentPassword, toggle: setShowCurrentPassword },
                         { label: "New password", key: "newPassword", visible: showNewPassword, toggle: setShowNewPassword },
+                        { label: "Confirm new password", key: "confirmPassword", visible: showConfirmPassword, toggle: setShowConfirmPassword },
                       ].map((field) => (
                         <label key={field.key} className="space-y-2">
                           <span className="text-sm text-slate-400">{field.label}</span>
@@ -561,17 +563,37 @@ export default function DashboardPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (passwordForm.currentPassword && passwordForm.newPassword.length >= 8) {
+                      onClick={async () => {
+                        setPasswordMessage("");
+                        if (!passwordForm.currentPassword || passwordForm.newPassword.length < 8) {
+                          setPasswordMessage("Use your current password and a new password with at least 8 characters.");
+                          return;
+                        }
+                        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+                          setPasswordMessage("The new password and confirmation do not match.");
+                          return;
+                        }
+
+                        const response = await fetch(`${socketUrl}/api/auth/password`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify(passwordForm),
+                        });
+                        const payload = (await response.json()) as { error?: string; message?: string };
+                        setPasswordMessage(payload.error || payload.message || "Password update failed.");
+                        if (response.ok) {
                           setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
                           setShowCurrentPassword(false);
                           setShowNewPassword(false);
+                          setShowConfirmPassword(false);
                         }
                       }}
                       className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400"
                     >
                       Change password
                     </button>
+                    {passwordMessage ? <p className="text-sm text-slate-300">{passwordMessage}</p> : null}
                   </section>
 
                   <section className="space-y-4 border-t border-white/10 pt-6">

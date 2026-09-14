@@ -791,6 +791,45 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "POST" && requestUrl.pathname === "/api/auth/password") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const currentPassword = typeof payload.currentPassword === "string" ? payload.currentPassword : "";
+      const newPassword = typeof payload.newPassword === "string" ? payload.newPassword : "";
+      const database = await getAuthDatabase();
+      const storedUser = await database.collection("users").findOne({ id: user.id });
+
+      if (!storedUser || !storedUser.passwordHash || !(await bcrypt.compare(currentPassword, storedUser.passwordHash))) {
+        writeJson(response, 400, { error: "Your current password is incorrect." }, request);
+        return;
+      }
+      if (newPassword.length < 8) {
+        writeJson(response, 400, { error: "Your new password must be at least 8 characters." }, request);
+        return;
+      }
+      if (currentPassword === newPassword) {
+        writeJson(response, 400, { error: "Your new password must be different from the current password." }, request);
+        return;
+      }
+
+      await database.collection("users").updateOne(
+        { id: user.id },
+        { $set: { passwordHash: await bcrypt.hash(newPassword, 12) } }
+      );
+      writeJson(response, 200, { message: "Password updated successfully." }, request);
+    } catch (error) {
+      console.error("Password update failed:", error);
+      writeJson(response, 503, { error: "Password update is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/uploads") {
     handleUpload(request, response);
     return;
