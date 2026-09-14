@@ -414,15 +414,6 @@ export function SyncPlayLanding() {
                     {authMode === "login" ? "Log in" : "Create account"}
                   </button>
 
-                  {authMode === "login" ? (
-                    <button
-                      type="button"
-                      onClick={() => { window.location.href = `${socketUrl}/api/auth/google`; }}
-                      className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 font-semibold text-black transition hover:bg-slate-200"
-                    >
-                      Continue with Google
-                    </button>
-                  ) : null}
                 </form>
               )}
 

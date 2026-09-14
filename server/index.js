@@ -7,7 +7,6 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { MongoClient } = require("mongodb");
 const nodemailer = require("nodemailer");
-const { OAuth2Client } = require("google-auth-library");
 const { Server } = require("socket.io");
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3002;
@@ -58,18 +57,6 @@ function createMailer() {
       pass: process.env.GMAIL_APP_PASSWORD,
     },
   });
-}
-
-function getGoogleClient() {
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
-    throw new Error("Google OAuth environment variables are not configured.");
-  }
-
-  return new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
 }
 
 function parseCookies(request) {
@@ -466,67 +453,6 @@ const server = http.createServer(async (request, response) => {
   if (request.method === "OPTIONS") {
     response.writeHead(204);
     response.end();
-    return;
-  }
-
-  if (request.method === "GET" && requestUrl.pathname === "/api/auth/google") {
-    try {
-      const googleClient = getGoogleClient();
-      const authorizationUrl = googleClient.generateAuthUrl({
-        access_type: "offline",
-        scope: ["openid", "email", "profile"],
-        prompt: "select_account",
-      });
-      response.writeHead(302, { Location: authorizationUrl });
-      response.end();
-    } catch (error) {
-      writeJson(response, 503, { error: error.message }, request);
-    }
-    return;
-  }
-
-  if (request.method === "GET" && requestUrl.pathname === "/api/auth/google/callback") {
-    try {
-      const code = requestUrl.searchParams.get("code");
-      if (!code) {
-        response.writeHead(302, { Location: `${frontendOrigin}/?authError=google_cancelled` });
-        response.end();
-        return;
-      }
-
-      const googleClient = getGoogleClient();
-      const { tokens } = await googleClient.getToken(code);
-      const ticket = await googleClient.verifyIdToken({
-        idToken: tokens.id_token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      const profile = ticket.getPayload();
-      if (!profile?.email || !profile.email_verified) {
-        throw new Error("Google did not provide a verified email address.");
-      }
-
-      const database = await getAuthDatabase();
-      const user = {
-        id: `google-${profile.sub}`,
-        name: profile.name || profile.email.split("@")[0],
-        email: profile.email.toLowerCase(),
-        createdAt: new Date().toISOString(),
-        provider: "google",
-      };
-      await database.collection("users").updateOne(
-        { email: user.email },
-        { $set: { name: user.name, provider: user.provider }, $setOnInsert: user },
-        { upsert: true }
-      );
-      const savedUser = await database.collection("users").findOne({ email: user.email });
-      await createSession(savedUser.id, response);
-      response.writeHead(302, { Location: `${frontendOrigin}/?auth=google-success` });
-      response.end();
-    } catch (error) {
-      console.error("Google authentication failed:", error);
-      response.writeHead(302, { Location: `${frontendOrigin}/?authError=google_failed` });
-      response.end();
-    }
     return;
   }
 
