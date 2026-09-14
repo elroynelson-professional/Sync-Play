@@ -457,6 +457,8 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && requestUrl.pathname === "/api/auth/request-otp") {
+    let database;
+
     try {
       const payload = await readJsonBody(request);
       const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
@@ -465,7 +467,7 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      const database = await getAuthDatabase();
+      database = await getAuthDatabase();
       const existingUser = await database.collection("users").findOne({ email });
       if (existingUser) {
         writeJson(response, 409, { error: "An account with that email already exists." }, request);
@@ -479,6 +481,13 @@ const server = http.createServer(async (request, response) => {
         { email, codeHash, expiresAt: Date.now() + 10 * 60 * 1000 },
         { upsert: true }
       );
+    } catch (error) {
+      console.error("OTP database request failed:", error);
+      writeJson(response, 503, { error: "The database connection is unavailable. Check MONGODB_URI and Atlas Network Access." }, request);
+      return;
+    }
+
+    try {
       await createMailer().sendMail({
         from: process.env.GMAIL_USER,
         to: email,
@@ -488,8 +497,8 @@ const server = http.createServer(async (request, response) => {
       });
       writeJson(response, 200, { message: "Verification code sent." }, request);
     } catch (error) {
-      console.error("OTP request failed:", error);
-      writeJson(response, 503, { error: "We could not send a verification code. Check the email service configuration." }, request);
+      console.error("OTP email delivery failed:", error);
+      writeJson(response, 503, { error: "The email service is unavailable. Check GMAIL_USER and GMAIL_APP_PASSWORD." }, request);
     }
     return;
   }
