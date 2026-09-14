@@ -688,6 +688,36 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/history") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      const activities = await database.collection("activity")
+        .find({ userId: user.id })
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .toArray();
+      const historyRows = activities.map((activity) => ({
+        title: activity.type === "watch" ? "Watch session" : activity.type === "room-created" ? "Created room" : "Joined room",
+        room: activity.roomId,
+        date: new Date(activity.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        duration: activity.type === "watch" ? `${Math.floor((activity.durationSeconds || 0) / 60)}m` : "-",
+        type: activity.type === "watch" ? "Watch session" : "Room activity",
+      }));
+
+      writeJson(response, 200, { history: historyRows }, request);
+    } catch (error) {
+      console.error("History data request failed:", error);
+      writeJson(response, 503, { error: "History data is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/api/friends/requests") {
     try {
       const user = await getAuthenticatedUser(request);

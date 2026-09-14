@@ -29,13 +29,6 @@ const navItems = [
   { label: "History", href: "/history", icon: "◌" },
 ];
 
-const initialHistoryRows: HistoryRow[] = [
-  { title: "Movie Night", room: "MOVIE7", date: "Sep 12, 2026", duration: "1h 22m", type: "Group watch" },
-  { title: "Anime Sync", room: "ANIME9", date: "Sep 09, 2026", duration: "54m", type: "Anime binge" },
-  { title: "Football Watch Party", room: "GOAL22", date: "Sep 04, 2026", duration: "2h 14m", type: "Live match" },
-  { title: "Study Session", room: "STUDY5", date: "Sep 01, 2026", duration: "41m", type: "Focus session" },
-];
-
 function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
@@ -55,7 +48,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<AccountUser | null>(null);
-  const [historyRows, setHistoryRows] = useState<HistoryRow[]>(initialHistoryRows);
+  const [historyRows, setHistoryRows] = useState<HistoryRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
@@ -64,22 +57,36 @@ export default function HistoryPage() {
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
 
   useEffect(() => {
-    const activeUser = readActiveUser() ?? {
-      id: "guest-user",
-      name: "Totok Michael",
-      email: "tmichael20@mail.com",
-      createdAt: new Date().toISOString(),
-    };
-
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
     if (invalidCodeMessage) {
       setRoomError(invalidCodeMessage);
       window.sessionStorage.removeItem("syncplay-room-error");
     }
 
-    setUser(activeUser);
-    setRoomDisplayName(activeUser.name);
-  }, []);
+    fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) {
+          router.replace("/");
+          return;
+        }
+
+        const payload = (await response.json()) as { user?: AccountUser };
+        if (!payload.user) {
+          router.replace("/");
+          return;
+        }
+
+        setUser(payload.user);
+        setRoomDisplayName(payload.user.name);
+        window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(payload.user));
+        const historyResponse = await fetch(`${socketUrl}/api/history`, { credentials: "include" });
+        if (historyResponse.ok) {
+          const historyPayload = (await historyResponse.json()) as { history?: HistoryRow[] };
+          setHistoryRows(historyPayload.history || []);
+        }
+      })
+      .catch(() => router.replace("/"));
+  }, [router]);
 
   const filteredHistoryRows = historyRows.filter((row) => {
     const query = searchTerm.trim().toLowerCase();
@@ -290,7 +297,7 @@ export default function HistoryPage() {
                   <span>Duration</span>
                 </div>
 
-                {filteredHistoryRows.map((row) => (
+                {filteredHistoryRows.length > 0 ? filteredHistoryRows.map((row) => (
                   <div key={`${row.title}-${row.room}-${row.date}`} className="grid grid-cols-[1.6fr_0.9fr_0.7fr_0.8fr] border-t border-white/10 bg-[#0d0d0d] px-4 py-3 text-sm text-slate-200">
                     <div>
                       <div className="font-medium text-white">{row.title}</div>
@@ -300,7 +307,11 @@ export default function HistoryPage() {
                     <div className="flex items-center text-slate-300">{row.date}</div>
                     <div className="flex items-center justify-end text-emerald-300">{row.duration}</div>
                   </div>
-                ))}
+                )) : (
+                  <div className="border-t border-white/10 bg-[#0d0d0d] px-4 py-8 text-center text-sm text-slate-400">
+                    No watch or room activity has been recorded for this account yet.
+                  </div>
+                )}
               </div>
             </div>
           </section>
