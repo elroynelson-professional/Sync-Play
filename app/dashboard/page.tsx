@@ -491,8 +491,8 @@ export default function DashboardPage() {
                       {(user.name || "G").slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h2 className="text-[2.7rem] font-semibold tracking-[-0.06em] text-white sm:text-[3rem]">{user.name}</h2>
-                      <p className="text-[1.7rem] leading-none text-slate-300 sm:text-[1.9rem]">Account owner</p>
+                      <h2 className="text-[1.65rem] font-semibold tracking-[-0.04em] text-white sm:text-[1.85rem]">{user.name}</h2>
+                      <p className="mt-1 text-sm leading-none text-slate-300 sm:text-[0.95rem]">Account owner</p>
                     </div>
                   </div>
                   <button
@@ -505,26 +505,26 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
-                <div className="space-y-10">
-                  <section className="space-y-5">
+                <div className="space-y-8">
+                  <section className="space-y-4">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Profile</p>
-                      <h3 className="mt-1 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">Personal information</h3>
+                      <h3 className="mt-1 text-[1.2rem] font-semibold tracking-[-0.03em] text-white">Personal information</h3>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="space-y-2">
                         <span className="text-sm text-slate-400">First name</span>
-                        <input value={user.name.split(" ")[0] || user.name} readOnly className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 text-white outline-none" />
+                        <input value={user.name.split(" ")[0] || user.name} readOnly className="w-full rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm text-white outline-none" />
                       </label>
                       <label className="space-y-2">
                         <span className="text-sm text-slate-400">Last name</span>
-                        <input value={user.name.split(" ").slice(1).join(" ") || "Not set"} readOnly className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 text-white outline-none" />
+                        <input value={user.name.split(" ").slice(1).join(" ") || "Not set"} readOnly className="w-full rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm text-white outline-none" />
                       </label>
                       <label className="space-y-2">
                         <span className="text-sm text-slate-400">Email address</span>
-                        <input value={user.email} readOnly className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 text-white outline-none" />
+                        <input value={user.email} readOnly className="w-full rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm text-white outline-none" />
                       </label>
-                      <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#121212] px-4 py-3">
+                      <div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5">
                         <span className="text-sm text-slate-400">Member since</span>
                         <span className="text-sm text-white">
                           {new Date(user.createdAt || Date.now()).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
@@ -533,10 +533,10 @@ export default function DashboardPage() {
                     </div>
                   </section>
 
-                  <section className="space-y-5 border-t border-white/10 pt-8">
+                  <section className="space-y-4 border-t border-white/10 pt-6">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Security</p>
-                      <h3 className="mt-1 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">Change password</h3>
+                      <h3 className="mt-1 text-[1.2rem] font-semibold tracking-[-0.03em] text-white">Change password</h3>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       {[
@@ -574,10 +574,10 @@ export default function DashboardPage() {
                     </button>
                   </section>
 
-                  <section className="space-y-5 border-t border-white/10 pt-8">
+                  <section className="space-y-4 border-t border-white/10 pt-6">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Preferences</p>
-                      <h3 className="mt-1 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">Notifications and privacy</h3>
+                      <h3 className="mt-1 text-[1.2rem] font-semibold tracking-[-0.03em] text-white">Notifications and privacy</h3>
                     </div>
                     <div className="space-y-3">
                       {[
