@@ -17,6 +17,17 @@ const navItems = [
   { label: "History", href: "/history", icon: "◌" },
 ];
 
+const sidebarItemClass = "flex min-h-10 w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-[15px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70";
+
+function SidebarAction({ label, icon, onClick }: { label: string; icon: string; onClick?: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className={`${sidebarItemClass} text-slate-300 hover:bg-white/4`}>
+      <span className="flex h-4 w-4 shrink-0 items-center justify-center text-[11px] text-slate-400">{icon}</span>
+      <span className="font-medium">{label}</span>
+    </button>
+  );
+}
+
 export function AppSidebar({ onCreateRoom, onJoinRoom, onAccountSettings, onHelp, onLogout }: AppSidebarProps) {
   const pathname = usePathname();
 
@@ -36,21 +47,21 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onAccountSettings, onHelp
             <Link
               key={item.label}
               href={item.href}
-              className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${
+              className={`${sidebarItemClass} ${
                 isActive ? "bg-white/6 text-emerald-300 shadow-inner shadow-emerald-500/5" : "text-slate-300 hover:bg-white/4"
               }`}
             >
-              <span className={`flex h-4 w-4 items-center justify-center text-[10px] ${isActive ? "text-emerald-300" : "text-slate-400"}`}>{item.icon}</span>
-              <span className="text-[15px] font-medium">{item.label}</span>
+              <span className={`flex h-4 w-4 shrink-0 items-center justify-center text-[11px] ${isActive ? "text-emerald-300" : "text-slate-400"}`}>{item.icon}</span>
+              <span className="font-medium">{item.label}</span>
             </Link>
           );
         })}
 
         <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
-          <button type="button" onClick={onCreateRoom} className="block w-full rounded-xl bg-emerald-500 px-3 py-2.5 text-center text-sm font-medium text-[#03150a]">
+          <button type="button" onClick={onCreateRoom} className="min-h-10 w-full rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70">
             Create room
           </button>
-          <button type="button" onClick={onJoinRoom} className="block w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center text-sm font-medium text-white">
+          <button type="button" onClick={onJoinRoom} className="min-h-10 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70">
             Join room
           </button>
         </div>
@@ -58,18 +69,9 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onAccountSettings, onHelp
 
       <div className="mt-auto space-y-3 text-sm">
         <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">General</div>
-        <button type="button" onClick={onAccountSettings} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-300 transition hover:bg-white/4">
-          <span className="flex h-4 w-4 items-center justify-center text-[10px] text-slate-400">◌</span>
-          <span className="text-[15px]">Account settings</span>
-        </button>
-        <button type="button" onClick={onHelp} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-300 transition hover:bg-white/4">
-          <span className="flex h-4 w-4 items-center justify-center text-[10px] text-slate-400">?</span>
-          <span className="text-[15px]">Help</span>
-        </button>
-        <button type="button" onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-300 transition hover:bg-white/4">
-          <span className="flex h-4 w-4 items-center justify-center text-[10px] text-slate-400">↪</span>
-          <span className="text-[15px]">Logout</span>
-        </button>
+        <SidebarAction label="Account settings" icon="◌" onClick={onAccountSettings} />
+        <SidebarAction label="Help" icon="?" onClick={onHelp} />
+        <SidebarAction label="Logout" icon="↪" onClick={onLogout} />
       </div>
     </aside>
   );

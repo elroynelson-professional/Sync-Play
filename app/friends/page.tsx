@@ -7,6 +7,7 @@ import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { TopBar } from "../components/top-bar";
 import { AppSidebar } from "../components/app-sidebar";
+import { AccountDialog, HelpDialog } from "../components/account-dialogs";
 
 type AccountUser = {
   id: string;
@@ -57,6 +58,7 @@ export default function FriendsPage() {
   const [roomCode, setRoomCode] = useState("");
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
   const [friendEmail, setFriendEmail] = useState("");
 
@@ -215,6 +217,7 @@ export default function FriendsPage() {
           onCreateRoom={() => openRoomModal("create")}
           onJoinRoom={() => openRoomModal("join")}
           onAccountSettings={() => setIsAccountSettingsOpen(true)}
+          onHelp={() => setIsHelpOpen(true)}
           onLogout={signOut}
         />
 
@@ -326,6 +329,9 @@ export default function FriendsPage() {
           </form>
         </div>
       ) : null}
+
+      {isAccountSettingsOpen && user ? <AccountDialog user={user} onClose={() => setIsAccountSettingsOpen(false)} /> : null}
+      {isHelpOpen ? <HelpDialog onClose={() => setIsHelpOpen(false)} /> : null}
 
       {roomModalMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
