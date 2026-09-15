@@ -760,18 +760,29 @@ const server = http.createServer(async (request, response) => {
       }
 
       const database = await getAuthDatabase();
+      const historySince = Date.now() - 7 * 24 * 60 * 60 * 1000;
       const activities = await database.collection("activity")
-        .find({ userId: user.id })
+        .find({ userId: user.id, createdAt: { $gte: historySince } })
         .sort({ createdAt: -1 })
         .limit(100)
         .toArray();
-      const historyRows = activities.map((activity) => ({
-        title: activity.type === "watch" ? "Watch session" : activity.type === "room-created" ? "Created room" : "Joined room",
-        room: activity.roomId,
-        date: new Date(activity.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-        duration: activity.type === "watch" ? `${Math.floor((activity.durationSeconds || 0) / 60)}m` : "-",
-        type: activity.type === "watch" ? "Watch session" : "Room activity",
-      }));
+      const formatDuration = (seconds) => {
+        const safeSeconds = Math.max(0, Math.round(seconds || 0));
+        const hours = Math.floor(safeSeconds / 3600);
+        const minutes = Math.floor((safeSeconds % 3600) / 60);
+        return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+      };
+      const historyRows = activities.map((activity) => {
+        const isRoomSession = activity.type === "room-session";
+        const isWatchSession = activity.type === "watch";
+        return {
+          title: isWatchSession ? "Watch session" : isRoomSession ? "Room session" : activity.type === "room-created" ? "Created room" : "Joined room",
+          room: activity.roomId,
+          date: new Date(activity.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          duration: isWatchSession || isRoomSession ? formatDuration(activity.durationSeconds) : "-",
+          type: isWatchSession ? "Watch session" : isRoomSession ? "Time in room" : "Room activity",
+        };
+      });
 
       writeJson(response, 200, { history: historyRows }, request);
     } catch (error) {
