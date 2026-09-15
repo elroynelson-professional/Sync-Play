@@ -40,6 +40,7 @@ export default function ContactPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const signedInEmail = user?.email || "";
     setIsSending(true);
     setStatusMessage("");
 
@@ -47,7 +48,7 @@ export default function ContactPage() {
       const response = await fetch(`${socketUrl}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, email: signedInEmail }),
       });
       const payload = (await response.json()) as { message?: string; error?: string };
       setStatusMessage(payload.error || payload.message || "Your message could not be sent.");
@@ -79,7 +80,7 @@ export default function ContactPage() {
           <form onSubmit={handleSubmit} className="rounded-[28px] border border-[var(--panel-border)] bg-[var(--panel-background)] p-5 shadow-2xl shadow-black/10 sm:p-7">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2"><span className="text-sm font-medium">Name</span><input required value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} className="syncplay-input w-full rounded-xl border px-3.5 py-3 text-sm outline-none" placeholder="Your name" /></label>
-              <label className="space-y-2"><span className="text-sm font-medium">Email</span><input required type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} className="syncplay-input w-full rounded-xl border px-3.5 py-3 text-sm outline-none" placeholder="you@example.com" /></label>
+              <label className="space-y-2"><span className="text-sm font-medium">Email</span><input required type="email" value={user.email} readOnly className="syncplay-input w-full cursor-not-allowed rounded-xl border px-3.5 py-3 text-sm outline-none opacity-75" aria-describedby="contact-email-note" /><span id="contact-email-note" className="block text-xs text-[var(--muted)]">Using your signed-in email</span></label>
             </div>
             <label className="mt-4 block space-y-2"><span className="text-sm font-medium">Message</span><textarea required minLength={10} rows={6} value={form.message} onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))} className="syncplay-input w-full resize-y rounded-xl border px-3.5 py-3 text-sm outline-none" placeholder="How can we help?" /></label>
             <button type="submit" disabled={isSending} className="syncplay-button-primary mt-5 rounded-xl px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60">{isSending ? "Sending..." : "Send message"}</button>
