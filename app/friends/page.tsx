@@ -221,7 +221,7 @@ export default function FriendsPage() {
       onSearchTermChange={setSearchTerm}
       searchPlaceholder="Search friends"
       user={user}
-      onInbox={() => router.push("/dashboard?inbox=1")}
+      onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Ffriends")}
       onAccountSettings={() => router.push("/dashboard?settings=1")}
       onCreateRoom={() => openRoomModal("create")}
       onJoinRoom={() => openRoomModal("join")}

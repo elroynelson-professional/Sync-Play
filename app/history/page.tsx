@@ -190,7 +190,7 @@ export default function HistoryPage() {
 
   return (
     <>
-    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => setIsHelpOpen(true)} onLogout={signOut}>
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => setIsHelpOpen(true)} onLogout={signOut}>
           <section className="space-y-5 pt-5">
             <div className="flex items-end justify-between">
               <div>
