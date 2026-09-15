@@ -217,6 +217,15 @@ export default function DashboardPage() {
     setSelectedConversation(null);
   }
 
+  function closeInbox() {
+    if (inboxReturnPath === "/dashboard") {
+      setIsInboxOpen(false);
+      return;
+    }
+
+    router.push(inboxReturnPath);
+  }
+
   useEffect(() => {
     const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
     if (params?.get("settings") === "1") {
@@ -345,7 +354,7 @@ export default function DashboardPage() {
 
   return (
     <>
-    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? router.push(inboxReturnPath) : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => setIsHelpOpen(true)} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? closeInbox() : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => setIsHelpOpen(true)} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
           {isInboxOpen ? (
             <section className="fixed inset-0 z-50 flex justify-end bg-black/70">
               <div className="flex h-full min-h-[560px] w-full max-w-[820px] flex-col overflow-hidden rounded-l-[22px] border-y border-l border-white/10 bg-[#0b0b0c] shadow-2xl shadow-black/60 md:flex-row">
@@ -406,7 +415,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     ) : <h2 className="text-lg font-semibold text-white">Messages</h2>}
-                    <button type="button" onClick={() => router.push(inboxReturnPath)} className="flex h-9 w-9 items-center justify-center rounded-full text-2xl text-slate-400 transition hover:bg-white/5 hover:text-white" aria-label="Close inbox">×</button>
+                    <button type="button" onClick={closeInbox} className="flex h-9 w-9 items-center justify-center rounded-full text-2xl text-slate-400 transition hover:bg-white/5 hover:text-white" aria-label="Close inbox">×</button>
                   </div>
 
                   {selectedConversation ? (
