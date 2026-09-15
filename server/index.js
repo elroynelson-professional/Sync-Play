@@ -905,6 +905,34 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  const removeFriendMatch = requestUrl.pathname.match(/^\/api\/friends\/([^/]+)\/remove$/);
+  if (request.method === "POST" && removeFriendMatch) {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const friendId = decodeURIComponent(removeFriendMatch[1]);
+      if (!friendId || friendId === user.id) {
+        writeJson(response, 400, { error: "That friend could not be removed." }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      await Promise.all([
+        database.collection("users").updateOne({ id: user.id }, { $pull: { friends: friendId } }),
+        database.collection("users").updateOne({ id: friendId }, { $pull: { friends: user.id } }),
+      ]);
+      writeJson(response, 200, { message: "Friend removed." }, request);
+    } catch (error) {
+      console.error("Remove friend failed:", error);
+      writeJson(response, 503, { error: "Friends are temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   const friendActionMatch = requestUrl.pathname.match(/^\/api\/friends\/requests\/([^/]+)\/(accept|ignore)$/);
   if (request.method === "POST" && friendActionMatch) {
     try {

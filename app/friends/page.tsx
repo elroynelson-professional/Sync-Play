@@ -16,6 +16,7 @@ type AccountUser = {
 };
 
 type FriendItem = {
+  id: string;
   name: string;
   status: "Online" | "In room" | "Away";
   mood: string;
@@ -196,6 +197,16 @@ export default function FriendsPage() {
     }
   }
 
+  async function removeFriend(friend: FriendItem) {
+    const response = await fetch(`${socketUrl}/api/friends/${encodeURIComponent(friend.id)}/remove`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (response.ok) {
+      setFriends((current) => current.filter((item) => item.id !== friend.id));
+    }
+  }
+
   async function signOut() {
     await fetch(`${socketUrl}/api/auth/logout`, {
       method: "POST",
@@ -249,7 +260,7 @@ export default function FriendsPage() {
 
                 <div className="space-y-3">
                   {filteredFriends.length > 0 ? filteredFriends.map((friend) => (
-                    <div key={friend.name} className="flex items-center justify-between rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
+                    <div key={friend.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
                       <div className="flex items-center gap-3">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">
                           {friend.avatar}
@@ -260,13 +271,18 @@ export default function FriendsPage() {
                         </div>
                       </div>
 
-                      <span className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
-                        friend.status === "Online" || friend.status === "In room"
-                          ? "bg-emerald-500/10 text-emerald-300"
-                          : "bg-amber-500/10 text-amber-300"
-                      }`}>
-                        {friend.status}
-                      </span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                          friend.status === "Online" || friend.status === "In room"
+                            ? "bg-emerald-500/10 text-emerald-300"
+                            : "bg-amber-500/10 text-amber-300"
+                        }`}>
+                          {friend.status}
+                        </span>
+                        <button type="button" onClick={() => void removeFriend(friend)} className="rounded-xl border border-white/10 px-2.5 py-1.5 text-xs text-slate-400 transition hover:border-rose-400/40 hover:text-rose-300">
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   )) : (
                     <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-5 text-sm text-slate-400">
