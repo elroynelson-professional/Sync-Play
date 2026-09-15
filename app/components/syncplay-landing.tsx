@@ -2,10 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AdOverlay } from "./ad-overlay";
 import { socketUrl } from "../lib/socket";
-
-const AD_DISPLAY_CHANCE = 0.5;
 
 function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -31,8 +28,6 @@ export function SyncPlayLanding() {
   const [authMessage, setAuthMessage] = useState("Create your account to start watching together.");
   const [activeUser, setActiveUser] = useState<{ id: string; name: string; email: string; createdAt: string } | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [isAdOpen, setIsAdOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomModalDisplayName, setRoomModalDisplayName] = useState("");
   const [roomModalCode, setRoomModalCode] = useState("");
@@ -173,23 +168,6 @@ export function SyncPlayLanding() {
     router.push(`/room/${code}?name=${normalizedName}&role=${role}&action=${action}`);
   }
 
-  function triggerAd(action: () => void) {
-    if (Math.random() >= AD_DISPLAY_CHANCE) {
-      action();
-      return;
-    }
-
-    setPendingAction(() => action);
-    setIsAdOpen(true);
-  }
-
-  function handleAdComplete() {
-    const nextAction = pendingAction;
-    setPendingAction(null);
-    setIsAdOpen(false);
-    nextAction?.();
-  }
-
   function openRoomModal(mode: "create" | "join") {
     setRoomModalMode(mode);
     setRoomModalDisplayName(displayName.trim() || activeUser?.name || "");
@@ -212,20 +190,14 @@ export function SyncPlayLanding() {
       return;
     }
 
-    if (isAdOpen) {
-      return;
-    }
-
     setDisplayName(targetName);
     const code = makeRoomCode();
     setRoomCode(code);
     setMessage(`Room ${code} created. Opening the shared room...`);
     closeRoomModal();
 
-    triggerAd(() => {
-      startTransition(() => {
-        goToRoom(code, "host", "create");
-      });
+    startTransition(() => {
+      goToRoom(code, "host", "create");
     });
   }
 
@@ -243,26 +215,18 @@ export function SyncPlayLanding() {
       return;
     }
 
-    if (isAdOpen) {
-      return;
-    }
-
     setDisplayName(targetName);
     setRoomCode(code);
     setMessage(`Joining room ${code}...`);
     closeRoomModal();
 
-    triggerAd(() => {
-      startTransition(() => {
-        goToRoom(code, "guest", "join");
-      });
+    startTransition(() => {
+      goToRoom(code, "guest", "join");
     });
   }
 
   return (
     <main className="syncplay-landing relative min-h-screen overflow-hidden px-5 py-8 text-white sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-      <AdOverlay isOpen={isAdOpen} onSkip={handleAdComplete} />
-
       <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl items-center">
         <div className="grid w-full gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
           <section className="syncplay-panel syncplay-landing-hero flex flex-col justify-center gap-8 rounded-3xl p-7 sm:p-9 lg:p-11">

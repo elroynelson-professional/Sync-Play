@@ -10,10 +10,7 @@ import { DirectMediaPlayer } from "./direct-video-player";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./youtube-player";
 import { VoiceChat } from "./voice-chat";
 import { VideoChat } from "./video-chat";
-import { AdOverlay } from "./ad-overlay";
 import { ThemeToggle } from "./theme-toggle";
-
-const AD_DISPLAY_CHANCE = 0.5;
 
 type RoomViewProps = {
   roomId: string;
@@ -179,8 +176,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   const [isConnected, setIsConnected] = useState(false);
   const [isJoinPending, setIsJoinPending] = useState(false);
   const [joinRequests, setJoinRequests] = useState<{ requestId: string; name: string }[]>([]);
-  const [isAdOpen, setIsAdOpen] = useState(false);
-  const [pendingAdAction, setPendingAdAction] = useState<(() => void) | null>(null);
   const playerRef = useRef<YouTubePlayerHandle | null>(null);
   const chatListRef = useRef<HTMLDivElement | null>(null);
   const isChatOpenRef = useRef(false);
@@ -520,29 +515,8 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
     }
   }
 
-  function triggerAd(action: () => void) {
-    if (Math.random() >= AD_DISPLAY_CHANCE) {
-      action();
-      return;
-    }
-
-    setPendingAdAction(() => action);
-    setIsAdOpen(true);
-  }
-
-  function handleAdComplete() {
-    const nextAction = pendingAdAction;
-    setPendingAdAction(null);
-    setIsAdOpen(false);
-    nextAction?.();
-  }
-
   return (
     <main className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-      <AdOverlay
-        isOpen={isAdOpen}
-        onSkip={handleAdComplete}
-      />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:gap-8">
         <header className="syncplay-panel syncplay-room-header rounded-[28px] px-5 py-5 pr-28 sm:px-6 sm:py-6 sm:pr-32">
           <div className="flex flex-wrap items-center justify-between gap-5">
@@ -559,8 +533,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
               </span>
               <button
                 type="button"
-                onClick={() => triggerAd(() => router.push("/dashboard"))}
-                disabled={isAdOpen}
+                onClick={() => router.push("/dashboard")}
                 className="syncplay-button-secondary rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Leave room
