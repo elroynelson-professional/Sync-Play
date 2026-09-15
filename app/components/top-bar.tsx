@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ThemeToggle } from "./theme-toggle";
 
 type TopBarProps = {
   searchTerm: string;
@@ -54,6 +55,7 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-3">
+        <ThemeToggle />
         <button
           type="button"
           onClick={onInbox}

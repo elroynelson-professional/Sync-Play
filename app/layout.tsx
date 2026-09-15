@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Sora } from "next/font/google";
-import { ThemeToggle } from "./components/theme-toggle";
 import "./globals.css";
 
 const sora = Sora({
@@ -19,10 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${sora.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <ThemeToggle />
-        {children}
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }
