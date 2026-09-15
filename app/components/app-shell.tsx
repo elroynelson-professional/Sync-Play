@@ -23,7 +23,7 @@ type AppShellProps = {
 
 export function AppShell({ children, searchTerm, onSearchTermChange, searchPlaceholder, user, onInbox, onAccountSettings, onCreateRoom, onJoinRoom, onHelp, onLogout, hasUnread, isSettingsOpen, onDashboardClick }: AppShellProps) {
   return (
-    <main className="min-h-screen bg-black p-0 text-white">
+    <main className="syncplay-auth-shell min-h-screen bg-black p-0 text-white">
       <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
         <AppSidebar onCreateRoom={onCreateRoom} onJoinRoom={onJoinRoom} onHelp={onHelp} onLogout={onLogout} isSettingsOpen={isSettingsOpen} onDashboardClick={onDashboardClick} />
         <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">

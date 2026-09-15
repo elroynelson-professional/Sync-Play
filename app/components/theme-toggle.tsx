@@ -8,7 +8,7 @@ const STORAGE_KEY = "syncplay-theme";
 const THEME_CHANGE_EVENT = "syncplay-theme-change";
 
 function getThemeSnapshot(): Theme {
-  return window.sessionStorage.getItem(STORAGE_KEY) === "light" ? "light" : "dark";
+  return window.localStorage.getItem(STORAGE_KEY) === "light" ? "light" : "dark";
 }
 
 function getServerThemeSnapshot(): Theme {
@@ -33,7 +33,7 @@ export function ThemeToggle() {
   function toggleTheme() {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
 
-    window.sessionStorage.setItem(STORAGE_KEY, nextTheme);
+    window.localStorage.setItem(STORAGE_KEY, nextTheme);
     window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   }
 

@@ -61,14 +61,69 @@ html[data-theme="light"] {
   box-sizing: border-box;
 }
 
-html {
+html[data-theme="dark"] {
   color-scheme: dark;
   background: linear-gradient(180deg, #0c0c0c 0%, #090909 100%);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 html,
 body {
   min-height: 100%;
+}
+
+.syncplay-auth-shell,
+.syncplay-auth-shell > div,
+.syncplay-auth-shell [class~="bg-[#050505]"],
+.syncplay-auth-shell [class~="bg-[#090909]"],
+.syncplay-auth-shell [class~="bg-[#0d0d0d]"],
+.syncplay-auth-shell [class~="bg-[#0b0b0c]"],
+.syncplay-auth-shell [class~="bg-[#101011]"],
+.syncplay-auth-shell [class~="bg-[#0a0a0a]"],
+.syncplay-auth-shell [class~="bg-[#121212]"],
+.syncplay-auth-shell [class~="bg-[#111111]"],
+.syncplay-auth-shell [class~="bg-black"] {
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+html[data-theme="light"] .syncplay-auth-shell,
+html[data-theme="light"] .syncplay-auth-shell > div,
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#050505]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#090909]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#0d0d0d]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#0b0b0c]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#101011]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#0a0a0a]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#121212]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#111111]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-black"] {
+  background-color: var(--surface) !important;
+}
+
+html[data-theme="light"] .syncplay-auth-shell [class~="text-white"] {
+  color: var(--foreground) !important;
+}
+
+html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-200"],
+html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-300"],
+html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-400"],
+html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-500"] {
+  color: var(--muted) !important;
+}
+
+html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/10"],
+html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/8"] {
+  border-color: var(--border) !important;
+}
+
+html[data-theme="light"] .syncplay-auth-shell input,
+html[data-theme="light"] .syncplay-auth-shell textarea {
+  color: var(--foreground) !important;
+  background-color: var(--input-background) !important;
+  border-color: var(--input-border) !important;
 }
 
 body {
