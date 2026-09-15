@@ -217,7 +217,13 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("inbox") === "1") {
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    if (params?.get("settings") === "1") {
+      setIsAccountSettingsOpen(true);
+      router.replace("/dashboard");
+      return;
+    }
+    if (params?.get("inbox") === "1") {
       openInbox();
       router.replace("/dashboard");
     }

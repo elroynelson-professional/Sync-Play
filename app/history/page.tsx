@@ -8,7 +8,6 @@ import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { TopBar } from "../components/top-bar";
 import { AppSidebar } from "../components/app-sidebar";
 import { HelpDialog } from "../components/account-dialogs";
-import { AccountSettingsDialog } from "../components/account-settings-dialog";
 
 type AccountUser = {
   id: string;
@@ -51,7 +50,6 @@ export default function HistoryPage() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [roomError, setRoomError] = useState("");
-  const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   useEffect(() => {
@@ -207,7 +205,7 @@ export default function HistoryPage() {
             searchPlaceholder="Search history"
             user={user}
             onInbox={() => router.push("/dashboard?inbox=1")}
-            onAccountSettings={() => setIsAccountSettingsOpen(true)}
+            onAccountSettings={() => router.push("/dashboard?settings=1")}
           />
 
           <section className="space-y-5 pt-5">
@@ -256,7 +254,6 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {isAccountSettingsOpen && user ? <AccountSettingsDialog user={user} socketUrl={socketUrl} onClose={() => setIsAccountSettingsOpen(false)} /> : null}
       {isHelpOpen ? <HelpDialog onClose={() => setIsHelpOpen(false)} /> : null}
 
       {roomModalMode ? (

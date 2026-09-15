@@ -8,7 +8,6 @@ import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { TopBar } from "../components/top-bar";
 import { AppSidebar } from "../components/app-sidebar";
 import { HelpDialog } from "../components/account-dialogs";
-import { AccountSettingsDialog } from "../components/account-settings-dialog";
 
 type AccountUser = {
   id: string;
@@ -58,7 +57,6 @@ export default function FriendsPage() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [roomError, setRoomError] = useState("");
-  const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
   const [friendEmail, setFriendEmail] = useState("");
@@ -233,7 +231,7 @@ export default function FriendsPage() {
             searchPlaceholder="Search friends"
             user={user}
             onInbox={() => router.push("/dashboard?inbox=1")}
-            onAccountSettings={() => setIsAccountSettingsOpen(true)}
+            onAccountSettings={() => router.push("/dashboard?settings=1")}
             hasUnread={friendRequests.length > 0}
           />
 
@@ -334,7 +332,6 @@ export default function FriendsPage() {
         </div>
       ) : null}
 
-      {isAccountSettingsOpen && user ? <AccountSettingsDialog user={user} socketUrl={socketUrl} onClose={() => setIsAccountSettingsOpen(false)} /> : null}
       {isHelpOpen ? <HelpDialog onClose={() => setIsHelpOpen(false)} /> : null}
 
       {roomModalMode ? (
