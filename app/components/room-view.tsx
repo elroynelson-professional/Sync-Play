@@ -207,6 +207,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
       roomId,
       name,
       userId: typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null")?.id || null : null,
+      inviteeIds: (searchParams.get("invitees") || "").split(",").filter(Boolean),
     };
 
     function handleRoomState(nextRoom: RoomState) {

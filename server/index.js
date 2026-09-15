@@ -912,7 +912,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("create-room", ({ roomId, name, userId }) => {
+  socket.on("create-room", async ({ roomId, name, userId, inviteeIds = [] }) => {
     const normalizedRoomId = (roomId || createRoomCode()).toUpperCase();
     let room = getRoom(normalizedRoomId);
 
@@ -931,6 +931,36 @@ io.on("connection", (socket) => {
     socket.data.userId = userId || null;
     socket.data.role = "host";
     socket.data.roomStartedAt = Date.now();
+
+    if (userId && Array.isArray(inviteeIds) && inviteeIds.length > 0) {
+      try {
+        const database = await getAuthDatabase();
+        const sender = await database.collection("users").findOne({ id: userId }, { projection: { name: 1, friends: 1 } });
+        const friendIds = new Set(sender?.friends || []);
+        const validInvitees = [...new Set(inviteeIds.filter((id) => typeof id === "string" && friendIds.has(id)))];
+        const recipients = await database.collection("users").find({ id: { $in: validInvitees } }, { projection: { id: 1, name: 1 } }).toArray();
+        const messages = recipients.map((recipient) => ({
+          id: crypto.randomUUID(),
+          senderId: userId,
+          senderName: sender.name,
+          recipientId: recipient.id,
+          recipientName: recipient.name,
+          text: `${sender.name} invited you to join room ${normalizedRoomId}.`,
+          roomId: normalizedRoomId,
+          createdAt: Date.now(),
+          read: false,
+        }));
+        if (messages.length > 0) {
+          await database.collection("directMessages").insertMany(messages);
+          const targetSockets = [...io.sockets.sockets.values()];
+          messages.forEach((message) => {
+            targetSockets.filter((targetSocket) => targetSocket.data.userId === message.recipientId).forEach((targetSocket) => targetSocket.emit("direct-message", message));
+          });
+        }
+      } catch (error) {
+        console.error("Room invite delivery failed:", error);
+      }
+    }
 
     socket.emit("room-state", publicRoomState(room));
     io.to(normalizedRoomId).emit("room-state", publicRoomState(room));

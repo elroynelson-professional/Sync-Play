@@ -78,6 +78,7 @@ export default function DashboardPage() {
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
+  const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -268,6 +269,7 @@ export default function DashboardPage() {
     setRoomModalMode(mode);
     setRoomDisplayName(user?.name || "");
     setRoomCode(prefilledCode);
+    setSelectedInviteeIds([]);
     setRoomError("");
   }
 
@@ -275,6 +277,7 @@ export default function DashboardPage() {
     setRoomModalMode(null);
     setRoomDisplayName("");
     setRoomCode("");
+    setSelectedInviteeIds([]);
     setRoomError("");
   }
 
@@ -287,7 +290,8 @@ export default function DashboardPage() {
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     closeRoomModal();
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create`);
+    const invitees = selectedInviteeIds.length > 0 ? `&invitees=${encodeURIComponent(selectedInviteeIds.join(","))}` : "";
+    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create${invitees}`);
   }
 
   async function submitJoinRoom() {
@@ -744,6 +748,28 @@ export default function DashboardPage() {
                     className="w-full rounded-2xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white uppercase outline-none placeholder:text-slate-500 focus:border-emerald-400/60"
                   />
                 </label>
+              ) : null}
+
+              {roomModalMode === "create" && friendContacts.length > 0 ? (
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium text-slate-200">Invite friends</legend>
+                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0a] p-2">
+                    {friendContacts.map((friend) => {
+                      const isSelected = selectedInviteeIds.includes(friend.id);
+                      return (
+                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-200" : "text-slate-300 hover:bg-white/5"}`}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => setSelectedInviteeIds((current) => isSelected ? current.filter((id) => id !== friend.id) : [...current, friend.id])}
+                            className="h-4 w-4 accent-emerald-500"
+                          />
+                          <span>{friend.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
               ) : null}
 
               {roomError ? (
