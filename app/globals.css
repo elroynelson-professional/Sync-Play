@@ -979,6 +979,17 @@ html[data-theme="light"] .syncplay-video-shell {
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
 }
 
+.syncplay-auth-shell .syncplay-theme-toggle {
+  position: static;
+  z-index: auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  flex: 0 0 auto;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
 .syncplay-theme-toggle:hover {
   transform: translateY(-2px);
   border-color: rgba(134, 239, 172, 0.5);
