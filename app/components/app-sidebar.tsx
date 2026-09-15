@@ -8,6 +8,8 @@ type AppSidebarProps = {
   onJoinRoom: () => void;
   onHelp?: () => void;
   onLogout: () => void;
+  isSettingsOpen?: boolean;
+  onDashboardClick?: () => void;
 };
 
 const navItems = [
@@ -27,7 +29,7 @@ function SidebarAction({ label, icon, onClick }: { label: string; icon: string; 
   );
 }
 
-export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout }: AppSidebarProps) {
+export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout, isSettingsOpen = false, onDashboardClick }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -40,12 +42,13 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout }: AppSi
       <nav aria-label="Primary navigation" className="space-y-1.5 text-sm">
         <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">Menu</div>
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href && !(isSettingsOpen && item.href === "/dashboard");
 
           return (
             <Link
               key={item.label}
               href={item.href}
+              onClick={item.href === "/dashboard" ? onDashboardClick : undefined}
               className={`${sidebarItemClass} ${
                 isActive ? "bg-white/6 text-emerald-300 shadow-inner shadow-emerald-500/5" : "text-slate-300 hover:bg-white/4"
               }`}
