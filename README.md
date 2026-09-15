@@ -1,10 +1,10 @@
-# SyncPlay
+# Sykonyx
 
 Watch, talk, and play together. Wherever you are.
 
 ## What this is
 
-SyncPlay is a Next.js + Socket.IO prototype for synchronized watch-and-chat rooms. The current build supports:
+Sykonyx is a Next.js + Socket.IO prototype for synchronized watch-and-chat rooms. The current build supports:
 
 - Creating and joining private rooms
 - Shared YouTube playback state

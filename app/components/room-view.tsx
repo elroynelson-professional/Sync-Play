@@ -549,7 +549,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
             <div>
               <div className="syncplay-caps text-xs text-slate-400">Room {roomId}</div>
               <h1 className="syncplay-hero-title mt-1 text-3xl text-white sm:text-4xl">
-                SyncPlay shared room
+                Sykonyx shared room
               </h1>
             </div>
             <div className="flex items-center gap-3">

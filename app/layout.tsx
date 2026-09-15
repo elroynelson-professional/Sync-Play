@@ -8,8 +8,8 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "SyncPlay",
-  description: "Watch, talk, and play together in sync.",
+  title: "Sykonyx",
+  description: "Watch, talk, and play together with Sykonyx.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
