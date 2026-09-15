@@ -1,13 +1,42 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { socketUrl } from "../lib/socket";
+import { AppShell } from "../components/app-shell";
+import { AuthPageLoading } from "../components/auth-page-loading";
+
+type ContactUser = { id: string; name: string; email: string; createdAt: string };
+
+const ACTIVE_USER_KEY = "syncplay-active-user-v1";
 
 export default function ContactPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<ContactUser | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return JSON.parse(window.localStorage.getItem(ACTIVE_USER_KEY) || "null") as ContactUser | null;
+    } catch {
+      return null;
+    }
+  });
+  const [searchTerm, setSearchTerm] = useState("");
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [statusMessage, setStatusMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+
+  useEffect(() => {
+    fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
+      .then(async (response) => {
+        if (!response.ok) {
+          router.replace("/");
+          return;
+        }
+        const payload = (await response.json()) as { user?: ContactUser };
+        if (payload.user) setUser(payload.user);
+      })
+      .catch(() => router.replace("/"));
+  }, [router]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,15 +59,17 @@ export default function ContactPage() {
     }
   }
 
-  return (
-    <main className="min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--foreground)] sm:px-8 lg:px-12">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col">
-        <header className="flex items-center justify-between border-b border-[var(--border)] pb-5">
-          <Link href="/" className="text-2xl font-semibold tracking-[-0.06em]">Sykonyx</Link>
-          <Link href="/" className="rounded-xl border border-[var(--control-border)] bg-[var(--control-background)] px-4 py-2 text-sm font-semibold text-[var(--control-text)] transition hover:bg-[var(--control-background-hover)]">Back home</Link>
-        </header>
+  if (!user) return <AuthPageLoading />;
 
-        <div className="grid flex-1 items-center gap-10 py-12 lg:grid-cols-[0.85fr_1.15fr]">
+  async function signOut() {
+    await fetch(`${socketUrl}/api/auth/logout`, { method: "POST", credentials: "include" }).catch(() => undefined);
+    window.localStorage.removeItem(ACTIVE_USER_KEY);
+    router.replace("/");
+  }
+
+  return (
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search contact" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fcontact")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => router.push("/dashboard")} onJoinRoom={() => router.push("/dashboard")} onHelp={() => router.push("/contact")} onLogout={signOut}>
+      <div className="mx-auto grid max-w-5xl items-center gap-10 py-12 lg:grid-cols-[0.85fr_1.15fr]">
           <section>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-strong)]">Contact us</p>
             <h1 className="mt-4 max-w-lg text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Let&apos;s make watching together better.</h1>
@@ -54,8 +85,7 @@ export default function ContactPage() {
             <button type="submit" disabled={isSending} className="syncplay-button-primary mt-5 rounded-xl px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60">{isSending ? "Sending..." : "Send message"}</button>
             {statusMessage ? <p className="mt-4 text-sm text-[var(--muted)]" role="status">{statusMessage}</p> : null}
           </form>
-        </div>
       </div>
-    </main>
+    </AppShell>
   );
 }

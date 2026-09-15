@@ -509,7 +509,7 @@ const server = http.createServer(async (request, response) => {
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: process.env.EMAIL_FROM,
-          to: [process.env.CONTACT_EMAIL || process.env.EMAIL_FROM],
+          to: [process.env.CONTACT_EMAIL || "elroynelson.professional@gmail.com"],
           reply_to: email,
           subject: `Sykonyx contact message from ${name}`,
           text: `From: ${name} <${email}>\n\n${message}`,
