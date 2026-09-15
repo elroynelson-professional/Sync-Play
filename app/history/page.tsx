@@ -8,6 +8,7 @@ import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { TopBar } from "../components/top-bar";
 import { AppSidebar } from "../components/app-sidebar";
 import { HelpDialog } from "../components/account-dialogs";
+import { AuthPageLoading } from "../components/auth-page-loading";
 
 type AccountUser = {
   id: string;
@@ -185,7 +186,7 @@ export default function HistoryPage() {
   }
 
   if (!user) {
-    return null;
+    return <AuthPageLoading />;
   }
 
   return (
