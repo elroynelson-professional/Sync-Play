@@ -50,6 +50,7 @@ type DashboardData = {
   metrics: {
     activeRooms: number;
     liveViewers: number;
+    friendsOnline: number;
     watchTime: string;
   };
   rooms: DashboardRoom[];
@@ -629,7 +630,7 @@ export default function DashboardPage() {
                 {[
                   { label: "Active rooms", value: String(dashboardData?.metrics.activeRooms ?? 0), change: "Rooms you created or joined" },
                   { label: "Live viewers", value: String(dashboardData?.metrics.liveViewers ?? 0), change: "Currently in your rooms" },
-                  { label: "Room time", value: dashboardData?.metrics.watchTime ?? "0h 0m", change: "Time spent in rooms" },
+                  { label: "Friends online", value: String(dashboardData?.metrics.friendsOnline ?? 0), change: "Ready to watch together" },
                 ].map((card) => (
                   <div
                     key={card.label}

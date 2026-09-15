@@ -626,6 +626,13 @@ const server = http.createServer(async (request, response) => {
 
       const database = await getAuthDatabase();
       const activities = await database.collection("activity").find({ userId: user.id }).sort({ createdAt: -1 }).limit(500).toArray();
+      const account = await database.collection("users").findOne({ id: user.id }, { projection: { friends: 1 } });
+      const friendIds = account?.friends || [];
+      const onlineFriendIds = new Set(
+        [...io.sockets.sockets.values()]
+          .map((socket) => socket.data.userId)
+          .filter((userId) => typeof userId === "string" && friendIds.includes(userId)),
+      );
       const userRoomIds = new Set(activities.map((activity) => activity.roomId));
       const liveRooms = [...rooms.values()]
         .filter((room) => room.users.some((member) => member.userId === user.id) || userRoomIds.has(room.roomId))
@@ -653,6 +660,7 @@ const server = http.createServer(async (request, response) => {
         metrics: {
           activeRooms: liveRooms.length,
           liveViewers: liveRooms.reduce((total, room) => total + Number.parseInt(room.viewers, 10), 0),
+          friendsOnline: onlineFriendIds.size,
           watchTime: `${Math.floor(roomTimeSeconds / 3600)}h ${Math.floor((roomTimeSeconds % 3600) / 60)}m`,
         },
         rooms: liveRooms,
