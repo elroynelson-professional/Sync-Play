@@ -34,6 +34,7 @@ export function VideoChat({ roomId }: VideoChatProps) {
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [peerIds, setPeerIds] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [isRemotePlaybackBlocked, setIsRemotePlaybackBlocked] = useState(false);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
   const localStreamRef = useRef<MediaStream | null>(null);
   const peersRef = useRef(new Map<string, RTCPeerConnection>());
@@ -225,6 +226,7 @@ export function VideoChat({ roomId }: VideoChatProps) {
       }
 
       void video.play().catch(() => {
+        setIsRemotePlaybackBlocked(true);
         setError("Remote video is blocked. Click the page and try joining video again.");
       });
     });
@@ -235,6 +237,16 @@ export function VideoChat({ roomId }: VideoChatProps) {
       }
     });
   }, [isVideoOpen, remoteStreams]);
+
+  async function enableRemoteVideo() {
+    const videos = [...remoteVideoRefs.current.values()];
+    const results = await Promise.allSettled(videos.map((video) => video.play()));
+
+    if (results.every((result) => result.status === "fulfilled")) {
+      setIsRemotePlaybackBlocked(false);
+      setError("");
+    }
+  }
 
   async function joinVideo() {
     if (isJoined) return;
@@ -282,6 +294,8 @@ export function VideoChat({ roomId }: VideoChatProps) {
     localStreamRef.current = null;
     setPeerIds([]);
     setRemoteStreams({});
+    setIsRemotePlaybackBlocked(false);
+    setError("");
     setIsMuted(false);
     setIsCameraOff(false);
     setIsJoined(false);
@@ -385,7 +399,16 @@ export function VideoChat({ roomId }: VideoChatProps) {
             )}
           </div>
 
-          {error ? <p className="syncplay-video-error mt-3 text-sm">{error}</p> : null}
+          {error ? (
+            <div className="mt-3 space-y-2">
+              <p className="syncplay-video-error text-sm">{error}</p>
+              {isRemotePlaybackBlocked ? (
+                <button type="button" onClick={enableRemoteVideo} className="syncplay-button-secondary rounded-2xl px-3 py-2 text-sm font-semibold">
+                  Enable remote video
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       ) : null}
 
