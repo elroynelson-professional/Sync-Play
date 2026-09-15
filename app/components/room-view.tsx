@@ -11,6 +11,7 @@ import { YouTubePlayer, type YouTubePlayerHandle } from "./youtube-player";
 import { VoiceChat } from "./voice-chat";
 import { VideoChat } from "./video-chat";
 import { AdOverlay } from "./ad-overlay";
+import { ThemeToggle } from "./theme-toggle";
 
 const AD_DISPLAY_CHANCE = 0.5;
 
@@ -552,6 +553,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
               </h1>
             </div>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <span className="syncplay-role-badge rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-slate-200">
                 {isHost ? "Host" : "Guest"}
               </span>
