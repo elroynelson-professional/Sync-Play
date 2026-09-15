@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { socketUrl } from "../lib/socket";
+import { socket, socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { AppShell } from "../components/app-shell";
 import { AuthPageLoading } from "../components/auth-page-loading";
@@ -61,6 +61,16 @@ export default function FriendsPage() {
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
   const [friendEmail, setFriendEmail] = useState("");
 
+  async function refreshFriends() {
+    const response = await fetch(`${socketUrl}/api/friends`, { credentials: "include" }).catch(() => null);
+    if (!response?.ok) return;
+
+    const payload = (await response.json()) as { friends?: FriendItem[]; requests?: FriendRequest[]; sentRequests?: FriendRequest[] };
+    setFriends(payload.friends || []);
+    setFriendRequests(payload.requests || []);
+    setSentFriendRequests(payload.sentRequests || []);
+  }
+
   useEffect(() => {
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
     if (invalidCodeMessage) {
@@ -94,6 +104,29 @@ export default function FriendsPage() {
       })
       .catch(() => router.replace("/"));
   }, [router]);
+
+  useEffect(() => {
+    if (!user) return;
+    const currentUser = user;
+
+    function handleFriendsChanged() {
+      void refreshFriends();
+    }
+
+    function handleConnect() {
+      socket.emit("identify", { userId: currentUser.id });
+    }
+
+    if (!socket.connected) socket.connect();
+    socket.emit("identify", { userId: currentUser.id });
+    socket.on("connect", handleConnect);
+    socket.on("friends-changed", handleFriendsChanged);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("friends-changed", handleFriendsChanged);
+    };
+  }, [user]);
 
   const filteredFriends = friends.filter((friend) => {
     const query = searchTerm.trim().toLowerCase();

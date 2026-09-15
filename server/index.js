@@ -897,6 +897,8 @@ const server = http.createServer(async (request, response) => {
         { id: target.id },
         { $addToSet: { friendRequests: user.id } }
       );
+      notifyUser(target.id, "friends-changed");
+      notifyUser(user.id, "friends-changed");
       writeJson(response, 200, { message: "Friend request sent." }, request);
     } catch (error) {
       console.error("Friend request failed:", error);
@@ -925,6 +927,8 @@ const server = http.createServer(async (request, response) => {
         database.collection("users").updateOne({ id: user.id }, { $pull: { friends: friendId } }),
         database.collection("users").updateOne({ id: friendId }, { $pull: { friends: user.id } }),
       ]);
+      notifyUser(user.id, "friends-changed");
+      notifyUser(friendId, "friends-changed");
       writeJson(response, 200, { message: "Friend removed." }, request);
     } catch (error) {
       console.error("Remove friend failed:", error);
@@ -951,6 +955,9 @@ const server = http.createServer(async (request, response) => {
         await database.collection("users").updateOne({ id: user.id }, { $addToSet: { friends: requesterId } });
         await database.collection("users").updateOne({ id: requesterId }, { $addToSet: { friends: user.id } });
       }
+
+      notifyUser(user.id, "friends-changed");
+      notifyUser(requesterId, "friends-changed");
 
       writeJson(response, 200, { message: action === "accept" ? "Friend request accepted." : "Friend request ignored." }, request);
     } catch (error) {
@@ -1043,6 +1050,12 @@ const io = new Server(server, {
     origin: "*",
   },
 });
+
+function notifyUser(userId, event, payload = {}) {
+  [...io.sockets.sockets.values()]
+    .filter((connectedSocket) => connectedSocket.data.userId === userId)
+    .forEach((connectedSocket) => connectedSocket.emit(event, payload));
+}
 
 io.on("connection", (socket) => {
   socket.on("identify", ({ userId }) => {
