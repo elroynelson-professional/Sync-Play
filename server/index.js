@@ -1446,12 +1446,6 @@ io.on("connection", (socket) => {
       socket.data.watchStartedAt = null;
     }
 
-    if (socket.data.roomStartedAt && socket.data.userId) {
-      recordDashboardActivity(socket.data.userId, roomId, "room-session", {
-        durationSeconds: Math.max(0, Math.round((Date.now() - socket.data.roomStartedAt) / 1000)),
-      }).catch((error) => console.error("Room session record failed:", error));
-    }
-
     room.playback = {
       ...room.playback,
       position,
@@ -1505,6 +1499,13 @@ io.on("connection", (socket) => {
       recordDashboardActivity(socket.data.userId, roomId, "watch", {
         durationSeconds: Math.max(0, Math.round((Date.now() - socket.data.watchStartedAt) / 1000)),
       }).catch((error) => console.error("Watch activity record failed:", error));
+    }
+
+    if (socket.data.roomStartedAt && socket.data.userId) {
+      recordDashboardActivity(socket.data.userId, roomId, "room-session", {
+        durationSeconds: Math.max(0, Math.round((Date.now() - socket.data.roomStartedAt) / 1000)),
+      }).catch((error) => console.error("Room session record failed:", error));
+      socket.data.roomStartedAt = null;
     }
 
     room.users = room.users.filter((user) => user.id !== socket.id);
