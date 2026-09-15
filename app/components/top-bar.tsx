@@ -14,6 +14,9 @@ type TopBarProps = {
   onInbox: () => void;
   onAccountSettings: () => void;
   hasUnread?: boolean;
+  userSearchResults?: { id: string; name: string; email: string; relationship: "friend" | "pending" | "incoming" | "none" }[];
+  onAddFriend?: (email: string) => void;
+  friendRequestPendingId?: string | null;
 };
 
 export function TopBar({
@@ -24,6 +27,9 @@ export function TopBar({
   onInbox,
   onAccountSettings,
   hasUnread = false,
+  userSearchResults = [],
+  onAddFriend,
+  friendRequestPendingId = null,
 }: TopBarProps) {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -41,7 +47,8 @@ export function TopBar({
 
   return (
     <header className="flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-[#0d0d0d] px-3 py-2.5 shadow-inner shadow-black/30">
+      <div className="relative flex-1">
+        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0d0d0d] px-3 py-2.5 shadow-inner shadow-black/30">
         <span className="text-base text-slate-400">⌕</span>
         <input
           ref={searchInputRef}
@@ -52,6 +59,35 @@ export function TopBar({
           className="w-full bg-transparent text-[13px] text-white outline-none placeholder:text-slate-500"
         />
         <span className="hidden rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-medium text-slate-300 sm:inline">⌘F</span>
+        </div>
+        {searchTerm.trim().length >= 2 && userSearchResults.length > 0 ? (
+          <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[#121212] shadow-2xl shadow-black/50">
+            {userSearchResults.map((result) => (
+              <div key={result.id} className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3 last:border-b-0">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-white">{result.name}</div>
+                  <div className="truncate text-xs text-slate-400">{result.email}</div>
+                </div>
+                {result.relationship === "friend" ? (
+                  <span className="shrink-0 text-xs text-emerald-300">Friends</span>
+                ) : result.relationship === "pending" ? (
+                  <span className="shrink-0 text-xs text-slate-400">Request sent</span>
+                ) : result.relationship === "incoming" ? (
+                  <span className="shrink-0 text-xs text-amber-300">Check requests</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onAddFriend?.(result.email)}
+                    disabled={friendRequestPendingId === result.id}
+                    className="shrink-0 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-[#03150a] disabled:opacity-60"
+                  >
+                    {friendRequestPendingId === result.id ? "Sending..." : "Add friend"}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-3">

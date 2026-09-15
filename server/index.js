@@ -751,6 +751,61 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/users/search") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const query = (requestUrl.searchParams.get("q") || "").trim().slice(0, 120);
+      if (query.length < 2) {
+        writeJson(response, 200, { users: [] }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      const account = await database.collection("users").findOne(
+        { id: user.id },
+        { projection: { friends: 1, friendRequests: 1 } },
+      );
+      const friends = new Set(account?.friends || []);
+      const incomingRequests = new Set(account?.friendRequests || []);
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const users = await database.collection("users")
+        .find({
+          id: { $ne: user.id },
+          $or: [
+            { name: { $regex: escapedQuery, $options: "i" } },
+            { email: { $regex: escapedQuery, $options: "i" } },
+          ],
+        })
+        .project({ id: 1, name: 1, email: 1, friendRequests: 1 })
+        .limit(8)
+        .toArray();
+
+      writeJson(response, 200, {
+        users: users.map((result) => ({
+          id: result.id,
+          name: result.name,
+          email: result.email,
+          relationship: friends.has(result.id)
+            ? "friend"
+            : (result.friendRequests || []).includes(user.id)
+              ? "pending"
+              : incomingRequests.has(result.id)
+                ? "incoming"
+                : "none",
+        })),
+      }, request);
+    } catch (error) {
+      console.error("User search failed:", error);
+      writeJson(response, 503, { error: "User search is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   if (request.method === "GET" && requestUrl.pathname === "/api/history") {
     try {
       const user = await getAuthenticatedUser(request);
