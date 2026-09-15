@@ -7,7 +7,8 @@ import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { TopBar } from "../components/top-bar";
 import { AppSidebar } from "../components/app-sidebar";
-import { AccountDialog, HelpDialog } from "../components/account-dialogs";
+import { HelpDialog } from "../components/account-dialogs";
+import { AccountSettingsDialog } from "../components/account-settings-dialog";
 
 type AccountUser = {
   id: string;
@@ -333,7 +334,7 @@ export default function FriendsPage() {
         </div>
       ) : null}
 
-      {isAccountSettingsOpen && user ? <AccountDialog user={user} onClose={() => setIsAccountSettingsOpen(false)} /> : null}
+      {isAccountSettingsOpen && user ? <AccountSettingsDialog user={user} socketUrl={socketUrl} onClose={() => setIsAccountSettingsOpen(false)} /> : null}
       {isHelpOpen ? <HelpDialog onClose={() => setIsHelpOpen(false)} /> : null}
 
       {roomModalMode ? (
