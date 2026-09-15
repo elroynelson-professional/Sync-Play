@@ -405,8 +405,8 @@ function handleUpload(request, response) {
     : "";
   const contentLength = Number(request.headers["content-length"] || 0);
 
-  if (!contentType.startsWith("video/") && !contentType.startsWith("audio/")) {
-    writeJson(response, 415, { error: "Only audio and video uploads are supported." });
+  if (!contentType) {
+    writeJson(response, 415, { error: "The uploaded file type is missing." });
     request.resume();
     return;
   }
@@ -673,6 +673,7 @@ const server = http.createServer(async (request, response) => {
 
       writeJson(response, 200, {
         friends: friendUsers.map((friend) => ({
+          id: friend.id,
           name: friend.name,
           status: "Away",
           mood: "Ready to watch together",
@@ -1198,10 +1199,18 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("chat-message", message);
   });
 
-  socket.on("direct-message", async ({ recipientId, text }) => {
+  socket.on("direct-message", async ({ recipientId, text, attachment }) => {
     const senderId = socket.data.userId;
     const normalizedText = typeof text === "string" ? text.trim().slice(0, 1000) : "";
-    if (!senderId || typeof recipientId !== "string" || !normalizedText) return;
+    const safeAttachment = attachment && typeof attachment === "object" && typeof attachment.url === "string" && typeof attachment.name === "string"
+      ? {
+          name: attachment.name.slice(0, 200),
+          url: attachment.url,
+          contentType: typeof attachment.contentType === "string" ? attachment.contentType.slice(0, 100) : "application/octet-stream",
+          size: Number.isFinite(attachment.size) ? attachment.size : 0,
+        }
+      : null;
+    if (!senderId || typeof recipientId !== "string" || (!normalizedText && !safeAttachment)) return;
 
     try {
       const database = await getAuthDatabase();
@@ -1218,6 +1227,7 @@ io.on("connection", (socket) => {
         recipientId,
         recipientName: recipient.name,
         text: normalizedText,
+        attachment: safeAttachment,
         createdAt: Date.now(),
         read: false,
       };

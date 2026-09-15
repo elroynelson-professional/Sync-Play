@@ -25,6 +25,17 @@ type DirectMessage = {
   createdAt: number;
   read: boolean;
   recipientName?: string;
+  attachment?: {
+    name: string;
+    url: string;
+    contentType: string;
+    size: number;
+  } | null;
+};
+
+type FriendContact = {
+  id: string;
+  name: string;
 };
 
 type DashboardRoom = {
@@ -71,8 +82,10 @@ export default function DashboardPage() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [inboxMessages, setInboxMessages] = useState<DirectMessage[]>([]);
+  const [friendContacts, setFriendContacts] = useState<FriendContact[]>([]);
   const [messageDraft, setMessageDraft] = useState("");
-  const [messageRecipient, setMessageRecipient] = useState("Ava Brooks");
+  const [messageRecipient, setMessageRecipient] = useState("");
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -112,6 +125,11 @@ export default function DashboardPage() {
         if (messagesResponse.ok) {
           const messagesPayload = (await messagesResponse.json()) as { messages?: DirectMessage[] };
           setInboxMessages(messagesPayload.messages || []);
+        }
+        const friendsResponse = await fetch(`${socketUrl}/api/friends`, { credentials: "include" });
+        if (friendsResponse.ok) {
+          const friendsPayload = (await friendsResponse.json()) as { friends?: FriendContact[] };
+          setFriendContacts(friendsPayload.friends || []);
         }
         const dashboardResponse = await fetch(`${socketUrl}/api/dashboard`, { credentials: "include" });
         if (dashboardResponse.ok) {
@@ -203,14 +221,46 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  function sendDirectMessage() {
+  async function sendDirectMessage(attachment: DirectMessage["attachment"] = null) {
     const text = messageDraft.trim();
-    if (!text || !user) return;
+    if ((!text && !attachment) || !user) return;
 
-    const recipient = inboxMessages.find((message) => message.senderName === messageRecipient)?.senderId;
+    const recipient = friendContacts.find((friend) => friend.name === messageRecipient)?.id;
     if (!recipient) return;
-    socket.emit("direct-message", { recipientId: recipient, text });
+    socket.emit("direct-message", { recipientId: recipient, text, attachment });
     setMessageDraft("");
+  }
+
+  async function handleAttachment(file: File | undefined) {
+    if (!file || !messageRecipient) return;
+    if (file.size > 25 * 1024 * 1024) {
+      setRoomError("Chat files must be 25 MB or smaller.");
+      return;
+    }
+
+    setIsUploadingAttachment(true);
+    try {
+      const response = await fetch(`${socketUrl}/uploads`, {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+          "X-File-Name": encodeURIComponent(file.name),
+        },
+        credentials: "include",
+        body: file,
+      });
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        setRoomError(payload.error || "The file could not be uploaded.");
+        return;
+      }
+
+      await sendDirectMessage({ name: file.name, url: payload.url, contentType: file.type || "application/octet-stream", size: file.size });
+    } catch {
+      setRoomError("The file could not be uploaded.");
+    } finally {
+      setIsUploadingAttachment(false);
+    }
   }
 
   function openRoomModal(mode: "create" | "join", prefilledCode = "") {
@@ -318,10 +368,11 @@ export default function DashboardPage() {
 
                   <div className="p-4 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Messages</div>
                   <div className="space-y-1 px-2 pb-4">
-                    {[...new Set(inboxMessages.map((message) => message.senderId === user.id ? message.recipientName : message.senderName).filter((name): name is string => Boolean(name)))].map((friendName) => {
-                      const friendMessages = inboxMessages.filter((message) => message.senderName === friendName || message.recipientName === friendName);
+                    {friendContacts.map((friend) => {
+                      const friendName = friend.name;
+                      const friendMessages = inboxMessages.filter((message) => message.senderId === friend.id || message.recipientId === friend.id);
                       const latestMessage = friendMessages[friendMessages.length - 1];
-                      const unread = inboxMessages.some((message) => message.senderName === friendName && !message.read);
+                      const unread = friendMessages.some((message) => message.recipientId === user.id && !message.read);
 
                       return (
                         <button
@@ -368,19 +419,31 @@ export default function DashboardPage() {
                     <>
                       <div className="flex-1 space-y-3 overflow-y-auto p-5">
                         {inboxMessages
-                          .filter((message) => message.senderName === selectedConversation || (message.senderId === user.id && message.recipientId === (selectedConversation === "Ava Brooks" ? "friend-ava" : "friend-kai")))
+                          .filter((message) => {
+                            const selectedFriend = friendContacts.find((friend) => friend.name === selectedConversation);
+                            return selectedFriend ? message.senderId === selectedFriend.id || message.recipientId === selectedFriend.id : false;
+                          })
                           .map((message) => (
                             <div key={message.id} className={`flex ${message.senderId === user.id ? "justify-end" : "justify-start"}`}>
                               <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm ${message.senderId === user.id ? "bg-emerald-500 text-[#03150a]" : "bg-[#181819] text-slate-200"}`}>
-                                {message.text}
+                                {message.text ? <p>{message.text}</p> : null}
+                                {message.attachment ? (
+                                  <a href={message.attachment.url} target="_blank" rel="noreferrer" className="mt-2 block rounded-lg bg-black/15 px-3 py-2 text-xs underline">
+                                    {message.attachment.name}
+                                  </a>
+                                ) : null}
                               </div>
                             </div>
                           ))}
                       </div>
                       <div className="border-t border-white/10 p-4">
                         <div className="flex gap-2">
-                          <input value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") sendDirectMessage(); }} placeholder="Write a message..." className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#121212] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/50" />
-                          <button type="button" onClick={sendDirectMessage} className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400">Send</button>
+                          <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-[#121212] text-lg text-slate-300 transition hover:bg-white/10" aria-label="Attach a file">
+                            <input type="file" className="hidden" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={isUploadingAttachment} />
+                            +
+                          </label>
+                          <input value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void sendDirectMessage(); }} placeholder={isUploadingAttachment ? "Uploading file..." : "Write a message..."} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#121212] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/50" disabled={isUploadingAttachment} />
+                          <button type="button" onClick={() => void sendDirectMessage()} disabled={!messageDraft.trim() || isUploadingAttachment} className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">Send</button>
                         </div>
                       </div>
                     </>
