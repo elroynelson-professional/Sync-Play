@@ -728,9 +728,10 @@ const server = http.createServer(async (request, response) => {
       const account = await database.collection("users").findOne({ id: user.id }, { projection: { friends: 1, friendRequests: 1 } });
       const friendIds = account?.friends || [];
       const requestIds = account?.friendRequests || [];
-      const [friendUsers, requestUsers] = await Promise.all([
+      const [friendUsers, requestUsers, sentRequestUsers] = await Promise.all([
         database.collection("users").find({ id: { $in: friendIds } }).project({ id: 1, name: 1, email: 1 }).toArray(),
         database.collection("users").find({ id: { $in: requestIds } }).project({ id: 1, name: 1 }).toArray(),
+        database.collection("users").find({ friendRequests: user.id }).project({ id: 1, name: 1 }).toArray(),
       ]);
 
       writeJson(response, 200, {
@@ -743,6 +744,7 @@ const server = http.createServer(async (request, response) => {
           accent: "from-emerald-400 to-teal-500",
         })),
         requests: requestUsers.map((request) => ({ id: request.id, name: request.name, note: "Sent you a friend request" })),
+        sentRequests: sentRequestUsers.map((request) => ({ id: request.id, name: request.name, note: "Awaiting response" })),
       }, request);
     } catch (error) {
       console.error("Friends data request failed:", error);

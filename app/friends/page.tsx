@@ -51,6 +51,7 @@ export default function FriendsPage() {
   const [user, setUser] = useState<AccountUser | null>(() => readActiveUser());
   const [friends, setFriends] = useState<FriendItem[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [sentFriendRequests, setSentFriendRequests] = useState<FriendRequest[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
@@ -84,9 +85,10 @@ export default function FriendsPage() {
         window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(payload.user));
         const friendsResponse = await fetch(`${socketUrl}/api/friends`, { credentials: "include" });
         if (friendsResponse.ok) {
-          const friendsPayload = (await friendsResponse.json()) as { friends?: FriendItem[]; requests?: FriendRequest[] };
+          const friendsPayload = (await friendsResponse.json()) as { friends?: FriendItem[]; requests?: FriendRequest[]; sentRequests?: FriendRequest[] };
           setFriends(friendsPayload.friends || []);
           setFriendRequests(friendsPayload.requests || []);
+          setSentFriendRequests(friendsPayload.sentRequests || []);
         }
       })
       .catch(() => router.replace("/"));
@@ -280,20 +282,30 @@ export default function FriendsPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {friendRequests.length > 0 ? friendRequests.map((request) => (
-                    <div key={request.name} className="rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
-                      <div className="text-[15px] font-medium text-white">{request.name}</div>
-                      <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
-                      <div className="mt-3 flex gap-2">
-                        <button type="button" onClick={() => acceptFriendRequest(request.name)} className="flex-1 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-medium text-[#03150a]">
-                          Accept
-                        </button>
-                        <button type="button" onClick={() => ignoreFriendRequest(request.name)} className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white">
-                          Ignore
-                        </button>
-                      </div>
-                    </div>
-                  )) : (
+                  {friendRequests.length > 0 || sentFriendRequests.length > 0 ? (
+                    <>
+                      {friendRequests.map((request) => (
+                        <div key={request.id} className="rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
+                          <div className="text-[15px] font-medium text-white">{request.name}</div>
+                          <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
+                          <div className="mt-3 flex gap-2">
+                            <button type="button" onClick={() => acceptFriendRequest(request.name)} className="flex-1 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-medium text-[#03150a]">
+                              Accept
+                            </button>
+                            <button type="button" onClick={() => ignoreFriendRequest(request.name)} className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white">
+                              Ignore
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {sentFriendRequests.map((request) => (
+                        <div key={request.id} className="rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
+                          <div className="text-[15px] font-medium text-white">{request.name}</div>
+                          <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
                     <div className="rounded-2xl border border-dashed border-white/10 bg-[#0a0a0a] p-5 text-sm text-slate-400">
                       No pending friend requests.
                     </div>
