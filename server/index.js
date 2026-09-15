@@ -487,6 +487,49 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "POST" && requestUrl.pathname === "/api/contact") {
+    try {
+      const payload = await readJsonBody(request);
+      const name = typeof payload.name === "string" ? payload.name.trim().slice(0, 120) : "";
+      const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase().slice(0, 200) : "";
+      const message = typeof payload.message === "string" ? payload.message.trim().slice(0, 5000) : "";
+
+      if (!name || !/^\S+@\S+\.\S+$/.test(email) || message.length < 10) {
+        writeJson(response, 400, { error: "Enter your name, a valid email, and a message of at least 10 characters." }, request);
+        return;
+      }
+
+      if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+        writeJson(response, 503, { error: "The contact service is not configured yet." }, request);
+        return;
+      }
+
+      const resendResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: process.env.EMAIL_FROM,
+          to: [process.env.CONTACT_EMAIL || process.env.EMAIL_FROM],
+          reply_to: email,
+          subject: `Sykonyx contact message from ${name}`,
+          text: `From: ${name} <${email}>\n\n${message}`,
+        }),
+      });
+
+      if (!resendResponse.ok) {
+        console.error("Contact email failed:", await resendResponse.text());
+        writeJson(response, 503, { error: "The contact service could not send your message." }, request);
+        return;
+      }
+
+      writeJson(response, 200, { message: "Thanks. Your message has been sent." }, request);
+    } catch (error) {
+      console.error("Contact request failed:", error);
+      writeJson(response, 503, { error: "The contact service is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/api/auth/request-otp") {
     let database;
     let email = "";

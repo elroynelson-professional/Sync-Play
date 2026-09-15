@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { socket, socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { AppShell } from "../components/app-shell";
-import { HelpDialog } from "../components/account-dialogs";
 import { AuthPageLoading } from "../components/auth-page-loading";
 
 type AccountUser = {
@@ -81,7 +80,6 @@ export default function DashboardPage() {
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [inboxReturnPath, setInboxReturnPath] = useState("/dashboard");
   const [inboxMessages, setInboxMessages] = useState<DirectMessage[]>([]);
@@ -354,7 +352,7 @@ export default function DashboardPage() {
 
   return (
     <>
-    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? closeInbox() : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => setIsHelpOpen(true)} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? closeInbox() : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
           {isInboxOpen ? (
             <section className="fixed inset-0 z-50 flex justify-end bg-black/70">
               <div className="flex h-full min-h-[560px] w-full max-w-[820px] flex-col overflow-hidden rounded-l-[22px] border-y border-l border-white/10 bg-[#0b0b0c] shadow-2xl shadow-black/60 md:flex-row">
@@ -702,7 +700,6 @@ export default function DashboardPage() {
           )}
     </AppShell>
 
-      {isHelpOpen ? <HelpDialog onClose={() => setIsHelpOpen(false)} /> : null}
 
       {roomModalMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">

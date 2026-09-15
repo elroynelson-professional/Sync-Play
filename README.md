@@ -63,6 +63,7 @@ MONGODB_URI=mongodb+srv://...
 MONGODB_DB=syncplay
 RESEND_API_KEY=re_...
 EMAIL_FROM=onboarding@resend.dev
+CONTACT_EMAIL=you@example.com
 FRONTEND_ORIGIN=https://sync-play-blue.vercel.app
 NODE_ENV=production
 ```

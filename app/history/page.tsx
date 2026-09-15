@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { AppShell } from "../components/app-shell";
-import { HelpDialog } from "../components/account-dialogs";
 import { AuthPageLoading } from "../components/auth-page-loading";
 
 type AccountUser = {
@@ -50,7 +49,6 @@ export default function HistoryPage() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [roomError, setRoomError] = useState("");
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   useEffect(() => {
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
@@ -190,7 +188,7 @@ export default function HistoryPage() {
 
   return (
     <>
-    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => setIsHelpOpen(true)} onLogout={signOut}>
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
           <section className="space-y-5 pt-5">
             <div className="flex items-end justify-between">
               <div>
@@ -236,7 +234,6 @@ export default function HistoryPage() {
           </section>
     </AppShell>
 
-      {isHelpOpen ? <HelpDialog onClose={() => setIsHelpOpen(false)} /> : null}
 
       {roomModalMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
