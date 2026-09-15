@@ -184,7 +184,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   const chatListRef = useRef<HTMLDivElement | null>(null);
   const isChatOpenRef = useRef(false);
 
-  const isHost = role === "host";
+  const isHost = role === "host" || room?.hostId === socket.id;
 
   const playback = room?.playback ?? EMPTY_PLAYBACK;
   const queue = room?.queue ?? [];
