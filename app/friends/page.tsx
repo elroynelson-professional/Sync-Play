@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
+import { TopBar } from "../components/top-bar";
 
 type AccountUser = {
   id: string;
@@ -272,31 +273,16 @@ export default function FriendsPage() {
         </aside>
 
         <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">
-          <header className="flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-[#0d0d0d] px-3 py-2.5 shadow-inner shadow-black/30">
-              <span className="text-base text-slate-400">⌕</span>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search friends"
-                className="w-full bg-transparent text-[13px] text-white outline-none placeholder:text-slate-500"
-              />
-              <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-medium text-slate-300">⌘F</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">✉</button>
-              <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200">◔</button>
-              <button type="button" onClick={() => setIsAccountSettingsOpen(true)} className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1 transition hover:bg-white/10">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[11px] font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
-                <div className="pr-1 text-left">
-                  <div className="text-[14px] font-medium text-white">{user.name}</div>
-                  <div className="text-[10px] text-slate-400">{user.email}</div>
-                </div>
-              </button>
-            </div>
-          </header>
+          <TopBar
+            searchTerm={searchTerm}
+            onSearchTermChange={setSearchTerm}
+            searchPlaceholder="Search friends"
+            user={user}
+            onInbox={() => router.push("/dashboard?inbox=1")}
+            onActivity={() => router.push("/history")}
+            onAccountSettings={() => setIsAccountSettingsOpen(true)}
+            hasUnread={friendRequests.length > 0}
+          />
 
           <section className="space-y-5 pt-5">
             <div className="flex items-end justify-between">
