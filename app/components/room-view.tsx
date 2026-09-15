@@ -552,7 +552,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
             </div>
             <div className="flex items-center gap-3">
               <span className="syncplay-role-badge rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-slate-200">
-                {role === "host" ? "Host" : "Guest"}
+                {isHost ? "Host" : "Guest"}
               </span>
               <button
                 type="button"
