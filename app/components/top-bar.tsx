@@ -11,7 +11,6 @@ type TopBarProps = {
     email: string;
   };
   onInbox: () => void;
-  onActivity: () => void;
   onAccountSettings: () => void;
   hasUnread?: boolean;
 };
@@ -22,7 +21,6 @@ export function TopBar({
   searchPlaceholder,
   user,
   onInbox,
-  onActivity,
   onAccountSettings,
   hasUnread = false,
 }: TopBarProps) {
@@ -64,14 +62,6 @@ export function TopBar({
         >
           ✉
           {hasUnread ? <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#050505] bg-emerald-400" /> : null}
-        </button>
-        <button
-          type="button"
-          onClick={onActivity}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200 transition hover:bg-white/10"
-          aria-label="Open activity history"
-        >
-          ◔
         </button>
         <button
           type="button"

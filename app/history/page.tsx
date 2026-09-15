@@ -206,7 +206,6 @@ export default function HistoryPage() {
             searchPlaceholder="Search history"
             user={user}
             onInbox={() => router.push("/dashboard?inbox=1")}
-            onActivity={() => router.push("/history")}
             onAccountSettings={() => setIsAccountSettingsOpen(true)}
           />
 

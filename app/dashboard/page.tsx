@@ -351,7 +351,6 @@ export default function DashboardPage() {
             searchPlaceholder="Search room"
             user={user}
             onInbox={() => isInboxOpen ? setIsInboxOpen(false) : openInbox()}
-            onActivity={() => router.push("/history")}
             onAccountSettings={() => setIsAccountSettingsOpen(true)}
             hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)}
           />

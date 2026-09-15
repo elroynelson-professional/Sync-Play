@@ -232,7 +232,6 @@ export default function FriendsPage() {
             searchPlaceholder="Search friends"
             user={user}
             onInbox={() => router.push("/dashboard?inbox=1")}
-            onActivity={() => router.push("/history")}
             onAccountSettings={() => setIsAccountSettingsOpen(true)}
             hasUnread={friendRequests.length > 0}
           />
