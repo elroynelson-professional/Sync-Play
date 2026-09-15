@@ -636,7 +636,12 @@ const server = http.createServer(async (request, response) => {
           status: room.playback.videoId ? "Live" : "Idle",
           code: room.roomId,
         }));
-      const watchTimeSeconds = activities.reduce((total, activity) => total + (activity.type === "watch" ? activity.durationSeconds || 0 : 0), 0);
+      const completedRoomSeconds = activities.reduce((total, activity) => total + (activity.type === "room-session" ? activity.durationSeconds || 0 : 0), 0);
+      const activeRoomSeconds = [...io.sockets.sockets.values()].reduce((total, socket) => {
+        if (socket.data.userId !== user.id || !socket.data.roomId || !socket.data.roomStartedAt) return total;
+        return total + Math.max(0, Math.round((Date.now() - socket.data.roomStartedAt) / 1000));
+      }, 0);
+      const roomTimeSeconds = completedRoomSeconds + activeRoomSeconds;
       const dayKeys = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const activityBars = dayKeys.map((label, dayIndex) => ({
         label,
@@ -648,7 +653,7 @@ const server = http.createServer(async (request, response) => {
         metrics: {
           activeRooms: liveRooms.length,
           liveViewers: liveRooms.reduce((total, room) => total + Number.parseInt(room.viewers, 10), 0),
-          watchTime: `${Math.floor(watchTimeSeconds / 3600)}h ${Math.floor((watchTimeSeconds % 3600) / 60)}m`,
+          watchTime: `${Math.floor(roomTimeSeconds / 3600)}h ${Math.floor((roomTimeSeconds % 3600) / 60)}m`,
         },
         rooms: liveRooms,
         activityBars: activityBars.map((bar) => ({ ...bar, value: Math.round((bar.value / maxActivity) * 100) })),
@@ -917,6 +922,7 @@ io.on("connection", (socket) => {
     socket.data.name = name || "Host";
     socket.data.userId = userId || null;
     socket.data.role = "host";
+    socket.data.roomStartedAt = Date.now();
 
     socket.emit("room-state", publicRoomState(room));
     io.to(normalizedRoomId).emit("room-state", publicRoomState(room));
@@ -977,6 +983,7 @@ io.on("connection", (socket) => {
     guestSocket.data.name = joinRequest.name;
     guestSocket.data.userId = joinRequest.userId;
     guestSocket.data.role = "guest";
+    guestSocket.data.roomStartedAt = Date.now();
     guestSocket.emit("join-approved");
     guestSocket.emit("room-state", publicRoomState(room));
     io.to(roomId).emit("room-state", publicRoomState(room));
@@ -1345,6 +1352,12 @@ io.on("connection", (socket) => {
         durationSeconds: Math.max(0, Math.round((Date.now() - socket.data.watchStartedAt) / 1000)),
       }).catch((error) => console.error("Watch activity record failed:", error));
       socket.data.watchStartedAt = null;
+    }
+
+    if (socket.data.roomStartedAt && socket.data.userId) {
+      recordDashboardActivity(socket.data.userId, roomId, "room-session", {
+        durationSeconds: Math.max(0, Math.round((Date.now() - socket.data.roomStartedAt) / 1000)),
+      }).catch((error) => console.error("Room session record failed:", error));
     }
 
     room.playback = {

@@ -629,7 +629,7 @@ export default function DashboardPage() {
                 {[
                   { label: "Active rooms", value: String(dashboardData?.metrics.activeRooms ?? 0), change: "Rooms you created or joined" },
                   { label: "Live viewers", value: String(dashboardData?.metrics.liveViewers ?? 0), change: "Currently in your rooms" },
-                  { label: "Watch time", value: dashboardData?.metrics.watchTime ?? "0h 0m", change: "From your watch sessions" },
+                  { label: "Room time", value: dashboardData?.metrics.watchTime ?? "0h 0m", change: "Time spent in rooms" },
                 ].map((card) => (
                   <div
                     key={card.label}
