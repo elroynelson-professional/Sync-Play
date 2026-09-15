@@ -130,15 +130,21 @@ export default function DashboardPage() {
       setInboxMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
     }
 
+    function handleConnect() {
+      if (user) socket.emit("identify", { userId: user.id });
+    }
+
     if (!socket.connected) socket.connect();
     if (user) socket.emit("identify", { userId: user.id });
     window.addEventListener("syncplay-direct-message", handleDirectMessage);
+    socket.on("connect", handleConnect);
     socket.on("direct-message", (message: DirectMessage) => {
       setInboxMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
     });
 
     return () => {
       window.removeEventListener("syncplay-direct-message", handleDirectMessage);
+      socket.off("connect", handleConnect);
       socket.off("direct-message");
     };
   }, [user]);

@@ -200,7 +200,12 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
 
   const livePosition = useMemo(() => derivePosition(playback), [playback]);
   useEffect(() => {
-    socket.connect();
+    const action = searchParams.get("action") ?? initialAction;
+    const payload = {
+      roomId,
+      name,
+      userId: typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null")?.id || null : null,
+    };
 
     function handleRoomState(nextRoom: RoomState) {
       setRoom(nextRoom);
@@ -236,6 +241,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
 
     function handleConnect() {
       setIsConnected(true);
+      socket.emit(action === "create" ? "create-room" : "join-room", payload);
     }
 
     function handleDisconnect() {
@@ -245,7 +251,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
     function handleConnectError() {
       setIsConnected(false);
       setStatus("Realtime server is offline. Start `npm run dev` or `npm run server`.");
-      socket.disconnect();
     }
 
     socket.on("room-state", handleRoomState);
@@ -254,6 +259,11 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.connect();
+    }
 
     return () => {
       socket.off("room-state", handleRoomState);
@@ -264,23 +274,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
       socket.off("connect_error", handleConnectError);
       socket.disconnect();
     };
-  }, []);
-
-  useEffect(() => {
-    const action = searchParams.get("action") ?? initialAction;
-
-    const payload = {
-      roomId,
-      name,
-      userId: typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null")?.id || null : null,
-    };
-
-    if (action === "create") {
-      socket.emit("create-room", payload);
-    } else {
-      socket.emit("join-room", payload);
-    }
-  }, [initialAction, name, roomId, searchParams]);
+  }, [initialAction, name, roomId, router, searchParams]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
