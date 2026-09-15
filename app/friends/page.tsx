@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
-import { TopBar } from "../components/top-bar";
-import { AppSidebar } from "../components/app-sidebar";
+import { AppShell } from "../components/app-shell";
 import { HelpDialog } from "../components/account-dialogs";
 import { AuthPageLoading } from "../components/auth-page-loading";
 
@@ -216,26 +215,20 @@ export default function FriendsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black p-0 text-white">
-      <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
-        <AppSidebar
-          onCreateRoom={() => openRoomModal("create")}
-          onJoinRoom={() => openRoomModal("join")}
-          onHelp={() => setIsHelpOpen(true)}
-          onLogout={signOut}
-        />
-
-        <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">
-          <TopBar
-            searchTerm={searchTerm}
-            onSearchTermChange={setSearchTerm}
-            searchPlaceholder="Search friends"
-            user={user}
-            onInbox={() => router.push("/dashboard?inbox=1")}
-            onAccountSettings={() => router.push("/dashboard?settings=1")}
-            hasUnread={friendRequests.length > 0}
-          />
-
+    <>
+    <AppShell
+      searchTerm={searchTerm}
+      onSearchTermChange={setSearchTerm}
+      searchPlaceholder="Search friends"
+      user={user}
+      onInbox={() => router.push("/dashboard?inbox=1")}
+      onAccountSettings={() => router.push("/dashboard?settings=1")}
+      onCreateRoom={() => openRoomModal("create")}
+      onJoinRoom={() => openRoomModal("join")}
+      onHelp={() => setIsHelpOpen(true)}
+      onLogout={signOut}
+      hasUnread={friendRequests.length > 0}
+    >
           <section className="space-y-5 pt-5">
             <div className="flex items-end justify-between">
               <div>
@@ -311,8 +304,7 @@ export default function FriendsPage() {
               </div>
             </div>
           </section>
-        </div>
-      </div>
+    </AppShell>
 
       {isAddFriendOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
@@ -370,6 +362,6 @@ export default function FriendsPage() {
           </div>
         </div>
       ) : null}
-    </main>
+    </>
   );
 }

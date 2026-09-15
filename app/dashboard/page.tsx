@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { socket, socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
-import { TopBar } from "../components/top-bar";
-import { AppSidebar } from "../components/app-sidebar";
+import { AppShell } from "../components/app-shell";
 import { HelpDialog } from "../components/account-dialogs";
 import { AuthPageLoading } from "../components/auth-page-loading";
 
@@ -342,29 +341,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black p-0 text-white">
-      <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
-        <AppSidebar
-          onCreateRoom={() => openRoomModal("create")}
-          onJoinRoom={() => openRoomModal("join")}
-          onHelp={() => setIsHelpOpen(true)}
-          onLogout={signOut}
-          isSettingsOpen={isAccountSettingsOpen}
-          onDashboardClick={() => setIsAccountSettingsOpen(false)}
-        />
-
-        <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">
-          <TopBar
-            searchTerm={searchTerm}
-            onSearchTermChange={setSearchTerm}
-            searchPlaceholder="Search room"
-            user={user}
-            onInbox={() => isInboxOpen ? setIsInboxOpen(false) : openInbox()}
-            onAccountSettings={() => setIsAccountSettingsOpen(true)}
-            hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)}
-          />
-
-          <div className="mt-4 flex-1 overflow-y-auto pr-1 pb-2">
+    <>
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? setIsInboxOpen(false) : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => setIsHelpOpen(true)} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
           {isInboxOpen ? (
             <section className="fixed inset-0 z-50 flex justify-end bg-black/70">
               <div className="flex h-full min-h-[560px] w-full max-w-[820px] flex-col overflow-hidden rounded-l-[22px] border-y border-l border-white/10 bg-[#0b0b0c] shadow-2xl shadow-black/60 md:flex-row">
@@ -710,9 +688,7 @@ export default function DashboardPage() {
               </div>
             </section>
           )}
-          </div>
-        </div>
-      </div>
+    </AppShell>
 
       {isHelpOpen ? <HelpDialog onClose={() => setIsHelpOpen(false)} /> : null}
 
@@ -795,6 +771,6 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : null}
-    </main>
+    </>
   );
 }
