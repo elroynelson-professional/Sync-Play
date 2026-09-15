@@ -121,8 +121,10 @@ export default function FriendsPage() {
     socket.emit("identify", { userId: currentUser.id });
     socket.on("connect", handleConnect);
     socket.on("friends-changed", handleFriendsChanged);
+    const refreshTimer = window.setInterval(handleFriendsChanged, 5000);
 
     return () => {
+      window.clearInterval(refreshTimer);
       socket.off("connect", handleConnect);
       socket.off("friends-changed", handleFriendsChanged);
     };
