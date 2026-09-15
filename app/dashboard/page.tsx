@@ -285,7 +285,6 @@ export default function DashboardPage() {
         <AppSidebar
           onCreateRoom={() => openRoomModal("create")}
           onJoinRoom={() => openRoomModal("join")}
-          onAccountSettings={() => setIsAccountSettingsOpen(true)}
           onHelp={() => setIsHelpOpen(true)}
           onLogout={signOut}
         />

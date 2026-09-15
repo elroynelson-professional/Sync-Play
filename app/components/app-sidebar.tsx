@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 type AppSidebarProps = {
   onCreateRoom: () => void;
   onJoinRoom: () => void;
-  onAccountSettings: () => void;
   onHelp?: () => void;
   onLogout: () => void;
 };
@@ -28,7 +27,7 @@ function SidebarAction({ label, icon, onClick }: { label: string; icon: string; 
   );
 }
 
-export function AppSidebar({ onCreateRoom, onJoinRoom, onAccountSettings, onHelp, onLogout }: AppSidebarProps) {
+export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -69,7 +68,6 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onAccountSettings, onHelp
 
       <div className="mt-auto space-y-3 text-sm">
         <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">General</div>
-        <SidebarAction label="Account settings" icon="◌" onClick={onAccountSettings} />
         <SidebarAction label="Help" icon="?" onClick={onHelp} />
         <SidebarAction label="Logout" icon="↪" onClick={onLogout} />
       </div>
