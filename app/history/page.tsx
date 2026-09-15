@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { TopBar } from "../components/top-bar";
+import { AppSidebar } from "../components/app-sidebar";
 
 type AccountUser = {
   id: string;
@@ -24,12 +25,6 @@ type HistoryRow = {
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
 
-const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: "▣" },
-  { label: "Friends", href: "/friends", icon: "◫" },
-  { label: "History", href: "/history", icon: "◌" },
-];
-
 function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
@@ -47,7 +42,6 @@ function readActiveUser(): AccountUser | null {
 
 export default function HistoryPage() {
   const router = useRouter();
-  const pathname = usePathname();
   const [user, setUser] = useState<AccountUser | null>(null);
   const [historyRows, setHistoryRows] = useState<HistoryRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -191,60 +185,12 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-black p-0 text-white">
       <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
-        <aside className="hidden w-[240px] flex-col border-r border-white/10 bg-[#090909] px-4 py-5 md:flex">
-          <div className="mb-6 flex items-center gap-3 px-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/10 text-base font-semibold text-emerald-300">◔</div>
-            <div className="text-[1.7rem] font-semibold tracking-[-0.06em] text-white">SyncPlay</div>
-          </div>
-
-          <div className="space-y-1.5 text-sm">
-            <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">Menu</div>
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${
-                    isActive ? "bg-white/6 text-emerald-300 shadow-inner shadow-emerald-500/5" : "text-slate-300 hover:bg-white/4"
-                  }`}
-                >
-                  <span className={`flex h-4 w-4 items-center justify-center text-[10px] ${isActive ? "text-emerald-300" : "text-slate-400"}`}>{item.icon}</span>
-                  <span className="text-[15px] font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
-
-            <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
-              <button type="button" onClick={() => openRoomModal("create")} className="block w-full rounded-xl bg-emerald-500 px-3 py-2.5 text-center text-sm font-medium text-[#03150a]">
-                Create room
-              </button>
-              <button type="button" onClick={() => openRoomModal("join")} className="block w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center text-sm font-medium text-white">
-                Join room
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-auto space-y-3 text-sm">
-            <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">General</div>
-            {[
-              { label: "Account settings", action: () => setIsAccountSettingsOpen(true) },
-              { label: "Help", action: () => undefined },
-              { label: "Logout", action: signOut },
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={item.action}
-                className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-300 transition hover:bg-white/4"
-              >
-                <span className="flex h-4 w-4 items-center justify-center text-[10px] text-slate-400">◌</span>
-                <span className="text-[15px]">{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
+        <AppSidebar
+          onCreateRoom={() => openRoomModal("create")}
+          onJoinRoom={() => openRoomModal("join")}
+          onAccountSettings={() => setIsAccountSettingsOpen(true)}
+          onLogout={signOut}
+        />
 
         <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-4 py-4 md:px-5 md:py-5">
           <TopBar
