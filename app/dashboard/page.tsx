@@ -72,7 +72,7 @@ function readActiveUser(): AccountUser | null {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<AccountUser | null>(null);
+  const [user, setUser] = useState<AccountUser | null>(() => readActiveUser());
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);

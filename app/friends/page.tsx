@@ -49,7 +49,7 @@ function readActiveUser(): AccountUser | null {
 
 export default function FriendsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<AccountUser | null>(null);
+  const [user, setUser] = useState<AccountUser | null>(() => readActiveUser());
   const [friends, setFriends] = useState<FriendItem[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
