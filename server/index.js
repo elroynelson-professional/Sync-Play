@@ -246,6 +246,7 @@ function createRoom(roomId, hostId, name) {
     queue: [],
     history: [],
     messages: [],
+    pendingJoins: [],
     createdAt: Date.now(),
   };
 }
@@ -281,8 +282,13 @@ function upsertUser(room, socketId, name, userId = null) {
 function broadcastRoom(io, roomId) {
   const room = getRoom(roomId);
   if (room) {
-    io.to(roomId).emit("room-state", room);
+    io.to(roomId).emit("room-state", publicRoomState(room));
   }
+}
+
+function publicRoomState(room) {
+  const { pendingJoins, ...state } = room;
+  return state;
 }
 
 function setCorsHeaders(response, request) {
@@ -912,8 +918,8 @@ io.on("connection", (socket) => {
     socket.data.userId = userId || null;
     socket.data.role = "host";
 
-    socket.emit("room-state", room);
-    io.to(normalizedRoomId).emit("room-state", room);
+    socket.emit("room-state", publicRoomState(room));
+    io.to(normalizedRoomId).emit("room-state", publicRoomState(room));
     recordDashboardActivity(userId, normalizedRoomId, "room-created").catch((error) => console.error("Activity record failed:", error));
   });
 
@@ -926,17 +932,67 @@ io.on("connection", (socket) => {
       return;
     }
 
-    upsertUser(room, socket.id, name || "Guest", userId);
+    const existingRequest = room.pendingJoins.find((request) => request.socketId === socket.id);
+    if (existingRequest) {
+      socket.emit("join-request-pending");
+      return;
+    }
 
-    socket.join(normalizedRoomId);
-    socket.data.roomId = normalizedRoomId;
+    const joinRequest = {
+      requestId: socket.id,
+      socketId: socket.id,
+      userId: userId || null,
+      name: name || "Guest",
+      createdAt: Date.now(),
+    };
+    room.pendingJoins.push(joinRequest);
+    socket.data.pendingRoomId = normalizedRoomId;
     socket.data.name = name || "Guest";
     socket.data.userId = userId || null;
     socket.data.role = "guest";
+    socket.emit("join-request-pending");
+    io.to(room.hostId).emit("room-join-request", {
+      requestId: joinRequest.requestId,
+      name: joinRequest.name,
+      createdAt: joinRequest.createdAt,
+    });
+  });
 
-    socket.emit("room-state", room);
-    io.to(normalizedRoomId).emit("room-state", room);
-    recordDashboardActivity(userId, normalizedRoomId, "room-joined").catch((error) => console.error("Activity record failed:", error));
+  socket.on("approve-room-join", ({ requestId }) => {
+    const roomId = socket.data.roomId;
+    const room = roomId ? getRoom(roomId) : null;
+    if (!room || room.hostId !== socket.id || typeof requestId !== "string") return;
+
+    const requestIndex = room.pendingJoins.findIndex((request) => request.requestId === requestId);
+    if (requestIndex < 0) return;
+
+    const [joinRequest] = room.pendingJoins.splice(requestIndex, 1);
+    const guestSocket = io.sockets.sockets.get(joinRequest.socketId);
+    if (!guestSocket) return;
+
+    upsertUser(room, guestSocket.id, joinRequest.name, joinRequest.userId);
+    guestSocket.join(roomId);
+    guestSocket.data.roomId = roomId;
+    delete guestSocket.data.pendingRoomId;
+    guestSocket.data.name = joinRequest.name;
+    guestSocket.data.userId = joinRequest.userId;
+    guestSocket.data.role = "guest";
+    guestSocket.emit("join-approved");
+    guestSocket.emit("room-state", publicRoomState(room));
+    io.to(roomId).emit("room-state", publicRoomState(room));
+    recordDashboardActivity(joinRequest.userId, roomId, "room-joined").catch((error) => console.error("Activity record failed:", error));
+  });
+
+  socket.on("deny-room-join", ({ requestId }) => {
+    const roomId = socket.data.roomId;
+    const room = roomId ? getRoom(roomId) : null;
+    if (!room || room.hostId !== socket.id || typeof requestId !== "string") return;
+
+    const requestIndex = room.pendingJoins.findIndex((request) => request.requestId === requestId);
+    if (requestIndex < 0) return;
+
+    const [joinRequest] = room.pendingJoins.splice(requestIndex, 1);
+    io.sockets.sockets.get(joinRequest.socketId)?.emit("join-denied");
   });
 
   socket.on("change-track", ({ videoId, title, url, mediaType }) => {
@@ -1318,6 +1374,13 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     const roomId = socket.data.roomId;
+    const pendingRoomId = socket.data.pendingRoomId;
+    if (pendingRoomId) {
+      const pendingRoom = getRoom(pendingRoomId);
+      if (pendingRoom) {
+        pendingRoom.pendingJoins = pendingRoom.pendingJoins.filter((request) => request.socketId !== socket.id);
+      }
+    }
     if (!roomId) return;
 
     if (socket.data.voiceJoined) {

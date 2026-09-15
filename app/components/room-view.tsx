@@ -176,6 +176,8 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [localPosition, setLocalPosition] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
+  const [isJoinPending, setIsJoinPending] = useState(false);
+  const [joinRequests, setJoinRequests] = useState<{ requestId: string; name: string }[]>([]);
   const [isAdOpen, setIsAdOpen] = useState(false);
   const [pendingAdAction, setPendingAdAction] = useState<(() => void) | null>(null);
   const playerRef = useRef<YouTubePlayerHandle | null>(null);
@@ -224,6 +226,27 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
       }
     }
 
+    function handleJoinRequestPending() {
+      setIsJoinPending(true);
+      setStatus("Join request sent. Waiting for the host to approve it...");
+    }
+
+    function handleJoinApproved() {
+      setIsJoinPending(false);
+      setStatus("Room active and synced.");
+    }
+
+    function handleJoinDenied() {
+      setIsJoinPending(false);
+      setStatus("The host declined your request to join this room.");
+      window.sessionStorage.setItem("syncplay-room-error", "The host declined your request to join this room.");
+      router.replace("/dashboard");
+    }
+
+    function handleRoomJoinRequest(request: { requestId: string; name: string }) {
+      setJoinRequests((current) => current.some((item) => item.requestId === request.requestId) ? current : [...current, request]);
+    }
+
     function handleChatMessage(nextMessage: ChatMessage) {
       if (!isChatOpenRef.current) {
         setUnreadChatCount((count) => count + 1);
@@ -241,6 +264,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
 
     function handleConnect() {
       setIsConnected(true);
+      setJoinRequests([]);
       socket.emit(action === "create" ? "create-room" : "join-room", payload);
     }
 
@@ -255,6 +279,10 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
 
     socket.on("room-state", handleRoomState);
     socket.on("room-error", handleRoomError);
+    socket.on("join-request-pending", handleJoinRequestPending);
+    socket.on("join-approved", handleJoinApproved);
+    socket.on("join-denied", handleJoinDenied);
+    socket.on("room-join-request", handleRoomJoinRequest);
     socket.on("chat-message", handleChatMessage);
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
@@ -268,6 +296,10 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
     return () => {
       socket.off("room-state", handleRoomState);
       socket.off("room-error", handleRoomError);
+      socket.off("join-request-pending", handleJoinRequestPending);
+      socket.off("join-approved", handleJoinApproved);
+      socket.off("join-denied", handleJoinDenied);
+      socket.off("room-join-request", handleRoomJoinRequest);
       socket.off("chat-message", handleChatMessage);
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
@@ -275,6 +307,16 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
       socket.disconnect();
     };
   }, [initialAction, name, roomId, router, searchParams]);
+
+  function approveJoin(requestId: string) {
+    socket.emit("approve-room-join", { requestId });
+    setJoinRequests((current) => current.filter((request) => request.requestId !== requestId));
+  }
+
+  function denyJoin(requestId: string) {
+    socket.emit("deny-room-join", { requestId });
+    setJoinRequests((current) => current.filter((request) => request.requestId !== requestId));
+  }
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -523,6 +565,38 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
             </div>
           </div>
         </header>
+
+        {isJoinPending ? (
+          <section className="syncplay-panel rounded-[28px] p-8 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-400/10 text-2xl text-emerald-300">...</div>
+            <h2 className="mt-5 text-2xl font-semibold text-white">Waiting for host approval</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">Your request was sent. You will enter the room as soon as the host approves it.</p>
+            <button type="button" onClick={() => router.push("/dashboard")} className="mt-6 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Leave request</button>
+          </section>
+        ) : null}
+
+        {isHost && joinRequests.length > 0 ? (
+          <section className="syncplay-panel rounded-[28px] border-emerald-400/20 p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="syncplay-caps text-xs text-emerald-300">Join requests</div>
+                <h2 className="mt-1 text-xl font-semibold text-white">Approve who enters this room</h2>
+              </div>
+              <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">{joinRequests.length} pending</span>
+            </div>
+            <div className="mt-4 space-y-2">
+              {joinRequests.map((request) => (
+                <div key={request.requestId} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                  <span className="text-sm font-medium text-white">{request.name} wants to join</span>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => denyJoin(request.requestId)} className="rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/10">Deny</button>
+                    <button type="button" onClick={() => approveJoin(request.requestId)} className="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-[#03150a] transition hover:bg-emerald-400">Approve</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_340px] lg:gap-8 xl:grid-cols-[minmax(0,1.25fr)_380px]">
             <div className="space-y-6 lg:space-y-8">
