@@ -197,7 +197,12 @@ export default function FriendsPage() {
     }
   }
 
-  function signOut() {
+  async function signOut() {
+    await fetch(`${socketUrl}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => undefined);
+
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(ACTIVE_USER_KEY);
     }
@@ -216,7 +221,6 @@ export default function FriendsPage() {
         <AppSidebar
           onCreateRoom={() => openRoomModal("create")}
           onJoinRoom={() => openRoomModal("join")}
-          onAccountSettings={() => setIsAccountSettingsOpen(true)}
           onHelp={() => setIsHelpOpen(true)}
           onLogout={signOut}
         />
