@@ -25,6 +25,8 @@ type DirectMessage = {
   createdAt: number;
   read: boolean;
   recipientName?: string;
+  roomId?: string;
+  roomTitle?: string;
   attachment?: {
     name: string;
     url: string;
@@ -251,6 +253,11 @@ export default function DashboardPage() {
     if (!recipient) return;
     socket.emit("direct-message", { recipientId: recipient, text, attachment });
     setMessageDraft("");
+  }
+
+  function joinRoomFromMessage(roomId?: string, roomTitle?: string) {
+    if (!roomId) return;
+    router.push(`/room/${roomId}?name=${encodeURIComponent(user?.name || "Guest")}&role=guest&action=join&title=${encodeURIComponent(roomTitle || `Room ${roomId}`)}`);
   }
 
   async function handleAttachment(file: File | undefined) {
@@ -494,6 +501,15 @@ export default function DashboardPage() {
                             <div key={message.id} className={`flex ${message.senderId === user.id ? "justify-end" : "justify-start"}`}>
                               <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm ${message.senderId === user.id ? "bg-emerald-500 text-[#03150a]" : "bg-[#181819] text-slate-200"}`}>
                                 {message.text ? <p>{message.text}</p> : null}
+                                {message.roomId ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => joinRoomFromMessage(message.roomId, message.roomTitle)}
+                                    className="mt-3 inline-flex items-center justify-center rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-[#03150a] shadow-sm shadow-emerald-950/40 transition hover:bg-emerald-400"
+                                  >
+                                    Join room
+                                  </button>
+                                ) : null}
                                 {message.attachment ? (
                                   <a href={message.attachment.url} target="_blank" rel="noreferrer" className="mt-2 block rounded-lg bg-black/15 px-3 py-2 text-xs underline">
                                     {message.attachment.name}

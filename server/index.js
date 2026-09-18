@@ -1148,14 +1148,16 @@ io.on("connection", (socket) => {
         const friendIds = new Set(sender?.friends || []);
         const validInvitees = [...new Set(inviteeIds.filter((id) => typeof id === "string" && friendIds.has(id)))];
         const recipients = await database.collection("users").find({ id: { $in: validInvitees } }, { projection: { id: 1, name: 1 } }).toArray();
+        const roomTitle = room.title || `Room ${normalizedRoomId}`;
         const messages = recipients.map((recipient) => ({
           id: crypto.randomUUID(),
           senderId: userId,
           senderName: sender.name,
           recipientId: recipient.id,
           recipientName: recipient.name,
-          text: `${sender.name} invited you to join room ${normalizedRoomId}.`,
+          text: `${sender.name} invited you to join ${roomTitle}.`,
           roomId: normalizedRoomId,
+          roomTitle,
           createdAt: Date.now(),
           read: false,
         }));
