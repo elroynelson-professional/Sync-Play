@@ -17,7 +17,7 @@ type AppShellProps = {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   searchPlaceholder: string;
-  user: { name: string; email: string };
+  user: { name: string; email: string; profileImage?: string | null };
   onInbox: () => void;
   onAccountSettings: () => void;
   onCreateRoom: () => void;

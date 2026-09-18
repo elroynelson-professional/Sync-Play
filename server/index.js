@@ -141,6 +141,7 @@ async function getAuthenticatedUser(request) {
     name: sessionUser.name,
     email: sessionUser.email,
     createdAt: sessionUser.createdAt,
+    profileImage: sessionUser.profileImage || null,
   };
 }
 
@@ -610,6 +611,7 @@ const server = http.createServer(async (request, response) => {
           name,
           email,
           createdAt: new Date().toISOString(),
+          profileImage: null,
         };
         const passwordHash = await bcrypt.hash(password, 12);
         await database.collection("users").insertOne({ ...user, passwordHash, provider: "password" });
@@ -633,6 +635,7 @@ const server = http.createServer(async (request, response) => {
           name: storedUser.name,
           email: storedUser.email,
           createdAt: storedUser.createdAt,
+          profileImage: storedUser.profileImage || null,
         },
       }, request);
       return;
@@ -963,6 +966,46 @@ const server = http.createServer(async (request, response) => {
     } catch (error) {
       console.error("Friend request action failed:", error);
       writeJson(response, 503, { error: "Friend request action is temporarily unavailable." }, request);
+    }
+    return;
+  }
+
+  if (request.method === "POST" && requestUrl.pathname === "/api/auth/profile-picture") {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) {
+        writeJson(response, 401, { error: "You are not signed in." }, request);
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const imageUrl = typeof payload.imageUrl === "string" ? payload.imageUrl.trim() : "";
+      const isValidProfileImage = /^https?:\/\//.test(imageUrl) || imageUrl.startsWith("/uploads/");
+      if (!imageUrl || !isValidProfileImage) {
+        writeJson(response, 400, { error: "Choose a valid image to use as your profile picture." }, request);
+        return;
+      }
+
+      const database = await getAuthDatabase();
+      const updatedUser = await database.collection("users").findOneAndUpdate(
+        { id: user.id },
+        { $set: { profileImage: imageUrl } },
+        { returnDocument: "after", projection: { id: 1, name: 1, email: 1, createdAt: 1, profileImage: 1 } },
+      );
+
+      const normalizedUser = updatedUser.value || { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt, profileImage: imageUrl };
+      writeJson(response, 200, {
+        user: {
+          id: normalizedUser.id,
+          name: normalizedUser.name,
+          email: normalizedUser.email,
+          createdAt: normalizedUser.createdAt,
+          profileImage: normalizedUser.profileImage || null,
+        },
+      }, request);
+    } catch (error) {
+      console.error("Profile picture update failed:", error);
+      writeJson(response, 503, { error: "Profile picture update is temporarily unavailable." }, request);
     }
     return;
   }

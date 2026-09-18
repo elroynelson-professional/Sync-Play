@@ -13,6 +13,7 @@ type AccountUser = {
   name: string;
   email: string;
   createdAt: string;
+  profileImage?: string | null;
 };
 
 type DirectMessage = {
@@ -99,6 +100,7 @@ export default function DashboardPage() {
     twoFactor: false,
     sessionActivity: true,
   });
+  const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
 
   useEffect(() => {
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
@@ -278,6 +280,57 @@ export default function DashboardPage() {
       setRoomError("The file could not be uploaded.");
     } finally {
       setIsUploadingAttachment(false);
+    }
+  }
+
+  async function handleProfileImageUpload(file: File | undefined) {
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      setPasswordMessage("Choose a valid image file for your profile picture.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPasswordMessage("Profile pictures must be 5 MB or smaller.");
+      return;
+    }
+
+    setIsUploadingProfileImage(true);
+    try {
+      const uploadResponse = await fetch(`${socketUrl}/uploads`, {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type || "image/jpeg",
+          "X-File-Name": encodeURIComponent(file.name),
+        },
+        credentials: "include",
+        body: file,
+      });
+      const uploadPayload = (await uploadResponse.json()) as { url?: string; error?: string };
+      if (!uploadResponse.ok || !uploadPayload.url) {
+        setPasswordMessage(uploadPayload.error || "The image could not be uploaded.");
+        return;
+      }
+
+      const saveResponse = await fetch(`${socketUrl}/api/auth/profile-picture`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ imageUrl: uploadPayload.url }),
+      });
+      const savePayload = (await saveResponse.json()) as { user?: AccountUser; error?: string };
+      if (!saveResponse.ok || !savePayload.user) {
+        setPasswordMessage(savePayload.error || "The profile picture could not be saved.");
+        return;
+      }
+
+      const nextUser = { ...user, ...savePayload.user, profileImage: savePayload.user.profileImage || null };
+      setUser(nextUser);
+      window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(nextUser));
+      setPasswordMessage("Profile picture updated.");
+    } catch {
+      setPasswordMessage("The profile picture could not be uploaded.");
+    } finally {
+      setIsUploadingProfileImage(false);
     }
   }
 
@@ -488,6 +541,26 @@ export default function DashboardPage() {
                       <h3 className="mt-1 text-[1.2rem] font-semibold tracking-[-0.03em] text-white">Personal information</h3>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2 sm:col-span-2">
+                        <span className="text-sm text-slate-400">Profile picture</span>
+                        <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#121212] p-3">
+                          {user.profileImage ? (
+                            <img src={user.profileImage} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-1 ring-white/10" />
+                          ) : (
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1d1d1d] text-sm font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
+                          )}
+                          <label className="cursor-pointer rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400">
+                            {isUploadingProfileImage ? "Uploading..." : "Upload photo"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(event) => { void handleProfileImageUpload(event.target.files?.[0]); event.currentTarget.value = ""; }}
+                              disabled={isUploadingProfileImage}
+                            />
+                          </label>
+                        </div>
+                      </div>
                       <label className="space-y-2">
                         <span className="text-sm text-slate-400">First name</span>
                         <input value={user.name.split(" ")[0] || user.name} readOnly className="w-full rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm text-white outline-none" />

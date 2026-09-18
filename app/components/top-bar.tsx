@@ -10,6 +10,7 @@ type TopBarProps = {
   user: {
     name: string;
     email: string;
+    profileImage?: string | null;
   };
   onInbox: () => void;
   onAccountSettings: () => void;
@@ -107,7 +108,11 @@ export function TopBar({
           className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-left transition hover:bg-white/10"
           aria-label="Open account settings"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[11px] font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
+          {user.profileImage ? (
+            <img src={user.profileImage} alt={user.name} className="h-8 w-8 rounded-full object-cover ring-1 ring-white/10" />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-[11px] font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
+          )}
           <div className="pr-1">
             <div className="text-[14px] font-medium text-white">{user.name}</div>
             <div className="text-[10px] text-slate-400">{user.email}</div>
