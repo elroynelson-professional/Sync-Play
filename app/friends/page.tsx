@@ -60,6 +60,7 @@ export default function FriendsPage() {
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
+  const [roomTitle, setRoomTitle] = useState("");
   const [roomError, setRoomError] = useState("");
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
   const [friendEmail, setFriendEmail] = useState("");
@@ -144,6 +145,7 @@ export default function FriendsPage() {
     setRoomModalMode(mode);
     setRoomDisplayName(user?.name || "");
     setRoomCode("");
+    setRoomTitle("");
     setRoomError("");
   }
 
@@ -151,19 +153,25 @@ export default function FriendsPage() {
     setRoomModalMode(null);
     setRoomDisplayName("");
     setRoomCode("");
+    setRoomTitle("");
     setRoomError("");
   }
 
   function handleCreateRoom() {
     const name = roomDisplayName.trim();
+    const title = roomTitle.trim();
     if (name.length < 2) {
       setRoomError("Add a valid display name first.");
+      return;
+    }
+    if (title.length < 2) {
+      setRoomError("Add a room title to create the room.");
       return;
     }
 
     const code = makeRoomCode();
     closeRoomModal();
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create`);
+    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create&title=${encodeURIComponent(title)}`);
   }
 
   async function handleJoinRoom() {
@@ -430,6 +438,13 @@ export default function FriendsPage() {
                 <span className="text-sm font-medium text-slate-200">Display name</span>
                 <input value={roomDisplayName} onChange={(event) => setRoomDisplayName(event.target.value)} placeholder="Your display name" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
               </label>
+
+              {roomModalMode === "create" ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-200">Room title</span>
+                  <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                </label>
+              ) : null}
 
               {roomModalMode === "join" ? (
                 <label className="block space-y-2">

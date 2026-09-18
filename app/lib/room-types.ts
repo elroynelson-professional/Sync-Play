@@ -36,6 +36,7 @@ export type PlaybackState = {
 export type RoomState = {
   roomId: string;
   hostId: string | null;
+  title: string | null;
   users: RoomMember[];
   playback: PlaybackState;
   queue: QueueTrack[];

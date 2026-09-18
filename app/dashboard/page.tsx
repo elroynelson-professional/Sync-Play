@@ -79,6 +79,7 @@ export default function DashboardPage() {
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
+  const [roomTitle, setRoomTitle] = useState("");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
@@ -339,6 +340,7 @@ export default function DashboardPage() {
     setRoomModalMode(mode);
     setRoomDisplayName(user?.name || "");
     setRoomCode(prefilledCode);
+    setRoomTitle("");
     setSelectedInviteeIds([]);
     setRoomError("");
   }
@@ -347,21 +349,27 @@ export default function DashboardPage() {
     setRoomModalMode(null);
     setRoomDisplayName("");
     setRoomCode("");
+    setRoomTitle("");
     setSelectedInviteeIds([]);
     setRoomError("");
   }
 
   function submitCreateRoom() {
     const name = roomDisplayName.trim();
+    const title = roomTitle.trim();
     if (name.length < 2) {
       setRoomError("Add a valid display name first.");
+      return;
+    }
+    if (title.length < 2) {
+      setRoomError("Add a room title to create the room.");
       return;
     }
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     closeRoomModal();
     const invitees = selectedInviteeIds.length > 0 ? `&invitees=${encodeURIComponent(selectedInviteeIds.join(","))}` : "";
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create${invitees}`);
+    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create&title=${encodeURIComponent(title)}${invitees}`);
   }
 
   async function submitJoinRoom() {
@@ -812,6 +820,18 @@ export default function DashboardPage() {
                   className="w-full rounded-2xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/60"
                 />
               </label>
+
+              {roomModalMode === "create" ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-200">Room title</span>
+                  <input
+                    value={roomTitle}
+                    onChange={(event) => setRoomTitle(event.target.value)}
+                    placeholder="Movie night, watch party, study session..."
+                    className="w-full rounded-2xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/60"
+                  />
+                </label>
+              ) : null}
 
               {roomModalMode === "join" ? (
                 <label className="block space-y-2">

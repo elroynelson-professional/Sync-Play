@@ -17,6 +17,7 @@ type RoomViewProps = {
   initialName: string;
   initialRole: "host" | "guest";
   initialAction: "create" | "join";
+  initialTitle?: string;
 };
 
 function extractYouTubeId(input: string) {
@@ -160,7 +161,7 @@ function getThumbnailUrl(videoId: string) {
   return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 }
 
-export function RoomView({ roomId, initialName, initialRole, initialAction }: RoomViewProps) {
+export function RoomView({ roomId, initialName, initialRole, initialAction, initialTitle = "Sykonyx shared room" }: RoomViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [room, setRoom] = useState<RoomState | null>(null);
@@ -181,6 +182,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   const isChatOpenRef = useRef(false);
 
   const isHost = role === "host" || room?.hostId === socket.id;
+  const roomTitle = room?.title || initialTitle || "Sykonyx shared room";
 
   const playback = room?.playback ?? EMPTY_PLAYBACK;
   const queue = room?.queue ?? [];
@@ -199,9 +201,11 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
   const livePosition = useMemo(() => derivePosition(playback), [playback]);
   useEffect(() => {
     const action = searchParams.get("action") ?? initialAction;
+    const title = searchParams.get("title") ?? initialTitle ?? "Sykonyx shared room";
     const payload = {
       roomId,
       name,
+      title,
       userId: typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null")?.id || null : null,
       inviteeIds: (searchParams.get("invitees") || "").split(",").filter(Boolean),
     };
@@ -523,7 +527,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction }: Ro
             <div>
               <div className="syncplay-caps text-xs text-slate-400">Room {roomId}</div>
               <h1 className="syncplay-hero-title mt-1 text-3xl text-white sm:text-4xl">
-                Sykonyx shared room
+                {roomTitle}
               </h1>
             </div>
             <div className="flex items-center gap-3">
