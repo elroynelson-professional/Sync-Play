@@ -99,6 +99,11 @@ html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#101011]"],
 html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#0a0a0a]"],
 html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#121212]"],
 html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#111111]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#111214]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#17181b]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#1b1d22]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#111827]"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-zinc-950"],
 html[data-theme="light"] .syncplay-auth-shell [class~="bg-black"] {
   background-color: var(--surface) !important;
 }
@@ -124,7 +129,9 @@ html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-500"] {
 }
 
 html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/10"],
-html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/8"] {
+html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/8"],
+html[data-theme="light"] .syncplay-auth-shell [class~="border-slate-600\/60"],
+html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/12"] {
   border-color: var(--border) !important;
 }
 
@@ -145,6 +152,27 @@ html[data-theme="light"] .syncplay-auth-shell button.bg-emerald-500,
 html[data-theme="light"] .syncplay-auth-shell button.bg-emerald-500:hover {
   background-color: var(--accent) !important;
   color: #f4fff9 !important;
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] main,
+html[data-theme="light"] section,
+html[data-theme="light"] div,
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] button {
+  color: var(--foreground);
+}
+
+html[data-theme="light"] .syncplay-auth-shell .text-slate-100,
+html[data-theme="light"] .syncplay-auth-shell .text-slate-200,
+html[data-theme="light"] .syncplay-auth-shell .text-slate-300,
+html[data-theme="light"] .syncplay-auth-shell .text-slate-400,
+html[data-theme="light"] .syncplay-auth-shell .text-slate-500,
+html[data-theme="light"] .syncplay-auth-shell .placeholder\:text-slate-400::placeholder,
+html[data-theme="light"] .syncplay-auth-shell .placeholder\:text-slate-500::placeholder,
+html[data-theme="light"] .syncplay-auth-shell .placeholder\:text-zinc-500::placeholder {
+  color: var(--muted) !important;
 }
 
 body {
