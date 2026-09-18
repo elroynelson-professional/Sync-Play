@@ -108,9 +108,25 @@ export function AppShell({ children, searchTerm, onSearchTermChange, searchPlace
             </div>
 
             {mobileMenuOpen ? (
-              <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm">
-                <div className="h-full w-[92vw] max-w-[420px] bg-[#090909] px-5 py-4 shadow-2xl shadow-black/60">
-                  <div className="mb-7 text-[2.2rem] font-semibold tracking-[-0.08em] text-white">Sykonyx</div>
+              <div
+                className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <div
+                  className="h-full w-[92vw] max-w-[420px] bg-[#090909] px-5 py-4 shadow-2xl shadow-black/60"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <div className="text-[2.2rem] font-semibold tracking-[-0.08em] text-white">Sykonyx</div>
+                    <button
+                      type="button"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl text-slate-200"
+                      aria-label="Close navigation menu"
+                    >
+                      ×
+                    </button>
+                  </div>
 
                   <div className="mb-4 text-[0.8rem] font-semibold uppercase tracking-[0.25em] text-slate-400">Menu</div>
                   <nav className="space-y-3">
