@@ -62,12 +62,24 @@ type DashboardData = {
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
 
+function normalizeStoredUser(value: Partial<AccountUser> | null | undefined): AccountUser | null {
+  if (!value || !value.id || !value.name || !value.email) return null;
+
+  return {
+    id: value.id,
+    name: value.name,
+    email: value.email,
+    createdAt: value.createdAt || new Date().toISOString(),
+    profileImage: value.profileImage ?? null,
+  };
+}
+
 function readActiveUser(): AccountUser | null {
   if (typeof window === "undefined") return null;
 
   try {
     const raw = window.localStorage.getItem(ACTIVE_USER_KEY);
-    return raw ? (JSON.parse(raw) as AccountUser) : null;
+    return raw ? normalizeStoredUser(JSON.parse(raw) as Partial<AccountUser>) : null;
   } catch {
     return null;
   }
@@ -126,8 +138,14 @@ export default function DashboardPage() {
           return;
         }
 
-        setUser(payload.user);
-        window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(payload.user));
+        const nextUser = normalizeStoredUser(payload.user) || readActiveUser();
+        if (!nextUser) {
+          router.replace("/");
+          return;
+        }
+
+        setUser(nextUser);
+        window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(nextUser));
         const messagesResponse = await fetch(`${socketUrl}/api/messages`, { credentials: "include" });
         if (messagesResponse.ok) {
           const messagesPayload = (await messagesResponse.json()) as { messages?: DirectMessage[] };
