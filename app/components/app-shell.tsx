@@ -174,7 +174,7 @@ export function AppShell({ children, searchTerm, onSearchTermChange, searchPlace
           </div>
 
           <TopBar searchTerm={searchTerm} onSearchTermChange={onSearchTermChange} searchPlaceholder={searchPlaceholder} user={user} onInbox={onInbox} onAccountSettings={onAccountSettings} hasUnread={hasUnread} userSearchResults={userSearchResults} onAddFriend={addFriend} friendRequestPendingId={friendRequestPendingId} />
-          <div className="mt-4 flex-1 overflow-y-auto overflow-x-hidden pb-2 pr-0 md:pr-1">{children}</div>
+          <div className="syncplay-page-shell mt-4 flex-1 overflow-y-auto overflow-x-hidden pb-2 pr-0 md:pr-1">{children}</div>
         </div>
       </div>
     </main>
