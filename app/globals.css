@@ -201,14 +201,24 @@ html[data-theme="light"] [class~="text-slate-100"],
 html[data-theme="light"] [class~="text-slate-200"],
 html[data-theme="light"] [class~="text-slate-300"],
 html[data-theme="light"] [class~="text-slate-400"],
-html[data-theme="light"] [class~="text-slate-500"] {
+html[data-theme="light"] [class~="text-slate-500"],
+html[data-theme="light"] .text-white,
+html[data-theme="light"] .text-slate-100,
+html[data-theme="light"] .text-slate-200,
+html[data-theme="light"] .text-slate-300,
+html[data-theme="light"] .text-slate-400,
+html[data-theme="light"] .text-slate-500 {
   color: var(--foreground) !important;
 }
 
 html[data-theme="light"] [class~="border-white/10"],
 html[data-theme="light"] [class~="border-white/8"],
 html[data-theme="light"] [class~="border-white/12"],
-html[data-theme="light"] [class~="border-slate-600/60"] {
+html[data-theme="light"] [class~="border-slate-600/60"],
+html[data-theme="light"] .border-white\/10,
+html[data-theme="light"] .border-white\/8,
+html[data-theme="light"] .border-white\/12,
+html[data-theme="light"] .border-slate-600\/60 {
   border-color: var(--border) !important;
 }
 
