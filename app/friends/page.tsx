@@ -325,7 +325,7 @@ export default function FriendsPage() {
                         <span className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] ${
                           friend.status === "Online" || friend.status === "In room"
                             ? "bg-emerald-500/10 text-emerald-300"
-                            : "bg-amber-500/10 text-amber-300"
+                            : "bg-slate-200/80 text-slate-700 dark:bg-slate-700/40 dark:text-slate-300"
                         }`}>
                           {friend.status}
                         </span>
