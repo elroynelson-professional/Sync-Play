@@ -34,8 +34,7 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout, isSetti
 
   return (
     <aside className="hidden w-[240px] shrink-0 flex-col border-r border-white/10 bg-[#090909] px-4 py-5 md:flex">
-      <div className="mb-6 flex items-center gap-3 px-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/10 text-base font-semibold text-emerald-300">◔</div>
+      <div className="mb-6 px-2">
         <div className="text-[1.7rem] font-semibold tracking-[-0.06em] text-white">Sykonyx</div>
       </div>
 
