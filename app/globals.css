@@ -26,28 +26,28 @@
 
 html[data-theme="light"] {
   color-scheme: light;
-  --background: #f5f7fa;
-  --foreground: #101828;
-  --muted: #667085;
-  --surface: #ffffff;
-  --surface-strong: #f2f4f7;
-  --border: rgba(16, 24, 40, 0.12);
-  --accent: #16a34a;
-  --accent-strong: #166534;
-  --accent-soft: #15803d;
-  --success: #16a34a;
-  --panel-background: #ffffff;
-  --panel-border: #eaecf0;
-  --control-background: #f2f4f7;
-  --control-background-hover: #e4e7ec;
-  --control-border: #d0d5dd;
-  --control-text: #344054;
+  --background: #edf4f8;
+  --foreground: #122033;
+  --muted: #56657a;
+  --surface: #f9fbfc;
+  --surface-strong: #edf3f8;
+  --border: rgba(18, 32, 51, 0.12);
+  --accent: #1d9d5f;
+  --accent-strong: #15754a;
+  --accent-soft: #49c28a;
+  --success: #1d9d5f;
+  --panel-background: rgba(255, 255, 255, 0.72);
+  --panel-border: rgba(18, 32, 51, 0.08);
+  --control-background: rgba(15, 23, 42, 0.04);
+  --control-background-hover: rgba(15, 23, 42, 0.08);
+  --control-border: rgba(18, 32, 51, 0.12);
+  --control-text: #294056;
   --input-background: #ffffff;
-  --input-border: #d0d5dd;
-  --input-text: #101828;
-  --soft-background: #f8fafc;
-  --soft-border: #eaecf0;
-  background: linear-gradient(180deg, #fbfcfe 0%, #f2f4f7 100%);
+  --input-border: rgba(18, 32, 51, 0.12);
+  --input-text: #122033;
+  --soft-background: rgba(255, 255, 255, 0.7);
+  --soft-border: rgba(18, 32, 51, 0.1);
+  background: linear-gradient(180deg, #f7fbfe 0%, #edf3f8 100%);
 }
 
 @theme inline {
@@ -103,6 +103,15 @@ html[data-theme="light"] .syncplay-auth-shell [class~="bg-black"] {
   background-color: var(--surface) !important;
 }
 
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/5"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/6"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/8"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/10"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-black/20"],
+html[data-theme="light"] .syncplay-auth-shell [class~="bg-black/70"] {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
 html[data-theme="light"] .syncplay-auth-shell [class~="text-white"] {
   color: var(--foreground) !important;
 }
@@ -124,6 +133,18 @@ html[data-theme="light"] .syncplay-auth-shell textarea {
   color: var(--foreground) !important;
   background-color: var(--input-background) !important;
   border-color: var(--input-border) !important;
+}
+
+html[data-theme="light"] .syncplay-auth-shell .bg-emerald-500,
+html[data-theme="light"] .syncplay-auth-shell .bg-emerald-500\/15,
+html[data-theme="light"] .syncplay-auth-shell .bg-emerald-500\/10 {
+  background-color: rgba(29, 157, 95, 0.12) !important;
+}
+
+html[data-theme="light"] .syncplay-auth-shell button.bg-emerald-500,
+html[data-theme="light"] .syncplay-auth-shell button.bg-emerald-500:hover {
+  background-color: var(--accent) !important;
+  color: #f4fff9 !important;
 }
 
 body {
