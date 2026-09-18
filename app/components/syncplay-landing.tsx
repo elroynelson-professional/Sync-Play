@@ -240,7 +240,7 @@ export function SyncPlayLanding() {
                 Watch together.
                 <span className="mt-1 block text-zinc-300">Same moment. Same room.</span>
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+              <p className="syncplay-landing-copy max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
                 Create a private room, share the code, and keep YouTube playback in sync across browsers.
                 Chat, talk, and see each other while you share the moment.
               </p>
@@ -395,8 +395,8 @@ export function SyncPlayLanding() {
       </div>
 
       {roomModalMode ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111214] p-6 shadow-2xl shadow-black/40">
+        <div className="syncplay-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="syncplay-modal-panel w-full max-w-md rounded-[28px] border border-white/10 bg-[#111214] p-6 shadow-2xl shadow-black/40">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-300">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
