@@ -402,7 +402,7 @@ export default function FriendsPage() {
 
       {isAddFriendOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <form onSubmit={(event) => { event.preventDefault(); void handleAddFriend(); }} className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
+          <form onSubmit={(event) => { event.preventDefault(); void handleAddFriend(); }} className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111214] p-6 shadow-2xl shadow-black/40">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Community</p>
@@ -411,8 +411,8 @@ export default function FriendsPage() {
               <button type="button" onClick={() => setIsAddFriendOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300" aria-label="Close add friend dialog">×</button>
             </div>
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-200">Friend email</span>
-              <input type="email" value={friendEmail} onChange={(event) => setFriendEmail(event.target.value)} placeholder="friend@example.com" autoFocus className="w-full rounded-2xl border border-white/10 bg-[#0a0a0a] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/60" />
+              <span className="text-sm font-medium text-slate-100">Friend email</span>
+              <input type="email" value={friendEmail} onChange={(event) => setFriendEmail(event.target.value)} placeholder="friend@example.com" autoFocus className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80" />
             </label>
             <button type="submit" disabled={!friendEmail.trim()} className="mt-5 w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">Send friend request</button>
           </form>

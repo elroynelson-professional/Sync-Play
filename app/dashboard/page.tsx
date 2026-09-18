@@ -830,7 +830,7 @@ export default function DashboardPage() {
           <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111214] p-6 shadow-2xl shadow-black/40">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-300">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-300">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
                 <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">
                   {roomModalMode === "create" ? "Start a room" : "Enter room details"}
                 </h3>
@@ -851,7 +851,7 @@ export default function DashboardPage() {
                   value={roomDisplayName}
                   onChange={(event) => setRoomDisplayName(event.target.value)}
                   placeholder="Your display name"
-                  className="w-full rounded-2xl border border-white/10 bg-[#17181b] px-4 py-3 text-base text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/70"
+                  className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-base text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
                 />
               </label>
 
@@ -862,7 +862,7 @@ export default function DashboardPage() {
                     value={roomTitle}
                     onChange={(event) => setRoomTitle(event.target.value)}
                     placeholder="Movie night, watch party, study session..."
-                    className="w-full rounded-2xl border border-white/10 bg-[#17181b] px-4 py-3 text-base text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/70"
+                    className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-base text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
                   />
                 </label>
               ) : null}
@@ -874,7 +874,7 @@ export default function DashboardPage() {
                     value={roomCode}
                     onChange={(event) => setRoomCode(event.target.value)}
                     placeholder="Enter room code"
-                    className="w-full rounded-2xl border border-white/10 bg-[#17181b] px-4 py-3 text-base uppercase text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/70"
+                    className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-base uppercase text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
                   />
                 </label>
               ) : null}
@@ -882,7 +882,7 @@ export default function DashboardPage() {
               {roomModalMode === "create" && friendContacts.length > 0 ? (
                 <fieldset className="space-y-2">
                   <legend className="text-sm font-medium text-slate-100">Invite friends</legend>
-                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#17181b] p-2">
+                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-slate-600/60 bg-[#1b1d22] p-2">
                     {friendContacts.map((friend) => {
                       const isSelected = selectedInviteeIds.includes(friend.id);
                       return (

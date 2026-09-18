@@ -396,10 +396,10 @@ export function SyncPlayLanding() {
 
       {roomModalMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111827] p-6 shadow-2xl shadow-black/40">
+          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111214] p-6 shadow-2xl shadow-black/40">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-300">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
                 <h3 className="mt-2 text-2xl font-semibold text-white">
                   {roomModalMode === "create" ? "Start a room" : "Enter room details"}
                 </h3>
@@ -415,23 +415,23 @@ export function SyncPlayLanding() {
 
             <div className="space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-200">Display name</span>
+                <span className="text-sm font-medium text-slate-100">Display name</span>
                 <input
                   value={roomModalDisplayName}
                   onChange={(event) => setRoomModalDisplayName(event.target.value)}
                   placeholder="Your display name"
-                  className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60"
+                  className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
                 />
               </label>
 
               {roomModalMode === "join" ? (
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-200">Room code</span>
+                  <span className="text-sm font-medium text-slate-100">Room code</span>
                   <input
                     value={roomModalCode}
                     onChange={(event) => setRoomModalCode(event.target.value)}
                     placeholder="Enter room code"
-                    className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-white uppercase outline-none placeholder:text-zinc-500 focus:border-emerald-400/60"
+                    className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-white uppercase outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
                   />
                 </label>
               ) : null}
@@ -443,7 +443,7 @@ export function SyncPlayLanding() {
               <button
                 type="button"
                 onClick={roomModalMode === "create" ? handleCreateRoom : handleJoinRoom}
-                className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400"
+                className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400"
               >
                 {roomModalMode === "create" ? "Create room" : "Join room"}
               </button>
