@@ -521,9 +521,13 @@ export default function DashboardPage() {
               <div className="mx-auto max-w-[1280px] overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0b0c] p-4 sm:p-5">
                 <div className="mb-7 flex items-center justify-between gap-4 border-b border-white/10 pb-5">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[radial-gradient(circle_at_30%_30%,_#f3d6b1,_#b4815d_38%,_#2d2b2b_100%)] text-[2rem] font-semibold text-white shadow-inner shadow-black/40 sm:h-[72px] sm:w-[72px]">
-                      {(user.name || "G").slice(0, 2).toUpperCase()}
-                    </div>
+                    {user.profileImage ? (
+                      <img src={user.profileImage} alt={user.name} className="h-16 w-16 rounded-[18px] object-cover shadow-inner shadow-black/40 sm:h-[72px] sm:w-[72px]" />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[radial-gradient(circle_at_30%_30%,_#f3d6b1,_#b4815d_38%,_#2d2b2b_100%)] text-[2rem] font-semibold text-white shadow-inner shadow-black/40 sm:h-[72px] sm:w-[72px]">
+                        {(user.name || "G").slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
                     <div>
                       <h2 className="text-[1.65rem] font-semibold tracking-[-0.04em] text-white sm:text-[1.85rem]">{user.name}</h2>
                       <p className="mt-1 text-sm leading-none text-slate-300 sm:text-[0.95rem]">Account owner</p>
