@@ -827,18 +827,18 @@ export default function DashboardPage() {
 
       {roomModalMode ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111214] p-6 shadow-2xl shadow-black/40">
+          <div className="w-full max-w-md rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl shadow-black/20">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-300">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
-                <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">
+                <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
+                <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
                   {roomModalMode === "create" ? "Start a room" : "Enter room details"}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={closeRoomModal}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-200"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--soft-background)] text-lg text-[var(--foreground)]"
               >
                 ×
               </button>
@@ -846,35 +846,35 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-100">Display name</span>
+                <span className="text-sm font-medium text-[var(--foreground)]">Display name</span>
                 <input
                   value={roomDisplayName}
                   onChange={(event) => setRoomDisplayName(event.target.value)}
                   placeholder="Your display name"
-                  className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-base text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
+                  className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/80"
                 />
               </label>
 
               {roomModalMode === "create" ? (
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-100">Room title</span>
+                  <span className="text-sm font-medium text-[var(--foreground)]">Room title</span>
                   <input
                     value={roomTitle}
                     onChange={(event) => setRoomTitle(event.target.value)}
                     placeholder="Movie night, watch party, study session..."
-                    className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-base text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/80"
                   />
                 </label>
               ) : null}
 
               {roomModalMode === "join" ? (
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-100">Room code</span>
+                  <span className="text-sm font-medium text-[var(--foreground)]">Room code</span>
                   <input
                     value={roomCode}
                     onChange={(event) => setRoomCode(event.target.value)}
                     placeholder="Enter room code"
-                    className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-base uppercase text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80"
+                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base uppercase text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/80"
                   />
                 </label>
               ) : null}
