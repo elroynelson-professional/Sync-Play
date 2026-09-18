@@ -882,11 +882,11 @@ export default function DashboardPage() {
               {roomModalMode === "create" && friendContacts.length > 0 ? (
                 <fieldset className="space-y-2">
                   <legend className="text-sm font-medium text-slate-100">Invite friends</legend>
-                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-slate-600/60 bg-[#1b1d22] p-2">
+                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] p-2">
                     {friendContacts.map((friend) => {
                       const isSelected = selectedInviteeIds.includes(friend.id);
                       return (
-                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-200" : "text-slate-200 hover:bg-white/5"}`}>
+                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-700" : "text-[var(--foreground)] hover:bg-[var(--soft-background)]"}`}>
                           <input
                             type="checkbox"
                             checked={isSelected}
