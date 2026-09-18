@@ -441,11 +441,11 @@ export default function DashboardPage() {
     <>
     <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? closeInbox() : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
           {isInboxOpen ? (
-            <section className="fixed inset-0 z-50 flex justify-end bg-black/70">
-              <div className="flex h-full min-h-[560px] w-full max-w-[820px] flex-col overflow-hidden rounded-l-[22px] border-y border-l border-white/10 bg-[#0b0b0c] shadow-2xl shadow-black/60 md:flex-row">
+            <section className="fixed inset-0 z-50 flex bg-black/70 md:justify-end">
+              <div className="flex h-full w-full max-w-[820px] flex-col overflow-hidden border-white/10 bg-[#0b0b0c] shadow-2xl shadow-black/60 md:min-h-[560px] md:flex-row md:rounded-l-[22px] md:border-y md:border-l">
                 <aside className="w-full border-b border-white/10 bg-[#101011] md:w-[310px] md:border-b-0 md:border-r">
-                  <div className="flex items-center gap-2 border-b border-white/10 p-4">
-                    <div className="flex flex-1 items-center gap-2 rounded-xl bg-[#1a1a1c] px-3 py-2.5">
+                  <div className="flex items-center gap-2 border-b border-white/10 p-3 sm:p-4">
+                    <div className="flex flex-1 items-center gap-2 rounded-xl bg-[#1a1a1c] px-2.5 py-2 sm:px-3">
                       <span className="text-slate-500">⌕</span>
                       <input placeholder="Search" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500" />
                     </div>
@@ -454,8 +454,8 @@ export default function DashboardPage() {
                     </button>
                   </div>
 
-                  <div className="p-4 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Messages</div>
-                  <div className="space-y-1 px-2 pb-4">
+                  <div className="px-3 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 sm:px-4 sm:pt-4">Messages</div>
+                  <div className="space-y-1 px-2 pb-3 sm:pb-4">
                     {friendContacts.map((friend) => {
                       const friendName = friend.name;
                       const friendMessages = inboxMessages.filter((message) => message.senderId === friend.id || message.recipientId === friend.id);
@@ -470,12 +470,12 @@ export default function DashboardPage() {
                             setSelectedConversation(friendName);
                             setMessageRecipient(friendName);
                           }}
-                          className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${selectedConversation === friendName ? "bg-emerald-500/15" : "hover:bg-white/5"}`}
+                          className={`flex w-full items-center gap-2.5 rounded-xl p-2.5 text-left transition sm:gap-3 sm:p-3 ${selectedConversation === friendName ? "bg-emerald-500/15" : "hover:bg-white/5"}`}
                         >
                           {friend.profileImage ? (
-                            <img src={friend.profileImage} alt={friendName} className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-white/10" />
+                            <img src={friend.profileImage} alt={friendName} className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-white/10 sm:h-10 sm:w-10" />
                           ) : (
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-semibold text-[#03150a]">{friendName.split(" ").map((part) => part[0]).join("")}</div>
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-xs font-semibold text-[#03150a] sm:h-10 sm:w-10 sm:text-sm">{friendName.split(" ").map((part) => part[0]).join("")}</div>
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">
@@ -493,11 +493,11 @@ export default function DashboardPage() {
                   </div>
                 </aside>
 
-                <div className="flex min-w-0 flex-1 flex-col bg-[#0b0b0c]">
-                  <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#0b0b0c]">
+                  <div className="flex items-center justify-between border-b border-white/10 px-3 py-3 sm:px-5 sm:py-4">
                     {selectedConversation ? (
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-semibold text-[#03150a]">{selectedConversation.split(" ").map((part) => part[0]).join("")}</div>
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-xs font-semibold text-[#03150a] sm:h-10 sm:w-10 sm:text-sm">{selectedConversation.split(" ").map((part) => part[0]).join("")}</div>
                         <div>
                           <h2 className="font-semibold text-white">{selectedConversation}</h2>
                           <p className="text-xs text-emerald-300">Friend</p>
@@ -509,7 +509,7 @@ export default function DashboardPage() {
 
                   {selectedConversation ? (
                     <>
-                      <div className="flex-1 space-y-3 overflow-y-auto p-5">
+                      <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto p-3 sm:space-y-3 sm:p-5">
                         {inboxMessages
                           .filter((message) => {
                             const selectedFriend = friendContacts.find((friend) => friend.name === selectedConversation);
@@ -517,7 +517,7 @@ export default function DashboardPage() {
                           })
                           .map((message) => (
                             <div key={message.id} className={`flex ${message.senderId === user.id ? "justify-end" : "justify-start"}`}>
-                              <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm ${message.senderId === user.id ? "bg-emerald-500 text-[#03150a]" : "bg-[#181819] text-slate-200"}`}>
+                              <div className={`max-w-[80%] rounded-2xl px-3 py-2.5 text-sm sm:max-w-[75%] sm:px-4 sm:py-3 ${message.senderId === user.id ? "bg-emerald-500 text-[#03150a]" : "bg-[#181819] text-slate-200"}`}>
                                 {message.text ? <p>{message.text}</p> : null}
                                 {message.roomId ? (
                                   <button
@@ -537,14 +537,14 @@ export default function DashboardPage() {
                             </div>
                           ))}
                       </div>
-                      <div className="border-t border-white/10 p-4">
+                      <div className="border-t border-white/10 p-2.5 sm:p-4">
                         <div className="flex gap-2">
-                          <label className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-[#121212] text-lg text-slate-300 transition hover:bg-white/10" aria-label="Attach a file">
+                          <label className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/10 bg-[#121212] text-lg text-slate-300 transition hover:bg-white/10 sm:h-11 sm:w-11" aria-label="Attach a file">
                             <input type="file" className="hidden" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={isUploadingAttachment} />
                             +
                           </label>
-                          <input value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void sendDirectMessage(); }} placeholder={isUploadingAttachment ? "Uploading file..." : "Write a message..."} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#121212] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/50" disabled={isUploadingAttachment} />
-                          <button type="button" onClick={() => void sendDirectMessage()} disabled={!messageDraft.trim() || isUploadingAttachment} className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">Send</button>
+                          <input value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void sendDirectMessage(); }} placeholder={isUploadingAttachment ? "Uploading file..." : "Write a message..."} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#121212] px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-emerald-400/50 sm:px-4 sm:py-3" disabled={isUploadingAttachment} />
+                          <button type="button" onClick={() => void sendDirectMessage()} disabled={!messageDraft.trim() || isUploadingAttachment} className="rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3">Send</button>
                         </div>
                       </div>
                     </>
