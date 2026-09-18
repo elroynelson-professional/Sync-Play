@@ -732,9 +732,9 @@ const server = http.createServer(async (request, response) => {
       const friendIds = account?.friends || [];
       const requestIds = account?.friendRequests || [];
       const [friendUsers, requestUsers, sentRequestUsers] = await Promise.all([
-        database.collection("users").find({ id: { $in: friendIds } }).project({ id: 1, name: 1, email: 1 }).toArray(),
-        database.collection("users").find({ id: { $in: requestIds } }).project({ id: 1, name: 1 }).toArray(),
-        database.collection("users").find({ friendRequests: user.id }).project({ id: 1, name: 1 }).toArray(),
+        database.collection("users").find({ id: { $in: friendIds } }).project({ id: 1, name: 1, email: 1, profileImage: 1 }).toArray(),
+        database.collection("users").find({ id: { $in: requestIds } }).project({ id: 1, name: 1, profileImage: 1 }).toArray(),
+        database.collection("users").find({ friendRequests: user.id }).project({ id: 1, name: 1, profileImage: 1 }).toArray(),
       ]);
 
       writeJson(response, 200, {
@@ -743,11 +743,22 @@ const server = http.createServer(async (request, response) => {
           name: friend.name,
           status: "Away",
           mood: "Ready to watch together",
-          avatar: friend.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase(),
+          avatar: friend.profileImage || friend.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase(),
           accent: "from-emerald-400 to-teal-500",
+          profileImage: friend.profileImage || null,
         })),
-        requests: requestUsers.map((request) => ({ id: request.id, name: request.name, note: "Sent you a friend request" })),
-        sentRequests: sentRequestUsers.map((request) => ({ id: request.id, name: request.name, note: "Awaiting response" })),
+        requests: requestUsers.map((request) => ({
+          id: request.id,
+          name: request.name,
+          note: "Sent you a friend request",
+          profileImage: request.profileImage || null,
+        })),
+        sentRequests: sentRequestUsers.map((request) => ({
+          id: request.id,
+          name: request.name,
+          note: "Awaiting response",
+          profileImage: request.profileImage || null,
+        })),
       }, request);
     } catch (error) {
       console.error("Friends data request failed:", error);

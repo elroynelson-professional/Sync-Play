@@ -13,6 +13,7 @@ type AccountUser = {
   name: string;
   email: string;
   createdAt: string;
+  profileImage?: string | null;
 };
 
 type FriendItem = {
@@ -22,12 +23,14 @@ type FriendItem = {
   mood: string;
   avatar: string;
   accent: string;
+  profileImage?: string | null;
 };
 
 type FriendRequest = {
   id: string;
   name: string;
   note: string;
+  profileImage?: string | null;
 };
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
@@ -297,9 +300,13 @@ export default function FriendsPage() {
                   {filteredFriends.length > 0 ? filteredFriends.map((friend) => (
                     <div key={friend.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">
-                          {friend.avatar}
-                        </div>
+                        {friend.profileImage ? (
+                          <img src={friend.profileImage} alt={friend.name} className="h-12 w-12 rounded-full object-cover ring-1 ring-white/10" />
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">
+                            {friend.avatar}
+                          </div>
+                        )}
                         <div>
                           <div className="text-[15px] font-medium text-white">{friend.name}</div>
                           <div className="text-[12px] text-slate-400">{friend.mood}</div>
@@ -337,8 +344,17 @@ export default function FriendsPage() {
                     <>
                       {friendRequests.map((request) => (
                         <div key={request.id} className="rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
-                          <div className="text-[15px] font-medium text-white">{request.name}</div>
-                          <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
+                          <div className="flex items-center gap-3">
+                            {request.profileImage ? (
+                              <img src={request.profileImage} alt={request.name} className="h-10 w-10 rounded-full object-cover ring-1 ring-white/10" />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">{request.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[15px] font-medium text-white">{request.name}</div>
+                              <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
+                            </div>
+                          </div>
                           <div className="mt-3 flex gap-2">
                             <button type="button" onClick={() => acceptFriendRequest(request.name)} className="flex-1 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-medium text-[#03150a]">
                               Accept
@@ -351,8 +367,17 @@ export default function FriendsPage() {
                       ))}
                       {sentFriendRequests.map((request) => (
                         <div key={request.id} className="rounded-2xl border border-white/8 bg-[#0a0a0a] p-3">
-                          <div className="text-[15px] font-medium text-white">{request.name}</div>
-                          <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
+                          <div className="flex items-center gap-3">
+                            {request.profileImage ? (
+                              <img src={request.profileImage} alt={request.name} className="h-10 w-10 rounded-full object-cover ring-1 ring-white/10" />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">{request.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[15px] font-medium text-white">{request.name}</div>
+                              <div className="mt-1 text-[12px] text-slate-400">{request.note}</div>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </>

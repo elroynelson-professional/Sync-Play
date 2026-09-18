@@ -36,6 +36,7 @@ type DirectMessage = {
 type FriendContact = {
   id: string;
   name: string;
+  profileImage?: string | null;
 };
 
 type DashboardRoom = {
@@ -438,7 +439,11 @@ export default function DashboardPage() {
                           }}
                           className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${selectedConversation === friendName ? "bg-emerald-500/15" : "hover:bg-white/5"}`}
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-semibold text-[#03150a]">{friendName.split(" ").map((part) => part[0]).join("")}</div>
+                          {friend.profileImage ? (
+                            <img src={friend.profileImage} alt={friendName} className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-white/10" />
+                          ) : (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-sm font-semibold text-[#03150a]">{friendName.split(" ").map((part) => part[0]).join("")}</div>
+                          )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">
                               <span className="truncate text-sm font-semibold text-white">{friendName}</span>
