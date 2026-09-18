@@ -47,9 +47,9 @@ export function TopBar({
   }, []);
 
   return (
-    <header className="flex flex-col gap-3 border-b border-[var(--border)] pb-4 md:flex-row md:items-center md:justify-between">
+    <header className="animate-fade-up flex flex-col gap-3 border-b border-[var(--border)] pb-4 md:flex-row md:items-center md:justify-between">
       <div className="relative flex-1 min-w-0">
-        <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-inner shadow-black/10">
+        <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-inner shadow-black/10 transition-transform duration-200 hover:scale-[1.01]">
           <span className="shrink-0 text-base text-[var(--muted)]">⌕</span>
           <input
             ref={searchInputRef}

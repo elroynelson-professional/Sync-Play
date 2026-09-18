@@ -758,7 +758,7 @@ export default function DashboardPage() {
                 ].map((card) => (
                   <div
                     key={card.label}
-                    className="rounded-[20px] border border-white/10 bg-[#0d0d0d] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
+                    className="card-surface animate-fade-up rounded-[20px] border border-white/10 bg-[#0d0d0d] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
                   >
                     <div className="text-[12px] font-medium uppercase tracking-[0.14em] text-slate-400">{card.label}</div>
                     <div className="mt-3 text-[2.2rem] font-semibold tracking-[-0.06em] text-white">{card.value}</div>
@@ -781,7 +781,7 @@ export default function DashboardPage() {
                           key={room.name}
                           type="button"
                           onClick={() => openRoomModal("join", room.code)}
-                          className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0a0a0a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#111111]"
+                          className="card-surface flex w-full items-center justify-between rounded-2xl border border-white/8 bg-[#0a0a0a] p-3 text-left transition hover:border-emerald-400/30 hover:bg-[#111111]"
                         >
                           <div>
                             <div className="text-[14px] font-medium text-white">{room.name}</div>
