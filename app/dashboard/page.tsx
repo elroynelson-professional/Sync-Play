@@ -560,25 +560,25 @@ export default function DashboardPage() {
             </section>
           ) : isAccountSettingsOpen ? (
             <section className="pt-5 pb-2">
-              <div className="mx-auto max-w-[1280px] overflow-hidden rounded-[28px] border border-white/10 bg-[#0b0b0c] p-4 sm:p-5">
-                <div className="mb-7 flex items-center justify-between gap-4 border-b border-white/10 pb-5">
+              <div className="mx-auto max-w-[1280px] overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+                <div className="mb-7 flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
                   <div className="flex items-center gap-4">
                     {user.profileImage ? (
-                      <img src={user.profileImage} alt={user.name} className="h-16 w-16 rounded-[18px] object-cover shadow-inner shadow-black/40 sm:h-[72px] sm:w-[72px]" />
+                      <img src={user.profileImage} alt={user.name} className="h-16 w-16 rounded-[18px] object-cover shadow-inner shadow-black/20 sm:h-[72px] sm:w-[72px]" />
                     ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[radial-gradient(circle_at_30%_30%,_#f3d6b1,_#b4815d_38%,_#2d2b2b_100%)] text-[2rem] font-semibold text-white shadow-inner shadow-black/40 sm:h-[72px] sm:w-[72px]">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[radial-gradient(circle_at_30%_30%,_#f3d6b1,_#b4815d_38%,_#2d2b2b_100%)] text-[2rem] font-semibold text-white shadow-inner shadow-black/20 sm:h-[72px] sm:w-[72px]">
                         {(user.name || "G").slice(0, 2).toUpperCase()}
                       </div>
                     )}
                     <div>
-                      <h2 className="text-[1.65rem] font-semibold tracking-[-0.04em] text-white sm:text-[1.85rem]">{user.name}</h2>
-                      <p className="mt-1 text-sm leading-none text-slate-300 sm:text-[0.95rem]">Account owner</p>
+                      <h2 className="text-[1.65rem] font-semibold tracking-[-0.04em] text-[var(--foreground)] sm:text-[1.85rem]">{user.name}</h2>
+                      <p className="mt-1 text-sm leading-none text-[var(--muted)] sm:text-[0.95rem]">Account owner</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsAccountSettingsOpen(false)}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#121212] text-[1.8rem] text-white transition hover:bg-white/5"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-strong)] text-[1.8rem] text-[var(--foreground)] transition hover:bg-[var(--soft-background)]"
                     aria-label="Close account settings"
                   >
                     ×
@@ -593,12 +593,12 @@ export default function DashboardPage() {
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2 sm:col-span-2">
-                        <span className="text-sm text-slate-400">Profile picture</span>
-                        <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#121212] p-3">
+                        <span className="text-sm text-[var(--muted)]">Profile picture</span>
+                        <div className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] p-3">
                           {user.profileImage ? (
-                            <img src={user.profileImage} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-1 ring-white/10" />
+                            <img src={user.profileImage} alt={user.name} className="h-14 w-14 rounded-full object-cover ring-1 ring-[var(--border)]" />
                           ) : (
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1d1d1d] text-sm font-semibold text-white">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--surface)] text-sm font-semibold text-[var(--foreground)]">{(user.name || "G").slice(0, 2).toUpperCase()}</div>
                           )}
                           <label className="cursor-pointer rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-[#03150a] transition hover:bg-emerald-400">
                             {isUploadingProfileImage ? "Uploading..." : "Upload photo"}
@@ -613,20 +613,20 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <label className="space-y-2">
-                        <span className="text-sm text-slate-400">First name</span>
-                        <input value={user.name.split(" ")[0] || user.name} readOnly className="w-full rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm text-white outline-none" />
+                        <span className="text-sm text-[var(--muted)]">First name</span>
+                        <input value={user.name.split(" ")[0] || user.name} readOnly className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-background)] px-3.5 py-2.5 text-sm text-[var(--foreground)] outline-none" />
                       </label>
                       <label className="space-y-2">
-                        <span className="text-sm text-slate-400">Last name</span>
-                        <input value={user.name.split(" ").slice(1).join(" ") || "Not set"} readOnly className="w-full rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm text-white outline-none" />
+                        <span className="text-sm text-[var(--muted)]">Last name</span>
+                        <input value={user.name.split(" ").slice(1).join(" ") || "Not set"} readOnly className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-background)] px-3.5 py-2.5 text-sm text-[var(--foreground)] outline-none" />
                       </label>
                       <label className="space-y-2">
-                        <span className="text-sm text-slate-400">Email address</span>
-                        <input value={user.email} readOnly className="w-full rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm text-white outline-none" />
+                        <span className="text-sm text-[var(--muted)]">Email address</span>
+                        <input value={user.email} readOnly className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-background)] px-3.5 py-2.5 text-sm text-[var(--foreground)] outline-none" />
                       </label>
-                      <div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#121212] px-3.5 py-2.5">
-                        <span className="text-sm text-slate-400">Member since</span>
-                        <span className="text-sm text-white">
+                      <div className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] px-3.5 py-2.5">
+                        <span className="text-sm text-[var(--muted)]">Member since</span>
+                        <span className="text-sm text-[var(--foreground)]">
                           {new Date(user.createdAt || Date.now()).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                         </span>
                       </div>
