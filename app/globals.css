@@ -175,6 +175,49 @@ html[data-theme="light"] .syncplay-auth-shell .placeholder\:text-zinc-500::place
   color: var(--muted) !important;
 }
 
+html[data-theme="light"] [class~="bg-[#0b0b0c]"],
+html[data-theme="light"] [class~="bg-[#101011]"],
+html[data-theme="light"] [class~="bg-[#111214]"],
+html[data-theme="light"] [class~="bg-[#121212]"],
+html[data-theme="light"] [class~="bg-[#181819]"],
+html[data-theme="light"] [class~="bg-[#1a1a1c]"],
+html[data-theme="light"] [class~="bg-[#0d0d0d]"],
+html[data-theme="light"] [class~="bg-zinc-950"],
+html[data-theme="light"] [class~="bg-[#090909]"],
+html[data-theme="light"] [class~="bg-[#050505]"] {
+  background-color: var(--surface) !important;
+}
+
+html[data-theme="light"] [class~="bg-white/5"],
+html[data-theme="light"] [class~="bg-white/10"],
+html[data-theme="light"] [class~="bg-black/15"],
+html[data-theme="light"] [class~="bg-black/20"],
+html[data-theme="light"] [class~="bg-black/70"] {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme="light"] [class~="text-white"],
+html[data-theme="light"] [class~="text-slate-100"],
+html[data-theme="light"] [class~="text-slate-200"],
+html[data-theme="light"] [class~="text-slate-300"],
+html[data-theme="light"] [class~="text-slate-400"],
+html[data-theme="light"] [class~="text-slate-500"] {
+  color: var(--foreground) !important;
+}
+
+html[data-theme="light"] [class~="border-white/10"],
+html[data-theme="light"] [class~="border-white/8"],
+html[data-theme="light"] [class~="border-white/12"],
+html[data-theme="light"] [class~="border-slate-600/60"] {
+  border-color: var(--border) !important;
+}
+
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] button {
+  color: var(--foreground);
+}
+
 body {
   margin: 0;
   background: var(--background);
