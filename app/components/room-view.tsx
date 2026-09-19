@@ -521,7 +521,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
   }
 
   return (
-    <main className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+    <div className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:gap-8">
         <header className="syncplay-panel syncplay-room-header rounded-[28px] px-5 py-5 pr-28 sm:px-6 sm:py-6 sm:pr-32">
           <div className="flex flex-wrap items-center justify-between gap-5">
@@ -927,6 +927,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
           <VoiceChat roomId={roomId} />
           <VideoChat roomId={roomId} />
       </div>
-    </main>
+    </div>
   );
 }
