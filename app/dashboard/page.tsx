@@ -117,6 +117,7 @@ export default function DashboardPage() {
     sessionActivity: true,
   });
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
+  const [lightboxMedia, setLightboxMedia] = useState<{ url: string; name: string; type: "image" | "video" } | null>(null);
 
   useEffect(() => {
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
@@ -276,6 +277,67 @@ export default function DashboardPage() {
   function joinRoomFromMessage(roomId?: string, roomTitle?: string) {
     if (!roomId) return;
     router.push(`/room/${roomId}?name=${encodeURIComponent(user?.name || "Guest")}&role=guest&action=join&title=${encodeURIComponent(roomTitle || `Room ${roomId}`)}`);
+  }
+
+  function renderMessageAttachment(message: DirectMessage) {
+    if (!message.attachment) return null;
+
+    const contentType = (message.attachment.contentType || "").toLowerCase();
+    const url = message.attachment.url;
+    const label = message.attachment.name || "Shared attachment";
+
+    if (contentType.startsWith("image/")) {
+      return (
+        <div className="mt-3 overflow-hidden rounded-2xl border border-black/10 bg-black/10 backdrop-blur-sm">
+          <button type="button" onClick={() => setLightboxMedia({ url, name: label, type: "image" })} className="block w-full text-left">
+            <img src={url} alt={label} className="max-h-72 w-full object-cover transition duration-200 hover:brightness-110" />
+          </button>
+          <div className="flex items-center justify-between gap-2 px-3 py-2">
+            <span className="truncate text-[11px] font-medium opacity-80">{label}</span>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setLightboxMedia({ url, name: label, type: "image" })} className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-current">View</button>
+              <a href={url} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-current">Open</a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (contentType.startsWith("video/")) {
+      return (
+        <div className="mt-3 overflow-hidden rounded-2xl border border-black/10 bg-black/10 backdrop-blur-sm">
+          <button type="button" onClick={() => setLightboxMedia({ url, name: label, type: "video" })} className="block w-full text-left">
+            <video src={url} playsInline preload="metadata" className="max-h-72 w-full object-cover bg-black" />
+          </button>
+          <div className="flex items-center justify-between gap-2 px-3 py-2">
+            <span className="truncate text-[11px] font-medium opacity-80">{label}</span>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setLightboxMedia({ url, name: label, type: "video" })} className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-current">Play</button>
+              <a href={url} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-current">Open</a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (contentType.startsWith("audio/")) {
+      return (
+        <div className="mt-3 rounded-2xl border border-black/10 bg-black/10 px-3 py-3 backdrop-blur-sm">
+          <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.1em] opacity-80">Audio</div>
+          <audio src={url} controls className="w-full max-w-[260px]" />
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="truncate text-[11px] font-medium opacity-80">{label}</span>
+            <a href={url} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 px-2 py-1 text-[10px] font-semibold text-current">Open</a>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <a href={url} target="_blank" rel="noreferrer" className="mt-3 block rounded-xl border border-black/10 bg-black/10 px-3 py-2 text-xs underline">
+        {label}
+      </a>
+    );
   }
 
   async function handleAttachment(file: File | undefined) {
@@ -440,6 +502,31 @@ export default function DashboardPage() {
   return (
     <>
     <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? closeInbox() : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
+          {lightboxMedia ? (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setLightboxMedia(null)}>
+              <div className="relative w-full max-w-4xl overflow-hidden rounded-[26px] border border-white/10 bg-[#0a0a0b] shadow-2xl shadow-black/50" onClick={(event) => event.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => setLightboxMedia(null)}
+                  className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-xl text-white transition hover:bg-black/60"
+                  aria-label="Close preview"
+                >
+                  ×
+                </button>
+                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 pr-16">
+                  <div className="truncate text-sm font-medium text-white">{lightboxMedia.name}</div>
+                </div>
+                <div className="flex max-h-[80vh] items-center justify-center bg-[#090909] p-3">
+                  {lightboxMedia.type === "image" ? (
+                    <img src={lightboxMedia.url} alt={lightboxMedia.name} className="max-h-[72vh] max-w-full rounded-xl object-contain" />
+                  ) : (
+                    <video src={lightboxMedia.url} controls autoPlay playsInline className="max-h-[72vh] max-w-full rounded-xl bg-black" />
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {isInboxOpen ? (
             <section className="fixed inset-0 z-50 flex bg-black/70 md:justify-end">
               <div className="flex h-full w-full max-w-[820px] flex-col overflow-hidden border-white/10 bg-[#0b0b0c] shadow-2xl shadow-black/60 md:min-h-[560px] md:flex-row md:rounded-l-[22px] md:border-y md:border-l">
@@ -528,11 +615,7 @@ export default function DashboardPage() {
                                     Join room
                                   </button>
                                 ) : null}
-                                {message.attachment ? (
-                                  <a href={message.attachment.url} target="_blank" rel="noreferrer" className="mt-2 block rounded-lg bg-black/15 px-3 py-2 text-xs underline">
-                                    {message.attachment.name}
-                                  </a>
-                                ) : null}
+                                {message.attachment ? renderMessageAttachment(message) : null}
                               </div>
                             </div>
                           ))}
