@@ -92,15 +92,6 @@ export function AppShell({ children, searchTerm, onSearchTermChange, searchPlace
       <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
         <AppSidebar onCreateRoom={onCreateRoom} onJoinRoom={onJoinRoom} onHelp={onHelp} onLogout={onLogout} isSettingsOpen={isSettingsOpen} onDashboardClick={onDashboardClick} />
         <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-3 py-3 sm:px-4 md:px-5 md:py-5">
-          <div className="mb-3 hidden items-center gap-2 md:flex">
-            <button type="button" onClick={onCreateRoom} className="min-h-11 flex-1 rounded-[18px] bg-emerald-500 px-4 py-3 text-[15px] font-semibold text-[#03150a] shadow-sm shadow-emerald-950/30 transition hover:bg-emerald-400">
-              Create room
-            </button>
-            <button type="button" onClick={onJoinRoom} className="min-h-11 flex-1 rounded-[18px] border border-white/10 bg-white/5 px-4 py-3 text-[15px] font-semibold text-white transition hover:bg-white/10">
-              Join room
-            </button>
-          </div>
-
           <div className="mb-3 md:hidden">
             <div className="flex items-center justify-between gap-3">
               <button
