@@ -34,8 +34,8 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout, isSetti
 
   return (
     <aside className="hidden w-[240px] shrink-0 flex-col border-r border-white/10 bg-[#090909] px-4 py-5 md:flex">
-      <div className="mb-6 px-2 animate-fade-up">
-        <div className="text-[1.7rem] font-semibold tracking-[-0.06em] text-white animate-float-soft">Sykonyx</div>
+      <div className="mb-6 px-2">
+        <div className="text-[1.7rem] font-semibold tracking-[-0.06em] text-white">Sykonyx</div>
       </div>
 
       <nav aria-label="Primary navigation" className="space-y-1.5 text-sm">
@@ -49,7 +49,7 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout, isSetti
               href={item.href}
               onClick={item.href === "/dashboard" ? onDashboardClick : undefined}
               className={`${sidebarItemClass} ${
-                isActive ? "bg-white/6 text-emerald-300 shadow-inner shadow-emerald-500/5 animate-glow" : "text-slate-300 hover:bg-white/4"
+                isActive ? "bg-[#1a1d1d] text-emerald-300 shadow-[inset_0_0_0_1px_rgba(94,234,212,0.08)]" : "text-slate-300 hover:bg-white/4"
               }`}
             >
               <span className={`flex h-4 w-4 shrink-0 items-center justify-center text-[11px] ${isActive ? "text-emerald-300" : "text-slate-400"}`}>{item.icon}</span>
