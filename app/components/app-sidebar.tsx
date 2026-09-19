@@ -57,8 +57,16 @@ export function AppSidebar({ onCreateRoom, onJoinRoom, onHelp, onLogout, isSetti
             </Link>
           );
         })}
-
       </nav>
+
+      <div className="mt-5 space-y-3 pb-4 text-sm">
+        <button type="button" onClick={onCreateRoom} className="w-full rounded-[16px] bg-emerald-500 px-4 py-3 text-[1.1rem] font-semibold text-[#03150a] shadow-[0_0_0_1px_rgba(16,185,129,0.18)] transition hover:bg-emerald-400">
+          Create room
+        </button>
+        <button type="button" onClick={onJoinRoom} className="w-full rounded-[16px] border border-white/10 bg-white/5 px-4 py-3 text-[1.1rem] font-semibold text-white transition hover:bg-white/8">
+          Join room
+        </button>
+      </div>
 
       <div className="mt-auto space-y-3 text-sm">
         <div className="mb-3 px-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-400">General</div>
