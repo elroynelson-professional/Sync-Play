@@ -18,6 +18,7 @@ type RoomViewProps = {
   initialRole: "host" | "guest";
   initialAction: "create" | "join";
   initialTitle?: string;
+  onLeave?: () => void;
 };
 
 function extractYouTubeId(input: string) {
@@ -161,7 +162,7 @@ function getThumbnailUrl(videoId: string) {
   return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 }
 
-export function RoomView({ roomId, initialName, initialRole, initialAction, initialTitle = "Sykonyx shared room" }: RoomViewProps) {
+export function RoomView({ roomId, initialName, initialRole, initialAction, initialTitle = "Sykonyx shared room", onLeave }: RoomViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [room, setRoom] = useState<RoomState | null>(null);
@@ -537,7 +538,13 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
               </span>
               <button
                 type="button"
-                onClick={() => router.push("/dashboard")}
+                onClick={() => {
+                  if (onLeave) {
+                    onLeave();
+                    return;
+                  }
+                  router.push("/dashboard");
+                }}
                 className="syncplay-button-secondary rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold text-slate-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Leave room
@@ -551,7 +558,19 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-400/10 text-2xl text-emerald-300">...</div>
             <h2 className="mt-5 text-2xl font-semibold text-white">Waiting for host approval</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">Your request was sent. You will enter the room as soon as the host approves it.</p>
-            <button type="button" onClick={() => router.push("/dashboard")} className="mt-6 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Leave request</button>
+            <button
+              type="button"
+              onClick={() => {
+                if (onLeave) {
+                  onLeave();
+                  return;
+                }
+                router.push("/dashboard");
+              }}
+              className="mt-6 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              Leave request
+            </button>
           </section>
         ) : null}
 

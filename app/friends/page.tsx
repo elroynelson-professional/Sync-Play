@@ -7,6 +7,7 @@ import { socket, socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { AppShell } from "../components/app-shell";
 import { AuthPageLoading } from "../components/auth-page-loading";
+import { RoomView } from "../components/room-view";
 
 type AccountUser = {
   id: string;
@@ -64,6 +65,7 @@ export default function FriendsPage() {
   const [roomError, setRoomError] = useState("");
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
   const [friendEmail, setFriendEmail] = useState("");
+  const [activeRoomSession, setActiveRoomSession] = useState<{ roomId: string; name: string; role: "host" | "guest"; action: "create" | "join"; title: string } | null>(null);
 
   async function refreshFriends() {
     const response = await fetch(`${socketUrl}/api/friends`, { credentials: "include" }).catch(() => null);
@@ -171,7 +173,7 @@ export default function FriendsPage() {
 
     const code = makeRoomCode();
     closeRoomModal();
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create&title=${encodeURIComponent(title)}`);
+    setActiveRoomSession({ roomId: code, name, role: "host", action: "create", title });
   }
 
   async function handleJoinRoom() {
@@ -207,7 +209,7 @@ export default function FriendsPage() {
     }
 
     closeRoomModal();
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=guest&action=join`);
+    setActiveRoomSession({ roomId: code, name, role: "guest", action: "join", title: "Sykonyx shared room" });
   }
 
   async function handleAddFriend() {
@@ -269,6 +271,33 @@ export default function FriendsPage() {
 
   if (!user) {
     return <AuthPageLoading />;
+  }
+
+  if (activeRoomSession) {
+    return (
+      <AppShell
+        searchTerm={searchTerm}
+        onSearchTermChange={setSearchTerm}
+        searchPlaceholder="Search friends"
+        user={user}
+        onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Ffriends")}
+        onAccountSettings={() => router.push("/dashboard?settings=1")}
+        onCreateRoom={() => openRoomModal("create")}
+        onJoinRoom={() => openRoomModal("join")}
+        onHelp={() => router.push("/contact")}
+        onLogout={signOut}
+        hasUnread={friendRequests.length > 0}
+      >
+        <RoomView
+          roomId={activeRoomSession.roomId}
+          initialName={activeRoomSession.name}
+          initialRole={activeRoomSession.role}
+          initialAction={activeRoomSession.action}
+          initialTitle={activeRoomSession.title}
+          onLeave={() => setActiveRoomSession(null)}
+        />
+      </AppShell>
+    );
   }
 
   return (

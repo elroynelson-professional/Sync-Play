@@ -7,6 +7,7 @@ import { socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { AppShell } from "../components/app-shell";
 import { AuthPageLoading } from "../components/auth-page-loading";
+import { RoomView } from "../components/room-view";
 
 type AccountUser = {
   id: string;
@@ -45,6 +46,7 @@ export default function HistoryPage() {
   const [user, setUser] = useState<AccountUser | null>(() => readActiveUser());
   const [historyRows, setHistoryRows] = useState<HistoryRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeRoomSession, setActiveRoomSession] = useState<{ roomId: string; name: string; role: "host" | "guest"; action: "create" | "join"; title: string } | null>(null);
   const [roomModalMode, setRoomModalMode] = useState<"create" | "join" | null>(null);
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
@@ -120,7 +122,7 @@ export default function HistoryPage() {
 
     const code = makeRoomCode();
     closeRoomModal();
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create&title=${encodeURIComponent(title)}`);
+    setActiveRoomSession({ roomId: code, name, role: "host", action: "create", title });
   }
 
   async function handleJoinRoom() {
@@ -156,7 +158,7 @@ export default function HistoryPage() {
     }
 
     closeRoomModal();
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=guest&action=join`);
+    setActiveRoomSession({ roomId: code, name, role: "guest", action: "join", title: "Sykonyx shared room" });
   }
 
   function exportHistory() {
@@ -192,6 +194,21 @@ export default function HistoryPage() {
 
   if (!user) {
     return <AuthPageLoading />;
+  }
+
+  if (activeRoomSession) {
+    return (
+      <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
+        <RoomView
+          roomId={activeRoomSession.roomId}
+          initialName={activeRoomSession.name}
+          initialRole={activeRoomSession.role}
+          initialAction={activeRoomSession.action}
+          initialTitle={activeRoomSession.title}
+          onLeave={() => setActiveRoomSession(null)}
+        />
+      </AppShell>
+    );
   }
 
   return (

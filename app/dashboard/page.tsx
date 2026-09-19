@@ -7,6 +7,7 @@ import { socket, socketUrl } from "../lib/socket";
 import { isRoomCodeValid, normalizeRoomCode } from "../lib/room-validation";
 import { AppShell } from "../components/app-shell";
 import { AuthPageLoading } from "../components/auth-page-loading";
+import { RoomView } from "../components/room-view";
 
 type AccountUser = {
   id: string;
@@ -117,6 +118,7 @@ export default function DashboardPage() {
     sessionActivity: true,
   });
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
+  const [activeRoomSession, setActiveRoomSession] = useState<{ roomId: string; name: string; role: "host" | "guest"; action: "create" | "join"; title: string } | null>(null);
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; name: string; type: "image" | "video" } | null>(null);
 
   useEffect(() => {
@@ -275,8 +277,8 @@ export default function DashboardPage() {
   }
 
   function joinRoomFromMessage(roomId?: string, roomTitle?: string) {
-    if (!roomId) return;
-    router.push(`/room/${roomId}?name=${encodeURIComponent(user?.name || "Guest")}&role=guest&action=join&title=${encodeURIComponent(roomTitle || `Room ${roomId}`)}`);
+    if (!roomId || !user) return;
+    setActiveRoomSession({ roomId, name: user.name, role: "guest", action: "join", title: roomTitle || `Room ${roomId}` });
   }
 
   function renderMessageAttachment(message: DirectMessage) {
@@ -455,8 +457,7 @@ export default function DashboardPage() {
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     closeRoomModal();
-    const invitees = selectedInviteeIds.length > 0 ? `&invitees=${encodeURIComponent(selectedInviteeIds.join(","))}` : "";
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=host&action=create&title=${encodeURIComponent(title)}${invitees}`);
+    setActiveRoomSession({ roomId: code, name, role: "host", action: "create", title });
   }
 
   async function submitJoinRoom() {
@@ -492,7 +493,7 @@ export default function DashboardPage() {
     }
 
     closeRoomModal();
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=guest&action=join`);
+    setActiveRoomSession({ roomId: code, name, role: "guest", action: "join", title: "Sykonyx shared room" });
   }
 
   if (!user) {
