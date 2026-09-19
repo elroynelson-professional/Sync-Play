@@ -500,6 +500,35 @@ export default function DashboardPage() {
     return <AuthPageLoading />;
   }
 
+  if (activeRoomSession) {
+    return (
+      <AppShell
+        searchTerm={searchTerm}
+        onSearchTermChange={setSearchTerm}
+        searchPlaceholder="Search room"
+        user={user}
+        onInbox={() => isInboxOpen ? closeInbox() : openInbox()}
+        onAccountSettings={() => setIsAccountSettingsOpen(true)}
+        onCreateRoom={() => openRoomModal("create")}
+        onJoinRoom={() => openRoomModal("join")}
+        onHelp={() => router.push("/contact")}
+        onLogout={signOut}
+        hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)}
+        isSettingsOpen={isAccountSettingsOpen}
+        onDashboardClick={() => setIsAccountSettingsOpen(false)}
+      >
+        <RoomView
+          roomId={activeRoomSession.roomId}
+          initialName={activeRoomSession.name}
+          initialRole={activeRoomSession.role}
+          initialAction={activeRoomSession.action}
+          initialTitle={activeRoomSession.title}
+          onLeave={() => setActiveRoomSession(null)}
+        />
+      </AppShell>
+    );
+  }
+
   return (
     <>
     <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search room" user={user} onInbox={() => isInboxOpen ? closeInbox() : openInbox()} onAccountSettings={() => setIsAccountSettingsOpen(true)} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut} hasUnread={inboxMessages.some((message) => !message.read && message.recipientId === user.id)} isSettingsOpen={isAccountSettingsOpen} onDashboardClick={() => setIsAccountSettingsOpen(false)}>
