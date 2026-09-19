@@ -939,19 +939,19 @@ export default function DashboardPage() {
 
 
       {roomModalMode ? (
-        <div className="syncplay-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="syncplay-modal-panel w-full max-w-md rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl shadow-black/20">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
-                <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
+                <h3 className="mt-2 text-2xl font-semibold text-white">
                   {roomModalMode === "create" ? "Start a room" : "Enter room details"}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={closeRoomModal}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--soft-background)] text-lg text-[var(--foreground)]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:bg-white/10"
               >
                 ×
               </button>
@@ -959,47 +959,47 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-[var(--foreground)]">Display name</span>
+                <span className="text-sm font-medium text-slate-200">Display name</span>
                 <input
                   value={roomDisplayName}
                   onChange={(event) => setRoomDisplayName(event.target.value)}
                   placeholder="Your display name"
-                  className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/80"
+                  className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60"
                 />
               </label>
 
               {roomModalMode === "create" ? (
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--foreground)]">Room title</span>
+                  <span className="text-sm font-medium text-slate-200">Room title</span>
                   <input
                     value={roomTitle}
                     onChange={(event) => setRoomTitle(event.target.value)}
                     placeholder="Movie night, watch party, study session..."
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/80"
+                    className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60"
                   />
                 </label>
               ) : null}
 
               {roomModalMode === "join" ? (
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--foreground)]">Room code</span>
+                  <span className="text-sm font-medium text-slate-200">Room code</span>
                   <input
                     value={roomCode}
                     onChange={(event) => setRoomCode(event.target.value)}
                     placeholder="Enter room code"
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base uppercase text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/80"
+                    className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base uppercase text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60"
                   />
                 </label>
               ) : null}
 
               {roomModalMode === "create" && friendContacts.length > 0 ? (
                 <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium text-slate-100">Invite friends</legend>
-                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] p-2">
+                  <legend className="text-sm font-medium text-slate-200">Invite friends</legend>
+                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#121212] p-2">
                     {friendContacts.map((friend) => {
                       const isSelected = selectedInviteeIds.includes(friend.id);
                       return (
-                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-700" : "text-[var(--foreground)] hover:bg-[var(--soft-background)]"}`}>
+                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-300" : "text-white hover:bg-white/5"}`}>
                           <input
                             type="checkbox"
                             checked={isSelected}
