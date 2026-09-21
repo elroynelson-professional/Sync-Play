@@ -62,6 +62,14 @@ type DashboardData = {
 };
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
+const CUSTOM_ROOM_THEMES_KEY = "syncplay-custom-room-themes-v1";
+
+type RoomThemePreset = {
+  id: string;
+  name: string;
+  accent: string;
+  background: string;
+};
 
 function normalizeStoredUser(value: Partial<AccountUser> | null | undefined): AccountUser | null {
   if (!value || !value.id || !value.name || !value.email) return null;
@@ -97,8 +105,11 @@ export default function DashboardPage() {
   const [roomTitle, setRoomTitle] = useState("");
   const [roomTheme, setRoomTheme] = useState("cinema");
   const [roomThemeCustom, setRoomThemeCustom] = useState("");
+  const [roomThemeAccent, setRoomThemeAccent] = useState("#5eead4");
+  const [roomThemeBackground, setRoomThemeBackground] = useState("#0f172a");
   const [roomSchedule, setRoomSchedule] = useState("");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
+  const [customRoomThemes, setCustomRoomThemes] = useState<RoomThemePreset[]>([]);
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
@@ -125,6 +136,18 @@ export default function DashboardPage() {
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; name: string; type: "image" | "video" } | null>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const storedThemes = window.localStorage.getItem(CUSTOM_ROOM_THEMES_KEY);
+        if (storedThemes) {
+          const parsedThemes = JSON.parse(storedThemes) as RoomThemePreset[];
+          setCustomRoomThemes(Array.isArray(parsedThemes) ? parsedThemes : []);
+        }
+      } catch {
+        setCustomRoomThemes([]);
+      }
+    }
+
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
     if (invalidCodeMessage) {
       setRoomError(invalidCodeMessage);
@@ -225,6 +248,15 @@ export default function DashboardPage() {
       room.code.toLowerCase().includes(query)
     );
   });
+
+  const roomThemeOptions = [
+    { value: "cinema", label: "Cinema noir" },
+    { value: "focus", label: "Focus mode" },
+    { value: "social", label: "Social lounge" },
+    { value: "gaming", label: "Gaming arena" },
+    { value: "custom", label: "Custom theme" },
+    ...customRoomThemes.map((theme) => ({ value: `saved:${theme.id}`, label: theme.name })),
+  ];
 
   const roomToolkitPresets = [
     { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
@@ -442,6 +474,8 @@ export default function DashboardPage() {
     setRoomTitle("");
     setRoomTheme("cinema");
     setRoomThemeCustom("");
+    setRoomThemeAccent("#5eead4");
+    setRoomThemeBackground("#0f172a");
     setRoomSchedule("");
     setSelectedInviteeIds([]);
     setRoomError("");
@@ -454,9 +488,41 @@ export default function DashboardPage() {
     setRoomTitle("");
     setRoomTheme("cinema");
     setRoomThemeCustom("");
+    setRoomThemeAccent("#5eead4");
+    setRoomThemeBackground("#0f172a");
     setRoomSchedule("");
     setSelectedInviteeIds([]);
     setRoomError("");
+  }
+
+  function saveCustomRoomTheme() {
+    const name = roomThemeCustom.trim();
+    if (!name) {
+      setRoomError("Give the custom theme a name before saving.");
+      return;
+    }
+
+    const nextTheme: RoomThemePreset = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name,
+      accent: roomThemeAccent,
+      background: roomThemeBackground,
+    };
+
+    const nextThemes = [nextTheme, ...customRoomThemes].slice(0, 8);
+    setCustomRoomThemes(nextThemes);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
+    }
+    setRoomTheme(`saved:${nextTheme.id}`);
+    setRoomError("");
+  }
+
+  function applySavedTheme(theme: RoomThemePreset) {
+    setRoomTheme(`saved:${theme.id}`);
+    setRoomThemeCustom(theme.name);
+    setRoomThemeAccent(theme.accent);
+    setRoomThemeBackground(theme.background);
   }
 
   function submitCreateRoom() {
@@ -609,12 +675,23 @@ export default function DashboardPage() {
                         <div className="grid gap-4 md:grid-cols-2">
                           <label className="block space-y-2">
                             <span className="text-sm font-medium text-slate-200">Room theme</span>
-                            <select value={roomTheme} onChange={(event) => setRoomTheme(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60">
-                              <option value="cinema">Cinema noir</option>
-                              <option value="focus">Focus mode</option>
-                              <option value="social">Social lounge</option>
-                              <option value="gaming">Gaming arena</option>
-                              <option value="custom">Custom theme</option>
+                            <select value={roomTheme} onChange={(event) => {
+                              const value = event.target.value;
+                              setRoomTheme(value);
+                              if (value === "custom") {
+                                setRoomThemeCustom("");
+                                setRoomThemeAccent("#5eead4");
+                                setRoomThemeBackground("#0f172a");
+                                return;
+                              }
+                              if (value.startsWith("saved:")) {
+                                const theme = customRoomThemes.find((item) => `saved:${item.id}` === value);
+                                if (theme) applySavedTheme(theme);
+                              }
+                            }} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60">
+                              {roomThemeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
                             </select>
                           </label>
 
@@ -624,11 +701,29 @@ export default function DashboardPage() {
                           </label>
                         </div>
 
-                        {roomTheme === "custom" ? (
-                          <label className="block space-y-2">
-                            <span className="text-sm font-medium text-slate-200">Custom theme name</span>
-                            <input value={roomThemeCustom} onChange={(event) => setRoomThemeCustom(event.target.value)} placeholder="Midnight watch club" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
-                          </label>
+                        {(roomTheme === "custom" || roomTheme.startsWith("saved:")) ? (
+                          <div className="space-y-4 rounded-2xl border border-white/10 bg-[#121212] p-4">
+                            <label className="block space-y-2">
+                              <span className="text-sm font-medium text-slate-200">Theme name</span>
+                              <input value={roomThemeCustom} onChange={(event) => setRoomThemeCustom(event.target.value)} placeholder="Midnight watch club" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                            </label>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
+                                <span>Accent</span>
+                                <input type="color" value={roomThemeAccent} onChange={(event) => setRoomThemeAccent(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
+                              </label>
+
+                              <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
+                                <span>Background</span>
+                                <input type="color" value={roomThemeBackground} onChange={(event) => setRoomThemeBackground(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
+                              </label>
+                            </div>
+
+                            <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15">
+                              Save theme
+                            </button>
+                          </div>
                         ) : null}
                       </>
                     ) : null}
