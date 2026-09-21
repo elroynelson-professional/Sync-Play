@@ -558,7 +558,7 @@ export default function DashboardPage() {
           ) : null}
 
           {roomModalMode ? (
-            <section className="mx-auto w-full max-w-5xl pb-5">
+            <section className="mb-5 pt-2">
               <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
                 <div className="mb-5 flex items-center justify-between gap-3">
                   <div>
