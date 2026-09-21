@@ -690,7 +690,7 @@ export default function DashboardPage() {
           {roomModalMode ? (
             <section className="mx-auto mb-5 w-full max-w-6xl pt-2">
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,360px)]">
-                <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
+                <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-none">
                   <div className="mb-5 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
@@ -814,7 +814,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-2xl shadow-black/40">
+                <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-none">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Toolkit</p>

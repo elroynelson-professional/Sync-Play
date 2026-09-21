@@ -330,7 +330,7 @@ function DashboardRoomPageContent() {
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,360px)]">
-          <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
+          <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-none">
             <div className="space-y-4">
               <label className="block space-y-2">
                 <span className="text-sm font-medium text-slate-200">Display name</span>

@@ -188,6 +188,59 @@ html[data-theme="light"] [class~="bg-[#050505]"] {
   background-color: var(--surface) !important;
 }
 
+html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-white,
+html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#101011]"] .text-white,
+html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#111214]"] .text-white,
+html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#121212]"] .text-white,
+html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#181819]"] .text-white,
+html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-white,
+html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-white,
+html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-zinc-950"] .text-white,
+html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-100,
+html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-200,
+html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-300,
+html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#090909]"] .text-white,
+html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-400,
+html[data-theme="light"] [class~="bg-[#050505]"] .text-white,
+html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-100,
+html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-200,
+html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-300,
+html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-400 {
+  color: #f5f5f5 !important;
+}
+
 html[data-theme="light"] [class~="bg-white/5"],
 html[data-theme="light"] [class~="bg-white/10"],
 html[data-theme="light"] [class~="bg-black/15"],
@@ -209,6 +262,19 @@ html[data-theme="light"] .text-slate-300,
 html[data-theme="light"] .text-slate-400,
 html[data-theme="light"] .text-slate-500 {
   color: var(--foreground) !important;
+}
+
+html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-500,
+html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-500 {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 html[data-theme="light"] [class~="border-white/10"],
