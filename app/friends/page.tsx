@@ -450,8 +450,8 @@ export default function FriendsPage() {
 
 
       {roomModalMode ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
+        <section className="mx-auto w-full max-w-5xl pb-5">
+          <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
@@ -489,7 +489,7 @@ export default function FriendsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </section>
       ) : null}
     </>
   );
