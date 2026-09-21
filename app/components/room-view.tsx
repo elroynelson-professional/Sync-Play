@@ -18,7 +18,7 @@ type RoomViewProps = {
   initialRole: "host" | "guest";
   initialAction: "create" | "join";
   initialTitle?: string;
-  theme?: { name?: string; accent?: string; background?: string };
+  theme?: { name?: string; accent?: string; background?: string; buttonColor?: string };
   onLeave?: () => void;
 };
 
@@ -167,6 +167,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
   const router = useRouter();
   const roomAccent = theme?.accent ?? "#5eead4";
   const roomBackground = theme?.background ?? "#0f172a";
+  const roomButtonColor = theme?.buttonColor ?? theme?.accent ?? "#5eead4";
   const searchParams = useSearchParams();
   const [room, setRoom] = useState<RoomState | null>(null);
   const [name] = useState(initialName || "Guest");
@@ -665,7 +666,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       aria-label={playback.playing ? "Pause" : "Play"}
                       title={playback.playing ? "Pause" : "Play"}
                       className="syncplay-transport-primary flex h-12 w-12 items-center justify-center rounded-full text-xl text-black transition disabled:cursor-not-allowed disabled:opacity-30"
-                      style={{ background: roomAccent }}
+                      style={{ background: roomButtonColor }}
                     >
                       {playback.playing ? "Ⅱ" : "▶"}
                     </button>
@@ -728,7 +729,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       type="button"
                       onClick={handleLoadTrack}
                       className="syncplay-button-primary rounded-2xl px-4 py-3 font-semibold text-black transition"
-                      style={{ background: roomAccent }}
+                      style={{ background: roomButtonColor }}
                     >
                       {playback.videoId ? "Add to queue" : "Load first video"}
                     </button>
@@ -875,7 +876,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       type="submit"
                       disabled={!chatInput.trim() || !isConnected}
                       className="syncplay-button-primary rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-                      style={{ background: roomAccent, color: "#071711" }}
+                      style={{ background: roomButtonColor, color: "#071711" }}
                     >
                       Send
                     </button>

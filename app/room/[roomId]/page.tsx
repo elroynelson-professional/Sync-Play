@@ -63,6 +63,7 @@ function RoomPageContent() {
   const roomTheme = {
     accent: searchParams.get("accent") || "#5eead4",
     background: searchParams.get("background") || "#0f172a",
+    buttonColor: searchParams.get("buttonColor") || searchParams.get("accent") || "#5eead4",
   };
 
   useEffect(() => {

@@ -69,6 +69,7 @@ type RoomThemePreset = {
   name: string;
   accent: string;
   background: string;
+  buttonColor?: string;
 };
 
 function normalizeStoredUser(value: Partial<AccountUser> | null | undefined): AccountUser | null {
@@ -107,6 +108,7 @@ export default function DashboardPage() {
   const [roomThemeCustom, setRoomThemeCustom] = useState("");
   const [roomThemeAccent, setRoomThemeAccent] = useState("#5eead4");
   const [roomThemeBackground, setRoomThemeBackground] = useState("#0f172a");
+  const [roomThemeButtonColor, setRoomThemeButtonColor] = useState("#5eead4");
   const [roomSchedule, setRoomSchedule] = useState("");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const [customRoomThemes, setCustomRoomThemes] = useState<RoomThemePreset[]>([]);
@@ -138,7 +140,7 @@ export default function DashboardPage() {
     role: "host" | "guest";
     action: "create" | "join";
     title: string;
-    theme?: { name: string; accent: string; background: string };
+    theme?: { name: string; accent: string; background: string; buttonColor?: string };
   } | null>(null);
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; name: string; type: "image" | "video" } | null>(null);
 
@@ -273,6 +275,7 @@ export default function DashboardPage() {
           name: savedTheme.name,
           accent: savedTheme.accent,
           background: savedTheme.background,
+          buttonColor: savedTheme.buttonColor || savedTheme.accent,
         };
       }
     }
@@ -282,14 +285,15 @@ export default function DashboardPage() {
         name: roomThemeCustom.trim() || "Custom theme",
         accent: roomThemeAccent,
         background: roomThemeBackground,
+        buttonColor: roomThemeButtonColor,
       };
     }
 
-    const presets: Record<string, { name: string; accent: string; background: string }> = {
-      cinema: { name: "Cinema noir", accent: "#5eead4", background: "#0f172a" },
-      focus: { name: "Focus mode", accent: "#93c5fd", background: "#111827" },
-      social: { name: "Social lounge", accent: "#f9a8d4", background: "#1f2937" },
-      gaming: { name: "Gaming arena", accent: "#a78bfa", background: "#140f2d" },
+    const presets: Record<string, { name: string; accent: string; background: string; buttonColor: string }> = {
+      cinema: { name: "Cinema noir", accent: "#5eead4", background: "#0f172a", buttonColor: "#5eead4" },
+      focus: { name: "Focus mode", accent: "#93c5fd", background: "#111827", buttonColor: "#93c5fd" },
+      social: { name: "Social lounge", accent: "#f9a8d4", background: "#1f2937", buttonColor: "#f9a8d4" },
+      gaming: { name: "Gaming arena", accent: "#a78bfa", background: "#140f2d", buttonColor: "#a78bfa" },
     };
 
     return presets[roomTheme] ?? presets.cinema;
@@ -523,6 +527,7 @@ export default function DashboardPage() {
     setRoomThemeCustom("");
     setRoomThemeAccent("#5eead4");
     setRoomThemeBackground("#0f172a");
+    setRoomThemeButtonColor("#5eead4");
     setRoomSchedule("");
     setSelectedInviteeIds([]);
     setRoomError("");
@@ -540,6 +545,7 @@ export default function DashboardPage() {
       name,
       accent: roomThemeAccent,
       background: roomThemeBackground,
+      buttonColor: roomThemeButtonColor,
     };
 
     const nextThemes = [nextTheme, ...customRoomThemes].slice(0, 8);
@@ -556,6 +562,7 @@ export default function DashboardPage() {
     setRoomThemeCustom(theme.name);
     setRoomThemeAccent(theme.accent);
     setRoomThemeBackground(theme.background);
+    setRoomThemeButtonColor(theme.buttonColor || theme.accent);
   }
 
   function submitCreateRoom() {
@@ -575,6 +582,7 @@ export default function DashboardPage() {
       name: selectedRoomTheme.name,
       accent: selectedRoomTheme.accent,
       background: selectedRoomTheme.background,
+      buttonColor: selectedRoomTheme.buttonColor || selectedRoomTheme.accent,
     };
 
     closeRoomModal();
@@ -722,6 +730,7 @@ export default function DashboardPage() {
                                 setRoomThemeCustom("");
                                 setRoomThemeAccent("#5eead4");
                                 setRoomThemeBackground("#0f172a");
+                                setRoomThemeButtonColor("#5eead4");
                                 return;
                               }
                               if (value.startsWith("saved:")) {
@@ -748,7 +757,7 @@ export default function DashboardPage() {
                               <input value={roomThemeCustom} onChange={(event) => setRoomThemeCustom(event.target.value)} placeholder="Midnight watch club" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
                             </label>
 
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-4 md:grid-cols-3">
                               <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
                                 <span>Accent</span>
                                 <input type="color" value={roomThemeAccent} onChange={(event) => setRoomThemeAccent(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
@@ -757,6 +766,11 @@ export default function DashboardPage() {
                               <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
                                 <span>Background</span>
                                 <input type="color" value={roomThemeBackground} onChange={(event) => setRoomThemeBackground(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
+                              </label>
+
+                              <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
+                                <span>Buttons</span>
+                                <input type="color" value={roomThemeButtonColor} onChange={(event) => setRoomThemeButtonColor(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
                               </label>
                             </div>
 
