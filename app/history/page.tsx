@@ -215,7 +215,7 @@ export default function HistoryPage() {
     <>
     <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
           {roomModalMode ? (
-            <section className="mb-5 pt-2">
+            <section className="mx-auto mb-5 w-full max-w-3xl pt-2">
               <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
                 <div className="mb-5 flex items-center justify-between gap-3">
                   <div>

@@ -316,7 +316,7 @@ export default function FriendsPage() {
       hasUnread={friendRequests.length > 0}
     >
           {roomModalMode ? (
-            <section className="mb-5 pt-2">
+            <section className="mx-auto mb-5 w-full max-w-3xl pt-2">
               <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
                 <div className="mb-5 flex items-center justify-between gap-3">
                   <div>
