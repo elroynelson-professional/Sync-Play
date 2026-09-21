@@ -78,6 +78,7 @@ function DashboardRoomPageContent() {
   const [roomSchedule, setRoomSchedule] = useState("");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const [customRoomThemes, setCustomRoomThemes] = useState<RoomThemePreset[]>([]);
+  const [activeRooms, setActiveRooms] = useState<Array<{ name: string; host: string; viewers: string; code: string; status: "Live" | "Idle" }>>([]);
   const [roomError, setRoomError] = useState("");
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
@@ -156,6 +157,12 @@ function DashboardRoomPageContent() {
           const friendsPayload = (await friendsResponse.json()) as { friends?: FriendContact[] };
           setFriendContacts(friendsPayload.friends || []);
         }
+
+        const dashboardResponse = await fetch(`${socketUrl}/api/dashboard`, { credentials: "include" });
+        if (dashboardResponse.ok) {
+          const dashboardPayload = (await dashboardResponse.json()) as { rooms?: Array<{ name: string; host: string; viewers: string; code: string; status: "Live" | "Idle" }> };
+          setActiveRooms(dashboardPayload.rooms || []);
+        }
       })
       .catch(() => router.replace("/"));
   }, [router]);
@@ -221,9 +228,9 @@ function DashboardRoomPageContent() {
     router.push(`/room/${code}?${query.toString()}`);
   }
 
-  async function joinRoom() {
+  async function joinRoom(codeOverride?: string) {
     const name = roomDisplayName.trim();
-    const code = normalizeRoomCode(roomCode);
+    const code = normalizeRoomCode(codeOverride ?? roomCode);
 
     if (name.length < 2) {
       setRoomError("Add a valid display name first.");
@@ -238,6 +245,10 @@ function DashboardRoomPageContent() {
     if (!isRoomCodeValid(code)) {
       setRoomError("Invalid code, try again.");
       return;
+    }
+
+    if (codeOverride) {
+      setRoomCode(code);
     }
 
     try {
@@ -401,78 +412,125 @@ function DashboardRoomPageContent() {
 
               {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{roomError}</div> : null}
 
-              <button type="button" onClick={mode === "create" ? createRoom : joinRoom} className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400">
+              <button
+                type="button"
+                onClick={mode === "create" ? createRoom : () => void joinRoom()}
+                className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400"
+              >
                 {mode === "create" ? "Create room" : "Join room"}
               </button>
             </div>
           </div>
 
-          <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-2xl shadow-black/40">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Toolkit</p>
-                <h4 className="mt-2 text-xl font-semibold text-white">Launch ideas</h4>
-              </div>
-              <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-300">Live</div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Quick presets</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
-                    { label: "Study sprint", title: "Study sprint session", hint: "Focused" },
-                    { label: "Gaming", title: "Late-night gaming lobby", hint: "Competitive" },
-                    { label: "Hangout", title: "Casual hangout room", hint: "Social" },
-                  ].map((preset) => (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => setRoomTitle(preset.title)}
-                      className="rounded-2xl border border-white/10 bg-[#121212] p-3 text-left transition hover:border-emerald-400/40 hover:bg-emerald-500/5"
-                    >
-                      <div className="text-sm font-semibold text-white">{preset.label}</div>
-                      <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-slate-400">{preset.hint}</div>
-                    </button>
-                  ))}
+          {mode === "join" ? (
+            <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-2xl shadow-black/40">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Rooms</p>
+                  <h4 className="mt-2 text-xl font-semibold text-white">Active rooms</h4>
                 </div>
+                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-300">Live</div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
-                <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Invite ready</div>
-                <div className="space-y-2">
-                  {friendContacts.slice(0, 4).map((friend) => (
-                    <button
-                      key={friend.id}
-                      type="button"
-                      onClick={() => setSelectedInviteeIds((current) => current.includes(friend.id) ? current.filter((id) => id !== friend.id) : [...current, friend.id])}
-                      className={`flex w-full items-center justify-between rounded-xl border px-2.5 py-2 text-left text-sm transition ${selectedInviteeIds.includes(friend.id) ? "border-emerald-500/40 bg-emerald-500/8 text-emerald-200" : "border-white/5 bg-[#18181a] text-white hover:border-white/10 hover:bg-white/5"}`}
-                    >
-                      <span>{friend.name}</span>
-                      <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">{selectedInviteeIds.includes(friend.id) ? "On" : "Add"}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
-                <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Theme preview</div>
-                <div className="rounded-2xl border border-white/10 p-3" style={{ background: `linear-gradient(135deg, ${selectedRoomTheme.background} 0%, ${selectedRoomTheme.background} 35%, ${selectedRoomTheme.accent} 100%)` }}>
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 backdrop-blur-sm">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[0.15em] text-white/70">Palette</div>
-                      <div className="mt-1 text-sm font-semibold text-white">{selectedRoomTheme.name}</div>
+              <div className="space-y-3">
+                {activeRooms.length > 0 ? activeRooms.map((room) => (
+                  <div key={room.code} className="rounded-2xl border border-white/10 bg-[#121212] p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-lg font-semibold text-white">{room.name}</div>
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400">Host: {room.host}</div>
+                      </div>
+                      <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-300" : "bg-slate-200/80 text-slate-700"}`}>
+                        {room.status}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: selectedRoomTheme.accent }} />
-                      <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: selectedRoomTheme.background }} />
+
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <span className="text-xs text-slate-400">{room.viewers}</span>
+                      <button
+                        type="button"
+                        onClick={() => { setRoomCode(room.code); void joinRoom(room.code); }}
+                        className="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-[#03150a] transition hover:bg-emerald-400"
+                      >
+                        Join
+                      </button>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="rounded-2xl border border-dashed border-white/10 bg-[#121212] p-4 text-sm text-slate-400">
+                    No active rooms are available right now.
+                  </div>
+                )}
+              </div>
+            </aside>
+          ) : (
+            <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-2xl shadow-black/40">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Toolkit</p>
+                  <h4 className="mt-2 text-xl font-semibold text-white">Launch ideas</h4>
+                </div>
+                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-300">Live</div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Quick presets</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
+                      { label: "Study sprint", title: "Study sprint session", hint: "Focused" },
+                      { label: "Gaming", title: "Late-night gaming lobby", hint: "Competitive" },
+                      { label: "Hangout", title: "Casual hangout room", hint: "Social" },
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setRoomTitle(preset.title)}
+                        className="rounded-2xl border border-white/10 bg-[#121212] p-3 text-left transition hover:border-emerald-400/40 hover:bg-emerald-500/5"
+                      >
+                        <div className="text-sm font-semibold text-white">{preset.label}</div>
+                        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-slate-400">{preset.hint}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Invite ready</div>
+                  <div className="space-y-2">
+                    {friendContacts.slice(0, 4).map((friend) => (
+                      <button
+                        key={friend.id}
+                        type="button"
+                        onClick={() => setSelectedInviteeIds((current) => current.includes(friend.id) ? current.filter((id) => id !== friend.id) : [...current, friend.id])}
+                        className={`flex w-full items-center justify-between rounded-xl border px-2.5 py-2 text-left text-sm transition ${selectedInviteeIds.includes(friend.id) ? "border-emerald-500/40 bg-emerald-500/8 text-emerald-200" : "border-white/5 bg-[#18181a] text-white hover:border-white/10 hover:bg-white/5"}`}
+                      >
+                        <span>{friend.name}</span>
+                        <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">{selectedInviteeIds.includes(friend.id) ? "On" : "Add"}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Theme preview</div>
+                  <div className="rounded-2xl border border-white/10 p-3" style={{ background: `linear-gradient(135deg, ${selectedRoomTheme.background} 0%, ${selectedRoomTheme.background} 35%, ${selectedRoomTheme.accent} 100%)` }}>
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 backdrop-blur-sm">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.15em] text-white/70">Palette</div>
+                        <div className="mt-1 text-sm font-semibold text-white">{selectedRoomTheme.name}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: selectedRoomTheme.accent }} />
+                        <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: selectedRoomTheme.background }} />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       </section>
     </AppShell>
