@@ -223,6 +223,13 @@ export default function DashboardPage() {
     );
   });
 
+  const roomToolkitPresets = [
+    { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
+    { label: "Study sprint", title: "Study sprint session", hint: "Focused" },
+    { label: "Gaming", title: "Late-night gaming lobby", hint: "Competitive" },
+    { label: "Hangout", title: "Casual hangout room", hint: "Social" },
+  ];
+
   async function signOut() {
     await fetch(`${socketUrl}/api/auth/logout`, {
       method: "POST",
@@ -558,67 +565,131 @@ export default function DashboardPage() {
           ) : null}
 
           {roomModalMode ? (
-            <section className="mx-auto mb-5 w-full max-w-3xl pt-2">
-              <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
-                    <h3 className="mt-2 text-2xl font-semibold text-white">
-                      {roomModalMode === "create" ? "Start a room" : "Enter room details"}
-                    </h3>
+            <section className="mx-auto mb-5 w-full max-w-6xl pt-2">
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,360px)]">
+                <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
+                      <h3 className="mt-2 text-2xl font-semibold text-white">
+                        {roomModalMode === "create" ? "Start a room" : "Enter room details"}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={closeRoomModal}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:bg-white/10"
+                    >
+                      ×
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={closeRoomModal}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:bg-white/10"
-                  >
-                    ×
-                  </button>
+
+                  <div className="space-y-4">
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-200">Display name</span>
+                      <input value={roomDisplayName} onChange={(event) => setRoomDisplayName(event.target.value)} placeholder="Your display name" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                    </label>
+
+                    {roomModalMode === "create" ? (
+                      <label className="block space-y-2">
+                        <span className="text-sm font-medium text-slate-200">Room title</span>
+                        <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                      </label>
+                    ) : null}
+
+                    {roomModalMode === "join" ? (
+                      <label className="block space-y-2">
+                        <span className="text-sm font-medium text-slate-200">Room code</span>
+                        <input value={roomCode} onChange={(event) => setRoomCode(event.target.value)} placeholder="Enter room code" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base uppercase text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                      </label>
+                    ) : null}
+
+                    {roomModalMode === "create" && friendContacts.length > 0 ? (
+                      <fieldset className="space-y-2">
+                        <legend className="text-sm font-medium text-slate-200">Invite friends</legend>
+                        <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#121212] p-2">
+                          {friendContacts.map((friend) => {
+                            const isSelected = selectedInviteeIds.includes(friend.id);
+                            return (
+                              <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-300" : "text-white hover:bg-white/5"}`}>
+                                <input type="checkbox" checked={isSelected} onChange={() => setSelectedInviteeIds((current) => isSelected ? current.filter((id) => id !== friend.id) : [...current, friend.id])} className="h-4 w-4 accent-emerald-500" />
+                                <span>{friend.name}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    ) : null}
+
+                    {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{roomError}</div> : null}
+
+                    <button type="button" onClick={roomModalMode === "create" ? submitCreateRoom : submitJoinRoom} className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400">
+                      {roomModalMode === "create" ? "Create room" : "Join room"}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-200">Display name</span>
-                    <input value={roomDisplayName} onChange={(event) => setRoomDisplayName(event.target.value)} placeholder="Your display name" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
-                  </label>
+                <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-2xl shadow-black/40">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Toolkit</p>
+                      <h4 className="mt-2 text-xl font-semibold text-white">Launch ideas</h4>
+                    </div>
+                    <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-300">Live</div>
+                  </div>
 
-                  {roomModalMode === "create" ? (
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-200">Room title</span>
-                      <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
-                    </label>
-                  ) : null}
-
-                  {roomModalMode === "join" ? (
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-200">Room code</span>
-                      <input value={roomCode} onChange={(event) => setRoomCode(event.target.value)} placeholder="Enter room code" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base uppercase text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
-                    </label>
-                  ) : null}
-
-                  {roomModalMode === "create" && friendContacts.length > 0 ? (
-                    <fieldset className="space-y-2">
-                      <legend className="text-sm font-medium text-slate-200">Invite friends</legend>
-                      <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#121212] p-2">
-                        {friendContacts.map((friend) => {
-                          const isSelected = selectedInviteeIds.includes(friend.id);
-                          return (
-                            <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-300" : "text-white hover:bg-white/5"}`}>
-                              <input type="checkbox" checked={isSelected} onChange={() => setSelectedInviteeIds((current) => isSelected ? current.filter((id) => id !== friend.id) : [...current, friend.id])} className="h-4 w-4 accent-emerald-500" />
-                              <span>{friend.name}</span>
-                            </label>
-                          );
-                        })}
+                  <div className="space-y-4">
+                    <div>
+                      <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Quick presets</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {roomToolkitPresets.map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => setRoomTitle(preset.title)}
+                            className="rounded-2xl border border-white/10 bg-[#121212] p-3 text-left transition hover:border-emerald-400/40 hover:bg-emerald-500/5"
+                          >
+                            <div className="text-sm font-semibold text-white">{preset.label}</div>
+                            <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-slate-400">{preset.hint}</div>
+                          </button>
+                        ))}
                       </div>
-                    </fieldset>
-                  ) : null}
+                    </div>
 
-                  {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{roomError}</div> : null}
+                    <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
+                      <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Invite ready</div>
+                      <div className="space-y-2">
+                        {friendContacts.slice(0, 4).map((friend) => (
+                          <button
+                            key={friend.id}
+                            type="button"
+                            onClick={() => setSelectedInviteeIds((current) => current.includes(friend.id) ? current.filter((id) => id !== friend.id) : [...current, friend.id])}
+                            className={`flex w-full items-center justify-between rounded-xl border px-2.5 py-2 text-left text-sm transition ${selectedInviteeIds.includes(friend.id) ? "border-emerald-500/40 bg-emerald-500/8 text-emerald-200" : "border-white/5 bg-[#18181a] text-white hover:border-white/10 hover:bg-white/5"}`}
+                          >
+                            <span>{friend.name}</span>
+                            <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">{selectedInviteeIds.includes(friend.id) ? "On" : "Add"}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                  <button type="button" onClick={roomModalMode === "create" ? submitCreateRoom : submitJoinRoom} className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400">
-                    {roomModalMode === "create" ? "Create room" : "Join room"}
-                  </button>
-                </div>
+                    <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
+                      <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Room pulse</div>
+                      <div className="space-y-2">
+                        {[
+                          { label: "Active rooms", value: dashboardData?.metrics?.activeRooms ?? 12 },
+                          { label: "Live viewers", value: dashboardData?.metrics?.liveViewers ?? 86 },
+                          { label: "Watch time", value: dashboardData?.metrics?.watchTime ?? "4.8h" },
+                        ].map((item) => (
+                          <div key={item.label} className="flex items-center justify-between rounded-xl bg-[#17181a] px-2.5 py-2 text-sm">
+                            <span className="text-slate-300">{item.label}</span>
+                            <span className="font-semibold text-white">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </aside>
               </div>
             </section>
           ) : null}
