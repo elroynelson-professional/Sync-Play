@@ -198,7 +198,7 @@ export default function HistoryPage() {
 
   if (activeRoomSession) {
     return (
-      <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
+      <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => router.push("/dashboard/room?mode=create")} onJoinRoom={() => router.push("/dashboard/room?mode=join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
         <RoomView
           roomId={activeRoomSession.roomId}
           initialName={activeRoomSession.name}
@@ -213,7 +213,7 @@ export default function HistoryPage() {
 
   return (
     <>
-    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => router.push("/dashboard/room?mode=create")} onJoinRoom={() => router.push("/dashboard/room?mode=join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
 
           <section className="space-y-5 pt-5">
             <div className="flex items-end justify-between">

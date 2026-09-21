@@ -118,8 +118,8 @@ function RoomPageContent() {
       user={user}
       onInbox={() => router.push(`/dashboard?inbox=1&returnTo=${encodeURIComponent(`/room/${roomId}`)}`)}
       onAccountSettings={() => router.push("/dashboard?settings=1")}
-      onCreateRoom={() => router.push("/dashboard")}
-      onJoinRoom={() => router.push("/dashboard")}
+      onCreateRoom={() => router.push("/dashboard/room?mode=create")}
+      onJoinRoom={() => router.push("/dashboard/room?mode=join")}
       onHelp={() => router.push("/contact")}
       onLogout={signOut}
     >

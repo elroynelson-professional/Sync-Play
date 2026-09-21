@@ -69,7 +69,7 @@ export default function ContactPage() {
   }
 
   return (
-    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search contact" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fcontact")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => router.push("/dashboard")} onJoinRoom={() => router.push("/dashboard")} onHelp={() => router.push("/contact")} onLogout={signOut}>
+    <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search contact" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fcontact")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => router.push("/dashboard/room?mode=create")} onJoinRoom={() => router.push("/dashboard/room?mode=join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
       <div className="mx-auto grid max-w-5xl items-center gap-10 py-12 lg:grid-cols-[0.85fr_1.15fr]">
           <section>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent-strong)]">Contact us</p>

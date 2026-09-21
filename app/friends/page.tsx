@@ -283,8 +283,8 @@ export default function FriendsPage() {
           user={user}
           onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Ffriends")}
           onAccountSettings={() => router.push("/dashboard?settings=1")}
-          onCreateRoom={() => openRoomModal("create")}
-          onJoinRoom={() => openRoomModal("join")}
+          onCreateRoom={() => router.push("/dashboard/room?mode=create")}
+          onJoinRoom={() => router.push("/dashboard/room?mode=join")}
           onHelp={() => router.push("/contact")}
           onLogout={signOut}
           hasUnread={friendRequests.length > 0}
@@ -434,8 +434,8 @@ export default function FriendsPage() {
         user={user}
         onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Ffriends")}
         onAccountSettings={() => router.push("/dashboard?settings=1")}
-        onCreateRoom={() => openRoomModal("create")}
-        onJoinRoom={() => openRoomModal("join")}
+        onCreateRoom={() => router.push("/dashboard/room?mode=create")}
+        onJoinRoom={() => router.push("/dashboard/room?mode=join")}
         onHelp={() => router.push("/contact")}
         onLogout={signOut}
         hasUnread={friendRequests.length > 0}
