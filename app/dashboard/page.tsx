@@ -95,6 +95,9 @@ export default function DashboardPage() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [roomTitle, setRoomTitle] = useState("");
+  const [roomTheme, setRoomTheme] = useState("cinema");
+  const [roomThemeCustom, setRoomThemeCustom] = useState("");
+  const [roomSchedule, setRoomSchedule] = useState("");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
@@ -437,6 +440,9 @@ export default function DashboardPage() {
     setRoomDisplayName(user?.name || "");
     setRoomCode(prefilledCode);
     setRoomTitle("");
+    setRoomTheme("cinema");
+    setRoomThemeCustom("");
+    setRoomSchedule("");
     setSelectedInviteeIds([]);
     setRoomError("");
   }
@@ -446,6 +452,9 @@ export default function DashboardPage() {
     setRoomDisplayName("");
     setRoomCode("");
     setRoomTitle("");
+    setRoomTheme("cinema");
+    setRoomThemeCustom("");
+    setRoomSchedule("");
     setSelectedInviteeIds([]);
     setRoomError("");
   }
@@ -591,10 +600,37 @@ export default function DashboardPage() {
                     </label>
 
                     {roomModalMode === "create" ? (
-                      <label className="block space-y-2">
-                        <span className="text-sm font-medium text-slate-200">Room title</span>
-                        <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
-                      </label>
+                      <>
+                        <label className="block space-y-2">
+                          <span className="text-sm font-medium text-slate-200">Room title</span>
+                          <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                        </label>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="block space-y-2">
+                            <span className="text-sm font-medium text-slate-200">Room theme</span>
+                            <select value={roomTheme} onChange={(event) => setRoomTheme(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60">
+                              <option value="cinema">Cinema noir</option>
+                              <option value="focus">Focus mode</option>
+                              <option value="social">Social lounge</option>
+                              <option value="gaming">Gaming arena</option>
+                              <option value="custom">Custom theme</option>
+                            </select>
+                          </label>
+
+                          <label className="block space-y-2">
+                            <span className="text-sm font-medium text-slate-200">Go live at</span>
+                            <input type="datetime-local" value={roomSchedule} onChange={(event) => setRoomSchedule(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60" />
+                          </label>
+                        </div>
+
+                        {roomTheme === "custom" ? (
+                          <label className="block space-y-2">
+                            <span className="text-sm font-medium text-slate-200">Custom theme name</span>
+                            <input value={roomThemeCustom} onChange={(event) => setRoomThemeCustom(event.target.value)} placeholder="Midnight watch club" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                          </label>
+                        ) : null}
+                      </>
                     ) : null}
 
                     {roomModalMode === "join" ? (
