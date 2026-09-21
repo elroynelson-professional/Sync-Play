@@ -132,7 +132,14 @@ export default function DashboardPage() {
     sessionActivity: true,
   });
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
-  const [activeRoomSession, setActiveRoomSession] = useState<{ roomId: string; name: string; role: "host" | "guest"; action: "create" | "join"; title: string } | null>(null);
+  const [activeRoomSession, setActiveRoomSession] = useState<{
+    roomId: string;
+    name: string;
+    role: "host" | "guest";
+    action: "create" | "join";
+    title: string;
+    theme?: { name: string; accent: string; background: string };
+  } | null>(null);
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; name: string; type: "image" | "video" } | null>(null);
 
   useEffect(() => {
@@ -257,6 +264,36 @@ export default function DashboardPage() {
     { value: "custom", label: "Custom theme" },
     ...customRoomThemes.map((theme) => ({ value: `saved:${theme.id}`, label: theme.name })),
   ];
+
+  const selectedRoomTheme = (() => {
+    if (roomTheme.startsWith("saved:")) {
+      const savedTheme = customRoomThemes.find((theme) => `saved:${theme.id}` === roomTheme);
+      if (savedTheme) {
+        return {
+          name: savedTheme.name,
+          accent: savedTheme.accent,
+          background: savedTheme.background,
+        };
+      }
+    }
+
+    if (roomTheme === "custom") {
+      return {
+        name: roomThemeCustom.trim() || "Custom theme",
+        accent: roomThemeAccent,
+        background: roomThemeBackground,
+      };
+    }
+
+    const presets: Record<string, { name: string; accent: string; background: string }> = {
+      cinema: { name: "Cinema noir", accent: "#5eead4", background: "#0f172a" },
+      focus: { name: "Focus mode", accent: "#93c5fd", background: "#111827" },
+      social: { name: "Social lounge", accent: "#f9a8d4", background: "#1f2937" },
+      gaming: { name: "Gaming arena", accent: "#a78bfa", background: "#140f2d" },
+    };
+
+    return presets[roomTheme] ?? presets.cinema;
+  })();
 
   const roomToolkitPresets = [
     { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
@@ -538,8 +575,14 @@ export default function DashboardPage() {
     }
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const theme = {
+      name: selectedRoomTheme.name,
+      accent: selectedRoomTheme.accent,
+      background: selectedRoomTheme.background,
+    };
+
     closeRoomModal();
-    setActiveRoomSession({ roomId: code, name, role: "host", action: "create", title });
+    setActiveRoomSession({ roomId: code, name, role: "host", action: "create", title, theme });
   }
 
   async function submitJoinRoom() {
@@ -605,6 +648,7 @@ export default function DashboardPage() {
           initialRole={activeRoomSession.role}
           initialAction={activeRoomSession.action}
           initialTitle={activeRoomSession.title}
+          theme={activeRoomSession.theme}
           onLeave={() => setActiveRoomSession(null)}
         />
       </AppShell>

@@ -18,6 +18,7 @@ type RoomViewProps = {
   initialRole: "host" | "guest";
   initialAction: "create" | "join";
   initialTitle?: string;
+  theme?: { name?: string; accent?: string; background?: string };
   onLeave?: () => void;
 };
 
@@ -162,8 +163,10 @@ function getThumbnailUrl(videoId: string) {
   return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 }
 
-export function RoomView({ roomId, initialName, initialRole, initialAction, initialTitle = "Sykonyx shared room", onLeave }: RoomViewProps) {
+export function RoomView({ roomId, initialName, initialRole, initialAction, initialTitle = "Sykonyx shared room", theme, onLeave }: RoomViewProps) {
   const router = useRouter();
+  const roomAccent = theme?.accent ?? "#5eead4";
+  const roomBackground = theme?.background ?? "#0f172a";
   const searchParams = useSearchParams();
   const [room, setRoom] = useState<RoomState | null>(null);
   const [name] = useState(initialName || "Guest");
@@ -521,19 +524,34 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
   }
 
   return (
-    <div className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+    <div
+      className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8"
+      style={{
+        background: `radial-gradient(circle at top, ${roomBackground} 0%, rgba(8, 8, 10, 0.96) 42%, #050505 100%)`,
+      }}
+    >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:gap-8">
-        <header className="syncplay-panel syncplay-room-header rounded-[28px] px-5 py-5 pr-28 sm:px-6 sm:py-6 sm:pr-32">
+        <header
+          className="syncplay-panel syncplay-room-header rounded-[28px] px-5 py-5 pr-28 sm:px-6 sm:py-6 sm:pr-32"
+          style={{
+            borderColor: `${roomAccent}55`,
+            boxShadow: `inset 0 0 0 1px ${roomAccent}22`,
+            background: `linear-gradient(180deg, ${roomBackground} 0%, rgba(10,10,11,0.92) 100%)`,
+          }}
+        >
           <div className="flex flex-wrap items-center justify-between gap-5">
             <div>
               <div className="syncplay-caps text-xs text-slate-400">Room {roomId}</div>
-              <h1 className="syncplay-hero-title mt-1 text-3xl text-white sm:text-4xl">
+              <h1 className="syncplay-hero-title mt-1 text-3xl text-white sm:text-4xl" style={{ color: roomAccent }}>
                 {roomTitle}
               </h1>
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              <span className="syncplay-role-badge rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-slate-200">
+              <span
+                className="syncplay-role-badge rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-slate-200"
+                style={{ borderColor: `${roomAccent}66`, background: `${roomAccent}1a`, color: roomAccent }}
+              >
                 {isHost ? "Host" : "Guest"}
               </span>
               <button
@@ -646,7 +664,8 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       disabled={!playback.videoId}
                       aria-label={playback.playing ? "Pause" : "Play"}
                       title={playback.playing ? "Pause" : "Play"}
-                      className="syncplay-transport-primary flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-xl text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-30"
+                      className="syncplay-transport-primary flex h-12 w-12 items-center justify-center rounded-full text-xl text-black transition disabled:cursor-not-allowed disabled:opacity-30"
+                      style={{ background: roomAccent }}
                     >
                       {playback.playing ? "Ⅱ" : "▶"}
                     </button>
@@ -708,7 +727,8 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <button
                       type="button"
                       onClick={handleLoadTrack}
-                      className="syncplay-button-primary rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-black transition hover:bg-emerald-400"
+                      className="syncplay-button-primary rounded-2xl px-4 py-3 font-semibold text-black transition"
+                      style={{ background: roomAccent }}
                     >
                       {playback.videoId ? "Add to queue" : "Load first video"}
                     </button>
@@ -855,6 +875,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       type="submit"
                       disabled={!chatInput.trim() || !isConnected}
                       className="syncplay-button-primary rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{ background: roomAccent, color: "#071711" }}
                     >
                       Send
                     </button>
@@ -868,6 +889,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                 aria-label={isChatOpen ? "Close live chat" : "Open live chat"}
                 aria-expanded={isChatOpen}
                 className={`syncplay-chat-launcher ${isChatOpen ? "is-active" : ""}`}
+                style={{ borderColor: `${roomAccent}55`, background: isChatOpen ? `${roomAccent}30` : undefined }}
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 3H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3l4 4 4-4h3a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z" />
@@ -884,7 +906,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <div className="syncplay-caps text-xs text-slate-400">Invite</div>
                     <h2 className="syncplay-hero-title mt-1 text-2xl text-white">
                       <span>Room code </span>
-                      <span className="syncplay-room-code">{roomId}</span>
+                      <span className="syncplay-room-code" style={{ color: roomAccent }}>{roomId}</span>
                     </h2>
                   </div>
                 </div>
