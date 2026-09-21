@@ -340,7 +340,7 @@ export default function FriendsPage() {
                         {friend.profileImage ? (
                           <img src={friend.profileImage} alt={friend.name} className="h-12 w-12 rounded-full object-cover ring-1 ring-white/10" />
                         ) : (
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1a1b1d] text-sm font-semibold text-slate-100 ring-1 ring-white/10">
                             {friend.avatar}
                           </div>
                         )}
@@ -385,7 +385,7 @@ export default function FriendsPage() {
                             {request.profileImage ? (
                               <img src={request.profileImage} alt={request.name} className="h-10 w-10 rounded-full object-cover ring-1 ring-white/10" />
                             ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">{request.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1a1b1d] text-sm font-semibold text-slate-100 ring-1 ring-white/10">{request.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
                             )}
                             <div className="min-w-0 flex-1">
                               <div className="text-[15px] font-medium text-white">{request.name}</div>
@@ -408,7 +408,7 @@ export default function FriendsPage() {
                             {request.profileImage ? (
                               <img src={request.profileImage} alt={request.name} className="h-10 w-10 rounded-full object-cover ring-1 ring-white/10" />
                             ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold text-white">{request.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1a1b1d] text-sm font-semibold text-slate-100 ring-1 ring-white/10">{request.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</div>
                             )}
                             <div className="min-w-0 flex-1">
                               <div className="text-[15px] font-medium text-white">{request.name}</div>
