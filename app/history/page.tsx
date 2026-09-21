@@ -214,48 +214,6 @@ export default function HistoryPage() {
   return (
     <>
     <AppShell searchTerm={searchTerm} onSearchTermChange={setSearchTerm} searchPlaceholder="Search history" user={user} onInbox={() => router.push("/dashboard?inbox=1&returnTo=%2Fhistory")} onAccountSettings={() => router.push("/dashboard?settings=1")} onCreateRoom={() => openRoomModal("create")} onJoinRoom={() => openRoomModal("join")} onHelp={() => router.push("/contact")} onLogout={signOut}>
-          {roomModalMode ? (
-            <section className="mx-auto mb-5 w-full max-w-3xl pt-2">
-              <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-2xl shadow-black/40">
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-300">{roomModalMode === "create" ? "Create room" : "Join room"}</p>
-                    <h3 className="mt-2 text-2xl font-semibold text-white">
-                      {roomModalMode === "create" ? "Start a room" : "Enter room details"}
-                    </h3>
-                  </div>
-                  <button type="button" onClick={closeRoomModal} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-slate-300 transition hover:bg-white/10">×</button>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-100">Display name</span>
-                    <input value={roomDisplayName} onChange={(event) => setRoomDisplayName(event.target.value)} placeholder="Your display name" className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80" />
-                  </label>
-
-                  {roomModalMode === "create" ? (
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-100">Room title</span>
-                      <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-white outline-none placeholder:text-slate-400 focus:border-emerald-400/80" />
-                    </label>
-                  ) : null}
-
-                  {roomModalMode === "join" ? (
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-100">Room code</span>
-                      <input value={roomCode} onChange={(event) => setRoomCode(event.target.value)} placeholder="Enter room code" className="w-full rounded-2xl border border-slate-600/60 bg-[#1b1d22] px-4 py-3 text-white uppercase outline-none placeholder:text-slate-400 focus:border-emerald-400/80" />
-                    </label>
-                  ) : null}
-
-                  {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{roomError}</div> : null}
-
-                  <button type="button" onClick={roomModalMode === "create" ? handleCreateRoom : handleJoinRoom} className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400">
-                    {roomModalMode === "create" ? "Create room" : "Join room"}
-                  </button>
-                </div>
-              </div>
-            </section>
-          ) : null}
 
           <section className="space-y-5 pt-5">
             <div className="flex items-end justify-between">

@@ -505,17 +505,13 @@ export default function DashboardPage() {
   }
 
   function openRoomModal(mode: "create" | "join", prefilledCode = "") {
-    setRoomModalMode(mode);
-    setRoomDisplayName(user?.name || "");
-    setRoomCode(prefilledCode);
-    setRoomTitle("");
-    setRoomTheme("cinema");
-    setRoomThemeCustom("");
-    setRoomThemeAccent("#5eead4");
-    setRoomThemeBackground("#0f172a");
-    setRoomSchedule("");
-    setSelectedInviteeIds([]);
-    setRoomError("");
+    const route = mode === "create" ? "/dashboard/room?mode=create" : "/dashboard/room?mode=join";
+    if (prefilledCode) {
+      const separator = route.includes("?") ? "&" : "?";
+      router.push(`${route}${separator}code=${encodeURIComponent(prefilledCode)}`);
+      return;
+    }
+    router.push(route);
   }
 
   function closeRoomModal() {
