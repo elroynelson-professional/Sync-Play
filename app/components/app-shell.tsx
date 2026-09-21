@@ -88,47 +88,47 @@ export function AppShell({ children, searchTerm, onSearchTermChange, searchPlace
   ];
 
   return (
-    <main className="syncplay-auth-shell min-h-screen bg-black p-0 text-white">
-      <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden bg-[#050505]">
+    <main className="syncplay-auth-shell min-h-screen bg-[var(--background)] p-0 text-[var(--foreground)]">
+      <div className="mx-auto flex h-screen max-h-screen w-full overflow-hidden border border-[var(--border)] bg-[var(--surface)] shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
         <AppSidebar onCreateRoom={onCreateRoom} onJoinRoom={onJoinRoom} onHelp={onHelp} onLogout={onLogout} isSettingsOpen={isSettingsOpen} onDashboardClick={onDashboardClick} />
-        <div className="flex min-h-0 flex-1 flex-col bg-[#050505] px-3 py-3 sm:px-4 md:px-5 md:py-5">
+        <div className="flex min-h-0 flex-1 flex-col bg-[var(--surface)] px-3 py-3 sm:px-4 md:px-5 md:py-5">
           <div className="mb-3 md:hidden">
             <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((current) => !current)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0d0d0d] text-xl text-slate-200"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--control-background)] text-xl text-[var(--foreground)]"
                 aria-label="Toggle navigation menu"
               >
                 ☰
               </button>
               <div className="flex-1 text-left">
-                <div className="text-[2.2rem] font-semibold tracking-[-0.08em] text-white leading-none">Sykonyx</div>
+                <div className="text-[2.2rem] font-semibold tracking-[-0.08em] text-[var(--foreground)] leading-none">Sykonyx</div>
               </div>
             </div>
 
             {mobileMenuOpen ? (
               <div
-                className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <div
-                  className="h-full w-[92vw] max-w-[420px] bg-[#090909] px-5 py-4 shadow-2xl shadow-black/60"
+                  className="h-full w-[92vw] max-w-[420px] bg-[var(--surface)] px-5 py-4 shadow-2xl shadow-black/15"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <div className="mb-5 flex items-center justify-between gap-3">
-                    <div className="text-[2.2rem] font-semibold tracking-[-0.08em] text-white">Sykonyx</div>
+                    <div className="text-[2.2rem] font-semibold tracking-[-0.08em] text-[var(--foreground)]">Sykonyx</div>
                     <button
                       type="button"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl text-slate-200"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--control-background)] text-xl text-[var(--foreground)]"
                       aria-label="Close navigation menu"
                     >
                       ×
                     </button>
                   </div>
 
-                  <div className="mb-4 text-[0.8rem] font-semibold uppercase tracking-[0.25em] text-slate-400">Menu</div>
+                  <div className="mb-4 text-[0.8rem] font-semibold uppercase tracking-[0.25em] text-[var(--muted)]">Menu</div>
                   <nav className="space-y-3">
                     {mobileNavItems.map((item) => {
                       const isActive = pathname === item.href && !(isSettingsOpen && item.href === "/dashboard");
@@ -137,9 +137,9 @@ export function AppShell({ children, searchTerm, onSearchTermChange, searchPlace
                           key={item.href}
                           href={item.href}
                           onClick={() => setMobileMenuOpen(false)}
-                          className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[1.05rem] font-medium transition ${isActive ? "bg-white/8 text-emerald-300" : "text-slate-200 hover:bg-white/5"}`}
+                          className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[1.05rem] font-medium transition ${isActive ? "bg-[var(--soft-background)] text-emerald-600" : "text-[var(--foreground)] hover:bg-[var(--soft-background)]"}`}
                         >
-                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center text-[0.8rem] ${isActive ? "text-emerald-300" : "text-slate-400"}`}>{item.icon}</span>
+                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center text-[0.8rem] ${isActive ? "text-emerald-600" : "text-[var(--muted)]"}`}>{item.icon}</span>
                           <span>{item.label}</span>
                         </Link>
                       );
@@ -150,20 +150,20 @@ export function AppShell({ children, searchTerm, onSearchTermChange, searchPlace
                     <button type="button" onClick={() => { onCreateRoom(); setMobileMenuOpen(false); }} className="w-full rounded-[1.1rem] bg-emerald-500 px-4 py-4 text-[1.05rem] font-semibold text-[#03150a]">
                       Create room
                     </button>
-                    <button type="button" onClick={() => { onJoinRoom(); setMobileMenuOpen(false); }} className="w-full rounded-[1.1rem] border border-white/10 bg-white/5 px-4 py-4 text-[1.05rem] font-semibold text-white">
+                    <button type="button" onClick={() => { onJoinRoom(); setMobileMenuOpen(false); }} className="w-full rounded-[1.1rem] border border-[var(--border)] bg-[var(--control-background)] px-4 py-4 text-[1.05rem] font-semibold text-[var(--foreground)]">
                       Join room
                     </button>
                   </div>
 
-                  <div className="mt-8 border-t border-white/10 pt-5">
-                    <div className="mb-4 text-[0.8rem] font-semibold uppercase tracking-[0.25em] text-slate-400">General</div>
+                  <div className="mt-8 border-t border-[var(--border)] pt-5">
+                    <div className="mb-4 text-[0.8rem] font-semibold uppercase tracking-[0.25em] text-[var(--muted)]">General</div>
                     <div className="space-y-3">
-                      <button type="button" onClick={() => { onHelp?.(); setMobileMenuOpen(false); }} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[1.05rem] font-medium text-slate-200 hover:bg-white/5">
-                        <span className="flex h-4 w-4 items-center justify-center text-[1rem] text-slate-300">?</span>
+                      <button type="button" onClick={() => { onHelp?.(); setMobileMenuOpen(false); }} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[1.05rem] font-medium text-[var(--foreground)] hover:bg-[var(--soft-background)]">
+                        <span className="flex h-4 w-4 items-center justify-center text-[1rem] text-[var(--muted)]">?</span>
                         <span>Help</span>
                       </button>
-                      <button type="button" onClick={() => { onLogout(); setMobileMenuOpen(false); }} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[1.05rem] font-medium text-slate-200 hover:bg-white/5">
-                        <span className="flex h-4 w-4 items-center justify-center text-[1rem] text-slate-300">↪</span>
+                      <button type="button" onClick={() => { onLogout(); setMobileMenuOpen(false); }} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[1.05rem] font-medium text-[var(--foreground)] hover:bg-[var(--soft-background)]">
+                        <span className="flex h-4 w-4 items-center justify-center text-[1rem] text-[var(--muted)]">↪</span>
                         <span>Logout</span>
                       </button>
                     </div>
