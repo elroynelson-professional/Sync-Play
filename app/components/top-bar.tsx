@@ -96,11 +96,11 @@ export function TopBar({
         <button
           type="button"
           onClick={onInbox}
-          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-slate-200 transition hover:bg-white/10"
+          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--control-background)] text-base text-[var(--foreground)] transition hover:bg-[var(--control-background-hover)]"
           aria-label="Open inbox"
         >
           ✉
-          {hasUnread ? <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#050505] bg-emerald-400" /> : null}
+          {hasUnread ? <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--background)] bg-emerald-400" /> : null}
         </button>
         <button
           type="button"

@@ -315,38 +315,38 @@ function DashboardRoomPageContent() {
       <section className="mx-auto w-full max-w-6xl pb-4 pt-2">
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-300">Room flow</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-white">
+            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-600">Room flow</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-[var(--foreground)]">
               {mode === "create" ? "Create a room" : "Join a room"}
             </h1>
           </div>
           <button
             type="button"
             onClick={() => router.push("/dashboard")}
-            className="rounded-[14px] border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+            className="rounded-[14px] border border-[var(--border)] bg-[var(--soft-background)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--control-background-hover)]"
           >
             Back to dashboard
           </button>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,360px)]">
-          <div className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6 shadow-none">
+          <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-none">
             <div className="space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-200">Display name</span>
-                <input value={roomDisplayName} onChange={(event) => setRoomDisplayName(event.target.value)} placeholder="Your display name" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                <span className="text-sm font-medium text-[var(--muted)]">Display name</span>
+                <input value={roomDisplayName} onChange={(event) => setRoomDisplayName(event.target.value)} placeholder="Your display name" className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
               </label>
 
               {mode === "create" ? (
                 <>
                   <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-200">Room title</span>
-                    <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                    <span className="text-sm font-medium text-[var(--muted)]">Room title</span>
+                    <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
                   </label>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-200">Room theme</span>
+                      <span className="text-sm font-medium text-[var(--muted)]">Room theme</span>
                       <select value={roomTheme} onChange={(event) => {
                         const value = event.target.value;
                         setRoomTheme(value);
@@ -360,7 +360,7 @@ function DashboardRoomPageContent() {
                           const theme = customRoomThemes.find((item) => `saved:${item.id}` === value);
                           if (theme) applySavedTheme(theme);
                         }
-                      }} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60">
+                      }} className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none focus:border-emerald-400/60">
                         {roomThemeOptions.map((option) => (
                           <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
@@ -368,36 +368,36 @@ function DashboardRoomPageContent() {
                     </label>
 
                     <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-200">Go live at</span>
-                      <input type="datetime-local" value={roomSchedule} onChange={(event) => setRoomSchedule(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60" />
+                      <span className="text-sm font-medium text-[var(--muted)]">Go live at</span>
+                      <input type="datetime-local" value={roomSchedule} onChange={(event) => setRoomSchedule(event.target.value)} className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none focus:border-emerald-400/60" />
                     </label>
                   </div>
 
                   {(roomTheme === "custom" || roomTheme.startsWith("saved:")) ? (
-                    <div className="space-y-4 rounded-2xl border border-white/10 bg-[#121212] p-4">
+                    <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-4">
                       <label className="block space-y-2">
-                        <span className="text-sm font-medium text-slate-200">Theme name</span>
-                        <input value={roomThemeCustom} onChange={(event) => setRoomThemeCustom(event.target.value)} placeholder="Midnight watch club" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                        <span className="text-sm font-medium text-[var(--muted)]">Theme name</span>
+                        <input value={roomThemeCustom} onChange={(event) => setRoomThemeCustom(event.target.value)} placeholder="Midnight watch club" className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
                       </label>
 
                       <div className="grid gap-4 md:grid-cols-3">
-                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
+                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-3 py-2.5 text-sm text-[var(--muted)]">
                           <span>Accent</span>
                           <input type="color" value={roomThemeAccent} onChange={(event) => setRoomThemeAccent(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
                         </label>
 
-                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
+                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-3 py-2.5 text-sm text-[var(--muted)]">
                           <span>Background</span>
                           <input type="color" value={roomThemeBackground} onChange={(event) => setRoomThemeBackground(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
                         </label>
 
-                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-zinc-950 px-3 py-2.5 text-sm text-slate-200">
+                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-3 py-2.5 text-sm text-[var(--muted)]">
                           <span>Buttons</span>
                           <input type="color" value={roomThemeButtonColor} onChange={(event) => setRoomThemeButtonColor(event.target.value)} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0" />
                         </label>
                       </div>
 
-                      <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15">
+                      <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/15">
                         Save theme
                       </button>
                     </div>
@@ -405,19 +405,19 @@ function DashboardRoomPageContent() {
                 </>
               ) : (
                 <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-200">Room code</span>
-                  <input value={roomCode} onChange={(event) => setRoomCode(event.target.value)} placeholder="Enter room code" className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base uppercase text-white outline-none placeholder:text-zinc-500 focus:border-emerald-400/60" />
+                  <span className="text-sm font-medium text-[var(--muted)]">Room code</span>
+                  <input value={roomCode} onChange={(event) => setRoomCode(event.target.value)} placeholder="Enter room code" className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base uppercase text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
                 </label>
               )}
 
               {mode === "create" && friendContacts.length > 0 ? (
                 <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium text-slate-200">Invite friends</legend>
-                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#121212] p-2">
+                  <legend className="text-sm font-medium text-[var(--muted)]">Invite friends</legend>
+                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-2">
                     {friendContacts.map((friend) => {
                       const isSelected = selectedInviteeIds.includes(friend.id);
                       return (
-                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-300" : "text-white hover:bg-white/5"}`}>
+                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-700" : "text-[var(--foreground)] hover:bg-[var(--control-background)]"}`}>
                           <input type="checkbox" checked={isSelected} onChange={() => setSelectedInviteeIds((current) => isSelected ? current.filter((id) => id !== friend.id) : [...current, friend.id])} className="h-4 w-4 accent-emerald-500" />
                           <span>{friend.name}</span>
                         </label>
@@ -427,7 +427,7 @@ function DashboardRoomPageContent() {
                 </fieldset>
               ) : null}
 
-              {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{roomError}</div> : null}
+              {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-700">{roomError}</div> : null}
 
               <button
                 type="button"
@@ -440,30 +440,30 @@ function DashboardRoomPageContent() {
           </div>
 
           {mode === "join" ? (
-            <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-2xl shadow-black/40">
+            <aside className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-none">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Rooms</p>
-                  <h4 className="mt-2 text-xl font-semibold text-white">Active rooms</h4>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">Rooms</p>
+                  <h4 className="mt-2 text-xl font-semibold text-[var(--foreground)]">Active rooms</h4>
                 </div>
-                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-300">Live</div>
+                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-600">Live</div>
               </div>
 
               <div className="space-y-3">
                 {activeRooms.length > 0 ? activeRooms.map((room) => (
-                  <div key={room.code} className="rounded-2xl border border-white/10 bg-[#121212] p-3">
+                  <div key={room.code} className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <div className="text-lg font-semibold text-white">{room.name}</div>
-                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400">Host: {room.host}</div>
+                        <div className="text-lg font-semibold text-[var(--foreground)]">{room.name}</div>
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">Host: {room.host}</div>
                       </div>
-                      <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-300" : "bg-slate-200/80 text-slate-700"}`}>
+                      <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-600" : "bg-slate-200 text-slate-700"}`}>
                         {room.status}
                       </span>
                     </div>
 
                     <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="text-xs text-slate-400">{room.viewers}</span>
+                      <span className="text-xs text-[var(--muted)]">{room.viewers}</span>
                       <button
                         type="button"
                         onClick={() => { setRoomCode(room.code); void joinRoom(room.code); }}
@@ -474,25 +474,25 @@ function DashboardRoomPageContent() {
                     </div>
                   </div>
                 )) : (
-                  <div className="rounded-2xl border border-dashed border-white/10 bg-[#121212] p-4 text-sm text-slate-400">
+                  <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--soft-background)] p-4 text-sm text-[var(--muted)]">
                     No active rooms are available right now.
                   </div>
                 )}
               </div>
             </aside>
           ) : (
-            <aside className="rounded-[28px] border border-white/10 bg-[#0d0d0d] p-5 shadow-2xl shadow-black/40">
+            <aside className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-none">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Toolkit</p>
-                  <h4 className="mt-2 text-xl font-semibold text-white">Launch ideas</h4>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">Toolkit</p>
+                  <h4 className="mt-2 text-xl font-semibold text-[var(--foreground)]">Launch ideas</h4>
                 </div>
-                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-300">Live</div>
+                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-600">Live</div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Quick presets</div>
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Quick presets</div>
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
@@ -504,35 +504,35 @@ function DashboardRoomPageContent() {
                         key={preset.label}
                         type="button"
                         onClick={() => setRoomTitle(preset.title)}
-                        className="rounded-2xl border border-white/10 bg-[#121212] p-3 text-left transition hover:border-emerald-400/40 hover:bg-emerald-500/5"
+                        className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3 text-left transition hover:border-emerald-400/40 hover:bg-emerald-500/5"
                       >
-                        <div className="text-sm font-semibold text-white">{preset.label}</div>
-                        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-slate-400">{preset.hint}</div>
+                        <div className="text-sm font-semibold text-[var(--foreground)]">{preset.label}</div>
+                        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">{preset.hint}</div>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Invite ready</div>
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3">
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Invite ready</div>
                   <div className="space-y-2">
                     {friendContacts.slice(0, 4).map((friend) => (
                       <button
                         key={friend.id}
                         type="button"
                         onClick={() => setSelectedInviteeIds((current) => current.includes(friend.id) ? current.filter((id) => id !== friend.id) : [...current, friend.id])}
-                        className={`flex w-full items-center justify-between rounded-xl border px-2.5 py-2 text-left text-sm transition ${selectedInviteeIds.includes(friend.id) ? "border-emerald-500/40 bg-emerald-500/8 text-emerald-200" : "border-white/5 bg-[#18181a] text-white hover:border-white/10 hover:bg-white/5"}`}
+                        className={`flex w-full items-center justify-between rounded-xl border px-2.5 py-2 text-left text-sm transition ${selectedInviteeIds.includes(friend.id) ? "border-emerald-500/40 bg-emerald-500/8 text-emerald-700" : "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--border)] hover:bg-[var(--control-background)]"}`}
                       >
                         <span>{friend.name}</span>
-                        <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">{selectedInviteeIds.includes(friend.id) ? "On" : "Add"}</span>
+                        <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">{selectedInviteeIds.includes(friend.id) ? "On" : "Add"}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">Theme preview</div>
-                  <div className="rounded-2xl border border-white/10 p-3" style={{ background: `linear-gradient(135deg, ${selectedRoomTheme.background} 0%, ${selectedRoomTheme.background} 35%, ${selectedRoomTheme.accent} 100%)` }}>
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3">
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Theme preview</div>
+                  <div className="rounded-2xl border border-[var(--border)] p-3" style={{ background: `linear-gradient(135deg, ${selectedRoomTheme.background} 0%, ${selectedRoomTheme.background} 35%, ${selectedRoomTheme.accent} 100%)` }}>
                     <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 backdrop-blur-sm">
                       <div>
                         <div className="text-[10px] uppercase tracking-[0.15em] text-white/70">Palette</div>
