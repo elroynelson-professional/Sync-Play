@@ -44,7 +44,7 @@ html[data-theme="light"] {
   --control-text: #294056;
   --input-background: #ffffff;
   --input-border: rgba(18, 32, 51, 0.12);
-  --input-text: #122033;
+  --input-text: #ffffff;
   --soft-background: rgba(255, 255, 255, 0.7);
   --soft-border: rgba(18, 32, 51, 0.1);
   background: linear-gradient(180deg, #f7fbfe 0%, #edf3f8 100%);
