@@ -1001,7 +1001,7 @@ export default function DashboardPage() {
                     {user.profileImage ? (
                       <img src={user.profileImage} alt={user.name} className="h-16 w-16 rounded-[18px] object-cover shadow-inner shadow-black/20 sm:h-[72px] sm:w-[72px]" />
                     ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[radial-gradient(circle_at_30%_30%,_#f3d6b1,_#b4815d_38%,_#2d2b2b_100%)] text-[2rem] font-semibold text-white shadow-inner shadow-black/20 sm:h-[72px] sm:w-[72px]">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-[18px] bg-[radial-gradient(circle_at_30%_30%,_#f3d6b1,_#b4815d_38%,_#2d2b2b_100%)] text-[2rem] font-semibold text-[#ffffff] shadow-inner shadow-black/20 sm:h-[72px] sm:w-[72px]">
                         {(user.name || "G").slice(0, 2).toUpperCase()}
                       </div>
                     )}

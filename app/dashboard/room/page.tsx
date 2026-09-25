@@ -533,10 +533,10 @@ function DashboardRoomPageContent() {
                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3">
                   <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Theme preview</div>
                   <div className="rounded-2xl border border-[var(--border)] p-3" style={{ background: `linear-gradient(135deg, ${selectedRoomTheme.background} 0%, ${selectedRoomTheme.background} 35%, ${selectedRoomTheme.accent} 100%)` }}>
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 backdrop-blur-sm">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/70 px-3 py-2 backdrop-blur-sm">
                       <div>
                         <div className="text-[10px] uppercase tracking-[0.15em] text-white/70">Palette</div>
-                        <div className="mt-1 text-sm font-semibold text-white">{selectedRoomTheme.name}</div>
+                        <div className="mt-1 text-sm font-semibold text-[#ffffff]">{selectedRoomTheme.name}</div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: selectedRoomTheme.accent }} />

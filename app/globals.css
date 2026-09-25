@@ -44,7 +44,7 @@ html[data-theme="light"] {
   --control-text: #294056;
   --input-background: #ffffff;
   --input-border: rgba(18, 32, 51, 0.12);
-  --input-text: #ffffff;
+  --input-text: #122033;
   --soft-background: rgba(255, 255, 255, 0.7);
   --soft-border: rgba(18, 32, 51, 0.1);
   background: linear-gradient(180deg, #f7fbfe 0%, #edf3f8 100%);
@@ -66,10 +66,6 @@ html[data-theme="dark"] {
   background: linear-gradient(180deg, #0c0c0c 0%, #090909 100%);
 }
 
-html[data-theme="light"] {
-  color-scheme: light;
-}
-
 html,
 body {
   min-height: 100%;
@@ -89,214 +85,143 @@ body {
   transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
-html[data-theme="light"] .syncplay-auth-shell,
-html[data-theme="light"] .syncplay-auth-shell > div,
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#050505]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#090909]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#0d0d0d]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#0b0b0c]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#101011]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#0a0a0a]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#121212]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#111111]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#111214]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#17181b]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#1b1d22]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-[#111827]"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-zinc-950"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-black"] {
+/* Compatibility for existing dark-first utilities. Keep these mappings together;
+   media and artwork use explicit colors instead of theme text utilities. */
+html[data-theme="light"] :is(
+  [class~="bg-[#050505]"],
+  [class~="bg-[#090909]"],
+  [class~="bg-[#0a0a0a]"],
+  [class~="bg-[#0a0a0b]"],
+  [class~="bg-[#0b0b0c]"],
+  [class~="bg-[#0d0d0d]"],
+  [class~="bg-[#101011]"],
+  [class~="bg-[#111111]"],
+  [class~="bg-[#111214]"],
+  [class~="bg-[#111827]"],
+  [class~="bg-[#121212]"],
+  [class~="bg-[#17181a]"],
+  [class~="bg-[#17181b]"],
+  [class~="bg-[#181819]"],
+  [class~="bg-[#18181a]"],
+  [class~="bg-[#1a1a1c]"],
+  [class~="bg-[#1a1b1d]"],
+  [class~="bg-[#1b1d22]"],
+  [class~="bg-zinc-950"]
+) {
   background-color: var(--surface) !important;
 }
 
-html[data-theme="light"] .syncplay-auth-shell {
-  background: var(--background);
-  color: var(--foreground);
+html[data-theme="light"] :is(
+  [class~="bg-white/5"],
+  [class~="bg-white/6"],
+  [class~="bg-white/8"],
+  [class~="bg-white/10"],
+  [class~="bg-black/15"],
+  [class~="bg-black/20"]
+) {
+  background-color: var(--control-background) !important;
 }
 
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/5"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/6"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/8"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-white/10"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-black/20"],
-html[data-theme="light"] .syncplay-auth-shell [class~="bg-black/70"] {
-  background-color: rgba(15, 23, 42, 0.04) !important;
-}
-
-html[data-theme="light"] .syncplay-auth-shell [class~="text-white"] {
+html[data-theme="light"] :is(
+  [class~="text-white"],
+  [class~="text-slate-100"],
+  [class~="text-slate-200"],
+  [class~="text-zinc-200"]
+) {
   color: var(--foreground) !important;
 }
 
-html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-200"],
-html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-300"],
-html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-400"],
-html[data-theme="light"] .syncplay-auth-shell [class~="text-slate-500"] {
+html[data-theme="light"] :is(
+  [class~="text-slate-300"],
+  [class~="text-slate-400"],
+  [class~="text-slate-500"],
+  [class~="text-zinc-300"],
+  [class~="text-zinc-400"],
+  [class~="text-zinc-500"]
+) {
   color: var(--muted) !important;
 }
 
-html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/10"],
-html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/8"],
-html[data-theme="light"] .syncplay-auth-shell [class~="border-slate-600\/60"],
-html[data-theme="light"] .syncplay-auth-shell [class~="border-white\/12"] {
+html[data-theme="light"] :is(
+  [class~="text-emerald-200"],
+  [class~="text-emerald-300"],
+  [class~="text-emerald-400"]
+) {
+  color: var(--accent-strong) !important;
+}
+
+html[data-theme="light"] :is(
+  [class~="text-rose-200"]
+) {
+  color: #be123c !important;
+}
+
+html[data-theme="light"] :is(
+  [class~="text-amber-300"]
+) {
+  color: #92400e !important;
+}
+
+html[data-theme="light"] :is(
+  [class~="border-white/5"],
+  [class~="border-white/8"],
+  [class~="border-white/10"],
+  [class~="border-white/12"],
+  [class~="border-slate-600/60"]
+) {
   border-color: var(--border) !important;
 }
 
-html[data-theme="light"] .syncplay-auth-shell input,
-html[data-theme="light"] .syncplay-auth-shell textarea {
+html[data-theme="light"] :is(
+  [class~="hover:bg-white/5"],
+  [class~="hover:bg-white/10"],
+  [class~="hover:bg-[#111111]"]
+):hover {
+  background-color: var(--control-background-hover) !important;
+}
+
+html[data-theme="light"] :is(
+  [class~="hover:text-white"]
+):hover {
   color: var(--foreground) !important;
-  background-color: var(--input-background) !important;
-  border-color: var(--input-border) !important;
 }
 
-html[data-theme="light"] .syncplay-auth-shell .bg-emerald-500,
-html[data-theme="light"] .syncplay-auth-shell .bg-emerald-500\/15,
-html[data-theme="light"] .syncplay-auth-shell .bg-emerald-500\/10 {
-  background-color: rgba(29, 157, 95, 0.12) !important;
+html[data-theme="light"] :is(
+  [class~="hover:text-rose-300"]
+):hover {
+  color: #be123c !important;
 }
 
-html[data-theme="light"] .syncplay-auth-shell button.bg-emerald-500,
-html[data-theme="light"] .syncplay-auth-shell button.bg-emerald-500:hover {
-  background-color: var(--accent) !important;
-  color: #f4fff9 !important;
+html[data-theme="light"] :is(input, textarea, select) {
+  color: var(--input-text);
 }
 
-html[data-theme="light"] body,
-html[data-theme="light"] main,
-html[data-theme="light"] section,
-html[data-theme="light"] div,
-html[data-theme="light"] input,
-html[data-theme="light"] textarea,
-html[data-theme="light"] button {
-  color: var(--foreground);
-}
-
-html[data-theme="light"] .syncplay-auth-shell .text-slate-100,
-html[data-theme="light"] .syncplay-auth-shell .text-slate-200,
-html[data-theme="light"] .syncplay-auth-shell .text-slate-300,
-html[data-theme="light"] .syncplay-auth-shell .text-slate-400,
-html[data-theme="light"] .syncplay-auth-shell .text-slate-500,
-html[data-theme="light"] .syncplay-auth-shell .placeholder\:text-slate-400::placeholder,
-html[data-theme="light"] .syncplay-auth-shell .placeholder\:text-slate-500::placeholder,
-html[data-theme="light"] .syncplay-auth-shell .placeholder\:text-zinc-500::placeholder {
+html[data-theme="light"] :is(input, textarea)::placeholder {
   color: var(--muted) !important;
+  opacity: 1;
 }
 
-html[data-theme="light"] [class~="bg-[#0b0b0c]"],
-html[data-theme="light"] [class~="bg-[#101011]"],
-html[data-theme="light"] [class~="bg-[#111214]"],
-html[data-theme="light"] [class~="bg-[#121212]"],
-html[data-theme="light"] [class~="bg-[#181819]"],
-html[data-theme="light"] [class~="bg-[#1a1a1c]"],
-html[data-theme="light"] [class~="bg-[#0d0d0d]"],
-html[data-theme="light"] [class~="bg-zinc-950"],
-html[data-theme="light"] [class~="bg-[#090909]"],
-html[data-theme="light"] [class~="bg-[#050505]"] {
-  background-color: var(--surface) !important;
+html[data-theme="light"] :is(input, textarea, select):focus,
+html[data-theme="light"] [class~="focus-within:border-emerald-400/50"]:focus-within {
+  border-color: var(--accent-strong) !important;
 }
 
-html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-white,
-html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#101011]"] .text-white,
-html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#111214]"] .text-white,
-html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#121212]"] .text-white,
-html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#181819]"] .text-white,
-html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-white,
-html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-white,
-html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-zinc-950"] .text-white,
-html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-100,
-html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-200,
-html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-300,
-html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#090909]"] .text-white,
-html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-400,
-html[data-theme="light"] [class~="bg-[#050505]"] .text-white,
-html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-100,
-html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-200,
-html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-300,
-html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-400 {
-  color: #f5f5f5 !important;
+html[data-theme="light"] :is([class~="bg-black/40"], [class~="bg-black/70"]).text-white {
+  color: #fff !important;
 }
 
-html[data-theme="light"] [class~="bg-white/5"],
-html[data-theme="light"] [class~="bg-white/10"],
-html[data-theme="light"] [class~="bg-black/15"],
-html[data-theme="light"] [class~="bg-black/20"],
-html[data-theme="light"] [class~="bg-black/70"] {
-  background-color: rgba(15, 23, 42, 0.04) !important;
+/* Keep the selected room palette as a tint on light surfaces. */
+html[data-theme="light"] .syncplay-room {
+  background: radial-gradient(circle at top, color-mix(in srgb, var(--room-background) 10%, var(--surface)), var(--background) 70%) !important;
 }
 
-html[data-theme="light"] [class~="text-white"],
-html[data-theme="light"] [class~="text-slate-100"],
-html[data-theme="light"] [class~="text-slate-200"],
-html[data-theme="light"] [class~="text-slate-300"],
-html[data-theme="light"] [class~="text-slate-400"],
-html[data-theme="light"] [class~="text-slate-500"],
-html[data-theme="light"] .text-white,
-html[data-theme="light"] .text-slate-100,
-html[data-theme="light"] .text-slate-200,
-html[data-theme="light"] .text-slate-300,
-html[data-theme="light"] .text-slate-400,
-html[data-theme="light"] .text-slate-500 {
-  color: var(--foreground) !important;
+html[data-theme="light"] .syncplay-room-header {
+  background: var(--panel-background) !important;
 }
 
-html[data-theme="light"] [class~="bg-[#0b0b0c]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#101011]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#111214]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#121212]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#181819]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#1a1a1c]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#0d0d0d]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-zinc-950"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#090909]"] .text-slate-500,
-html[data-theme="light"] [class~="bg-[#050505]"] .text-slate-500 {
-  color: rgba(255, 255, 255, 0.7) !important;
-}
-
-html[data-theme="light"] [class~="border-white/10"],
-html[data-theme="light"] [class~="border-white/8"],
-html[data-theme="light"] [class~="border-white/12"],
-html[data-theme="light"] [class~="border-slate-600/60"],
-html[data-theme="light"] .border-white\/10,
-html[data-theme="light"] .border-white\/8,
-html[data-theme="light"] .border-white\/12,
-html[data-theme="light"] .border-slate-600\/60 {
-  border-color: var(--border) !important;
-}
-
-html[data-theme="light"] input,
-html[data-theme="light"] textarea,
-html[data-theme="light"] button {
-  color: var(--foreground);
+html[data-theme="light"] .syncplay-room-title,
+html[data-theme="light"] .syncplay-room-code {
+  color: var(--accent-strong) !important;
 }
 
 @keyframes fade-up {
@@ -695,7 +620,7 @@ button:hover,
 .syncplay-audio-player-art {
   background:
     radial-gradient(circle at 50% 45%, rgba(52, 211, 153, 0.2), transparent 34%),
-    var(--soft-background);
+    var(--surface);
   color: var(--foreground);
 }
 
@@ -1440,20 +1365,6 @@ html[data-theme="light"] .syncplay-video-shell {
   background: rgba(34, 34, 34, 0.94);
 }
 
-.syncplay-theme-toggle:hover {
-  border-color: rgba(134, 239, 172, 0.5);
-  background: rgba(34, 34, 34, 0.94);
-}
-
-html[data-theme="light"] body {
-  background: var(--background);
-}
-
-html[data-theme="light"] .syncplay-panel {
-  border-radius: 0rem;
-  border-bottom: 1px solid var(--panel-border);
-}
-
 html[data-theme="light"] .syncplay-theme-toggle {
   border-color: #d0d5dd;
   background: #ffffff;
@@ -1463,68 +1374,6 @@ html[data-theme="light"] .syncplay-theme-toggle {
 
 html[data-theme="light"] .syncplay-theme-toggle:hover {
   background: #f8fafc;
-}
-
-/* Tailwind utility colors used by the existing screens. */
-html[data-theme="light"] [class~="text-white"] {
-  color: #101828;
-}
-
-html[data-theme="light"] [class~="text-zinc-300"],
-html[data-theme="light"] [class~="text-slate-300"] {
-  color: #475467;
-}
-
-html[data-theme="light"] [class~="text-slate-200"],
-html[data-theme="light"] [class~="text-zinc-200"],
-html[data-theme="light"] [class~="text-slate-100"] {
-  color: #344054;
-}
-
-html[data-theme="light"] [class~="text-slate-400"] {
-  color: #667085;
-}
-
-html[data-theme="light"] [class~="text-slate-500"],
-html[data-theme="light"] [class~="text-zinc-500"] {
-  color: #98a2b3;
-}
-
-html[data-theme="light"] [class~="text-emerald-200"] {
-  color: #047857;
-}
-
-html[data-theme="light"] [class~="text-emerald-300"] {
-  color: #047857;
-}
-
-html[data-theme="light"] [class~="bg-zinc-950"] {
-  background-color: #ffffff;
-}
-
-html[data-theme="light"] [class~="bg-white\/5"] {
-  background-color: rgba(16, 24, 40, 0.04);
-}
-
-html[data-theme="light"] [class~="bg-white\/6"] {
-  background-color: rgba(16, 24, 40, 0.06);
-}
-
-html[data-theme="light"] [class~="bg-black\/20"] {
-  background-color: rgba(16, 24, 40, 0.04);
-}
-
-html[data-theme="light"] [class~="border-white\/10"],
-html[data-theme="light"] [class~="border-white\/12"] {
-  border-color: rgba(16, 24, 40, 0.12);
-}
-
-html[data-theme="light"] [class~="hover\\:bg-white\/10"]:hover {
-  background-color: rgba(16, 24, 40, 0.09);
-}
-
-html[data-theme="light"] input::placeholder {
-  color: #98a2b3;
 }
 
 .syncplay-glow {

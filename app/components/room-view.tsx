@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { socket, socketUrl } from "../lib/socket";
 import { FLOATING_PANEL_EVENT, openFloatingPanel, type FloatingPanelName } from "../lib/floating-panel";
@@ -528,8 +528,9 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
     <div
       className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8"
       style={{
+        "--room-background": roomBackground,
         background: `radial-gradient(circle at top, ${roomBackground} 0%, rgba(8, 8, 10, 0.96) 42%, #050505 100%)`,
-      }}
+      } as CSSProperties}
     >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:gap-8">
         <header
@@ -543,7 +544,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
           <div className="flex flex-wrap items-center justify-between gap-5">
             <div>
               <div className="syncplay-caps text-xs text-slate-400">Room {roomId}</div>
-              <h1 className="syncplay-hero-title mt-1 text-3xl text-white sm:text-4xl" style={{ color: roomAccent }}>
+              <h1 className="syncplay-hero-title syncplay-room-title mt-1 text-3xl sm:text-4xl" style={{ color: roomAccent }}>
                 {roomTitle}
               </h1>
             </div>
