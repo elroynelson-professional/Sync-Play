@@ -127,12 +127,6 @@ export default function DashboardPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [preferences, setPreferences] = useState({
-    emailAlerts: true,
-    pushNotifications: true,
-    twoFactor: false,
-    sessionActivity: true,
-  });
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const [activeRoomSession, setActiveRoomSession] = useState<{
     roomId: string;
@@ -1128,38 +1122,6 @@ export default function DashboardPage() {
                       Change password
                     </button>
                     {passwordMessage ? <p className="text-sm text-slate-300">{passwordMessage}</p> : null}
-                  </section>
-
-                  <section className="space-y-4 border-t border-white/10 pt-6">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Preferences</p>
-                      <h3 className="mt-1 text-[1.2rem] font-semibold tracking-[-0.03em] text-white">Notifications and privacy</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        { key: "emailAlerts", label: "Email alerts", description: "Receive account and product updates." },
-                        { key: "pushNotifications", label: "Push notifications", description: "Get alerts for room activity and mentions." },
-                        { key: "twoFactor", label: "Two-factor authentication", description: "Add another layer of account security." },
-                      ].map((item) => {
-                        const enabled = preferences[item.key as keyof typeof preferences];
-                        return (
-                          <div key={item.key} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#121212] p-4">
-                            <div>
-                              <p className="font-medium text-white">{item.label}</p>
-                              <p className="mt-1 text-sm text-slate-400">{item.description}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setPreferences((current) => ({ ...current, [item.key]: !enabled }))}
-                              className={`relative h-7 w-12 shrink-0 rounded-full border transition ${enabled ? "border-emerald-400/50 bg-emerald-500/20" : "border-white/10 bg-white/5"}`}
-                              aria-label={`Toggle ${item.label}`}
-                            >
-                              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${enabled ? "left-6" : "left-1"}`} />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
                   </section>
 
                   <section className="border-t border-white/10 pt-8">
