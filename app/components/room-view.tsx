@@ -619,7 +619,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
         ) : null}
 
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_340px] lg:gap-8 xl:grid-cols-[minmax(0,1.25fr)_380px]">
-            <div className="space-y-6 lg:space-y-8">
+            <div className="min-w-0 space-y-6 lg:space-y-8">
               <section className="syncplay-panel syncplay-playback-panel rounded-[28px] p-5 sm:p-6">
                 <div hidden={stageView !== "playback"}>
 
@@ -645,8 +645,9 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                 </div>
                 </div>
                 <VideoChat roomId={roomId} members={room?.users ?? []} localName={name} isVisible={stageView === "call"} onOpen={() => setStageView("call")} />
-                  <div className="syncplay-transport-bar mt-3 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-2">
-                    <div className="flex items-center justify-center gap-2">
+                  <div className="syncplay-playback-dock mt-4">
+                    <div className="syncplay-transport-bar syncplay-transport-layout">
+                    <div className="syncplay-transport-actions" role="group" aria-label="Playback controls">
                     <button
                       type="button"
                       onClick={handlePreviousTrack}
@@ -699,16 +700,16 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       ⏭
                     </button>
                     </div>
-                <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Main area view">
+                <div className="syncplay-view-switch" role="group" aria-label="Main area view">
                   {(["playback", "call"] as const).map((view) => (
-                    <button key={view} type="button" aria-pressed={stageView === view} onClick={() => setStageView(view)} className={`rounded-full border px-3 py-2 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 ${stageView === view ? "border-[var(--accent)] bg-[var(--accent)] text-black" : "border-[var(--border)] bg-[var(--soft-background)] text-[var(--foreground)]"}`}>
+                    <button key={view} type="button" aria-pressed={stageView === view} onClick={() => setStageView(view)} className={`syncplay-view-option ${stageView === view ? "is-selected" : ""}`}>
                       {view === "playback" ? "Playback" : "Video call"}
                     </button>
                   ))}
                 </div>
                   </div>
 
-                  <div className="syncplay-playback-stats mt-4 flex flex-wrap gap-6 text-sm text-slate-300">
+                  <div className="syncplay-playback-stats syncplay-dock-stats text-sm text-slate-300">
                     <div>
                       <div className="syncplay-stat-label syncplay-caps text-[10px] text-slate-400">Position</div>
                       <div className="syncplay-stat-value mt-1 font-semibold text-white">{formatTime(livePosition)}</div>
@@ -723,6 +724,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                         {isConnected ? "Live" : "Offline"}
                       </div>
                     </div>
+                  </div>
                   </div>
               </section>
 
