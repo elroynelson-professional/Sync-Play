@@ -621,13 +621,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_340px] lg:gap-8 xl:grid-cols-[minmax(0,1.25fr)_380px]">
             <div className="space-y-6 lg:space-y-8">
               <section className="syncplay-panel syncplay-playback-panel rounded-[28px] p-5 sm:p-6">
-                <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Main area view">
-                  {(["playback", "call"] as const).map((view) => (
-                    <button key={view} type="button" aria-pressed={stageView === view} onClick={() => setStageView(view)} className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 ${stageView === view ? "border-[var(--accent)] bg-[var(--accent)] text-black" : "border-[var(--border)] bg-[var(--soft-background)] text-[var(--foreground)]"}`}>
-                      {view === "playback" ? "Playback" : "Video call"}
-                    </button>
-                  ))}
-                </div>
                 <div hidden={stageView !== "playback"}>
 
                 <div className="flex items-center justify-between gap-4">
@@ -649,7 +642,11 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <YouTubePlayer ref={playerRef} playback={playback} onTrackEnd={handleTrackEnd} />
                   )}
 
-                  <div className="syncplay-transport-bar mt-3 flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/20 p-2">
+                </div>
+                </div>
+                <VideoChat roomId={roomId} members={room?.users ?? []} localName={name} isVisible={stageView === "call"} onOpen={() => setStageView("call")} />
+                  <div className="syncplay-transport-bar mt-3 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-2">
+                    <div className="flex items-center justify-center gap-2">
                     <button
                       type="button"
                       onClick={handlePreviousTrack}
@@ -701,6 +698,14 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     >
                       ⏭
                     </button>
+                    </div>
+                <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Main area view">
+                  {(["playback", "call"] as const).map((view) => (
+                    <button key={view} type="button" aria-pressed={stageView === view} onClick={() => setStageView(view)} className={`rounded-full border px-3 py-2 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 ${stageView === view ? "border-[var(--accent)] bg-[var(--accent)] text-black" : "border-[var(--border)] bg-[var(--soft-background)] text-[var(--foreground)]"}`}>
+                      {view === "playback" ? "Playback" : "Video call"}
+                    </button>
+                  ))}
+                </div>
                   </div>
 
                   <div className="syncplay-playback-stats mt-4 flex flex-wrap gap-6 text-sm text-slate-300">
@@ -719,9 +724,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       </div>
                     </div>
                   </div>
-                </div>
-                </div>
-                <VideoChat roomId={roomId} members={room?.users ?? []} localName={name} isVisible={stageView === "call"} onOpen={() => setStageView("call")} />
               </section>
 
               <section className="syncplay-panel syncplay-controls-panel rounded-[28px] p-5 sm:p-6">
