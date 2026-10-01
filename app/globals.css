@@ -635,6 +635,16 @@ button:hover,
 
 .syncplay-upload-field input[type="file"]::file-selector-button {
   cursor: pointer;
+  background: var(--room-button, var(--accent));
+  color: var(--room-button-text, #000000);
+}
+
+.syncplay-upload-field input[type="file"]:not(:disabled)::file-selector-button:hover {
+  filter: brightness(0.95);
+}
+
+.syncplay-upload-field input[type="file"]:disabled::file-selector-button {
+  cursor: not-allowed;
 }
 
 .syncplay-upload-help {

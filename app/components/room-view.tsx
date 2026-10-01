@@ -763,7 +763,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       accept="video/*,audio/*"
                       onChange={handleLocalMediaUpload}
                       disabled={isUploadingMedia}
-                      className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-500 file:px-3 file:py-2 file:font-semibold file:text-black disabled:cursor-not-allowed disabled:opacity-60"
+                      className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition file:mr-3 file:rounded-lg file:border-0 file:px-3 file:py-2 file:font-semibold disabled:cursor-not-allowed disabled:opacity-60"
                     />
                     <span className="syncplay-upload-help block text-xs leading-5 text-slate-400">
                       {isUploadingMedia ? "Uploading media..." : "Maximum upload size: 500 MB."}
