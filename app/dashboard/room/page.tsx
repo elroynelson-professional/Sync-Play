@@ -312,7 +312,7 @@ function DashboardRoomPageContent() {
       isSettingsOpen={isAccountSettingsOpen}
       onDashboardClick={() => setIsAccountSettingsOpen(false)}
     >
-      <section className="mx-auto w-full max-w-6xl pb-4 pt-2">
+      <section className={`mx-auto w-full pb-4 pt-2 ${mode === "create" ? "max-w-4xl" : "max-w-6xl"}`}>
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-emerald-600">Room flow</p>
@@ -331,7 +331,7 @@ function DashboardRoomPageContent() {
 
         <div className={`grid gap-5 ${mode === "join" ? "lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,360px)]" : ""}`}>
           <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-none">
-            <div className="space-y-4">
+            <div className={mode === "create" ? "grid grid-cols-1 gap-5 md:grid-cols-2" : "space-y-4"}>
               <label className="block space-y-2">
                 <span className="text-sm font-medium text-[var(--muted)]">Display name</span>
                 <input value={roomDisplayName} onChange={(event) => setRoomDisplayName(event.target.value)} placeholder="Your display name" className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
@@ -344,7 +344,7 @@ function DashboardRoomPageContent() {
                     <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
                   </label>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid min-w-0 gap-5 md:col-span-2 md:grid-cols-2">
                     <label className="block space-y-2">
                       <span className="text-sm font-medium text-[var(--muted)]">Room theme</span>
                       <select value={roomTheme} onChange={(event) => {
@@ -374,7 +374,7 @@ function DashboardRoomPageContent() {
                   </div>
 
                   {(roomTheme === "custom" || roomTheme.startsWith("saved:")) ? (
-                    <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-4">
+                    <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-4 md:col-span-2">
                       <label className="block space-y-2">
                         <span className="text-sm font-medium text-[var(--muted)]">Theme name</span>
                         <input value={roomThemeCustom} onChange={(event) => setRoomThemeCustom(event.target.value)} placeholder="Midnight watch club" className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
@@ -411,15 +411,15 @@ function DashboardRoomPageContent() {
               )}
 
               {mode === "create" && friendContacts.length > 0 ? (
-                <fieldset className="space-y-2">
+                <fieldset className="min-w-0 space-y-2 md:col-span-2">
                   <legend className="text-sm font-medium text-[var(--muted)]">Invite friends</legend>
-                  <div className="max-h-36 space-y-1 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-2">
+                  <div className="grid max-h-48 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
                     {friendContacts.map((friend) => {
                       const isSelected = selectedInviteeIds.includes(friend.id);
                       return (
-                        <label key={friend.id} className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-700" : "text-[var(--foreground)] hover:bg-[var(--control-background)]"}`}>
-                          <input type="checkbox" checked={isSelected} onChange={() => setSelectedInviteeIds((current) => isSelected ? current.filter((id) => id !== friend.id) : [...current, friend.id])} className="h-4 w-4 accent-emerald-500" />
-                          <span>{friend.name}</span>
+                        <label key={friend.id} className={`flex min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] px-4 py-3 text-sm transition ${isSelected ? "bg-emerald-500/10 text-emerald-700" : "text-[var(--foreground)] hover:bg-[var(--control-background)]"}`}>
+                          <input type="checkbox" checked={isSelected} onChange={() => setSelectedInviteeIds((current) => isSelected ? current.filter((id) => id !== friend.id) : [...current, friend.id])} className="h-4 w-4 shrink-0 accent-emerald-500" />
+                          <span className="min-w-0 break-words">{friend.name}</span>
                         </label>
                       );
                     })}
@@ -427,12 +427,12 @@ function DashboardRoomPageContent() {
                 </fieldset>
               ) : null}
 
-              {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-700">{roomError}</div> : null}
+              {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-700 md:col-span-full">{roomError}</div> : null}
 
               <button
                 type="button"
                 onClick={mode === "create" ? createRoom : () => void joinRoom()}
-                className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400"
+                className={`w-full rounded-2xl bg-emerald-500 px-6 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400 ${mode === "create" ? "md:col-span-2 md:w-auto md:min-w-48 md:justify-self-end" : ""}`}
               >
                 {mode === "create" ? "Create room" : "Join room"}
               </button>
