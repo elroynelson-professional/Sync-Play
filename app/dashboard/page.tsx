@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { socket, socketUrl } from "../lib/socket";
@@ -1168,7 +1167,6 @@ export default function DashboardPage() {
                 <div className="rounded-[22px] border border-white/10 bg-[#0d0d0d] p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-[1.4rem] font-semibold tracking-[-0.04em] text-white">Live rooms</h2>
-                    <Link href="/dashboard/room?mode=join" className="text-xs font-medium text-emerald-300">View all</Link>
                   </div>
 
                   <div className="space-y-2.5">
