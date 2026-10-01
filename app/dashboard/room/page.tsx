@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "../../components/app-shell";
 import { AuthPageLoading } from "../../components/auth-page-loading";
 import { isRoomCodeValid, normalizeRoomCode } from "../../lib/room-validation";
+import type { RoomPurpose } from "../../lib/room-types";
 import { socketUrl } from "../../lib/socket";
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
@@ -72,6 +73,7 @@ function DashboardRoomPageContent() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState(searchParams.get("code") || "");
   const [roomTitle, setRoomTitle] = useState("");
+  const [roomPurpose, setRoomPurpose] = useState<RoomPurpose>("video");
   const [roomTheme, setRoomTheme] = useState("cinema");
   const [roomThemeCustom, setRoomThemeCustom] = useState("");
   const [roomThemeAccent, setRoomThemeAccent] = useState("#5eead4");
@@ -235,6 +237,7 @@ function DashboardRoomPageContent() {
       background: theme.background,
       buttonColor: theme.buttonColor,
       schedule: roomSchedule,
+      purpose: roomPurpose,
     });
 
     router.push(`/room/${code}?${query.toString()}`);
@@ -343,6 +346,25 @@ function DashboardRoomPageContent() {
                     <span className="text-sm font-medium text-[var(--muted)]">Room title</span>
                     <input value={roomTitle} onChange={(event) => setRoomTitle(event.target.value)} placeholder="Movie night, watch party, study session..." className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
                   </label>
+
+                  <fieldset className="min-w-0 space-y-2 md:col-span-2">
+                    <legend className="text-sm font-medium text-[var(--muted)]">Room purpose</legend>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {([
+                        { value: "video", label: "Video", description: "Videos and shared clips" },
+                        { value: "movie", label: "Movie", description: "Movie nights and watch parties" },
+                        { value: "audio", label: "Audio", description: "Music and listening sessions" },
+                      ] as const).map((purpose) => (
+                        <label key={purpose.value} className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition focus-within:ring-2 focus-within:ring-emerald-500 ${roomPurpose === purpose.value ? "border-emerald-500 bg-emerald-500/10" : "border-[var(--border)] bg-[var(--soft-background)] hover:border-emerald-500/50"}`}>
+                          <input type="radio" name="room-purpose" value={purpose.value} checked={roomPurpose === purpose.value} onChange={() => setRoomPurpose(purpose.value)} className="mt-1 h-4 w-4 shrink-0 accent-emerald-500" />
+                          <span>
+                            <span className="block text-sm font-semibold text-[var(--foreground)]">{purpose.label}</span>
+                            <span className="mt-1 block text-xs text-[var(--muted)]">{purpose.description}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
 
                   <div className="grid min-w-0 gap-5 md:col-span-2 md:grid-cols-2">
                     <label className="block space-y-2">
