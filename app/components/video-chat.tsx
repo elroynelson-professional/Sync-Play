@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { socket } from "../lib/socket";
-import { FLOATING_PANEL_EVENT, openFloatingPanel, type FloatingPanelName } from "../lib/floating-panel";
+import type { RoomMember } from "../lib/room-types";
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -10,6 +10,10 @@ const ICE_SERVERS: RTCConfiguration = {
 
 type VideoChatProps = {
   roomId: string;
+  members: RoomMember[];
+  localName: string;
+  isVisible: boolean;
+  onOpen: () => void;
 };
 
 type VideoOffer = {
@@ -27,8 +31,8 @@ type VideoIceCandidate = {
   candidate: RTCIceCandidateInit;
 };
 
-export function VideoChat({ roomId }: VideoChatProps) {
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
+export function VideoChat({ roomId, members, localName, isVisible, onOpen }: VideoChatProps) {
+  const [isJoining, setIsJoining] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
@@ -199,18 +203,6 @@ export function VideoChat({ roomId }: VideoChatProps) {
   }, [isJoined]);
 
   useEffect(() => {
-    function handleFloatingPanel(event: Event) {
-      const panel = (event as CustomEvent<FloatingPanelName>).detail;
-      if (panel !== "video") {
-        setIsVideoOpen(false);
-      }
-    }
-
-    window.addEventListener(FLOATING_PANEL_EVENT, handleFloatingPanel);
-    return () => window.removeEventListener(FLOATING_PANEL_EVENT, handleFloatingPanel);
-  }, []);
-
-  useEffect(() => {
     const localVideo = localVideoRef.current;
     if (localVideo && localStreamRef.current) {
       localVideo.srcObject = localStreamRef.current;
@@ -236,7 +228,7 @@ export function VideoChat({ roomId }: VideoChatProps) {
         remoteVideoRefs.current.delete(peerId);
       }
     });
-  }, [isVideoOpen, remoteStreams]);
+  }, [isVisible, isJoined, remoteStreams]);
 
   async function enableRemoteVideo() {
     const videos = [...remoteVideoRefs.current.values()];
@@ -249,13 +241,14 @@ export function VideoChat({ roomId }: VideoChatProps) {
   }
 
   async function joinVideo() {
-    if (isJoined) return;
+    if (isJoined || isJoining) return;
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setError("Video chat requires a secure connection or localhost.");
       return;
     }
 
+    setIsJoining(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -282,6 +275,8 @@ export function VideoChat({ roomId }: VideoChatProps) {
       socket.emit("video-join", { roomId });
     } catch {
       setError("Camera and microphone permission is required to join video chat.");
+    } finally {
+      setIsJoining(false);
     }
   }
 
@@ -317,33 +312,22 @@ export function VideoChat({ roomId }: VideoChatProps) {
     setIsCameraOff(nextCameraOff);
   }
 
-  function toggleVideoPanel() {
-    const nextOpenState = !isVideoOpen;
-
-    if (nextOpenState) {
-      openFloatingPanel("video");
-    }
-
-    setIsVideoOpen(nextOpenState);
-  }
-
   return (
     <>
-      {isVideoOpen ? (
-        <section className="syncplay-panel syncplay-video-panel syncplay-video-floating rounded-[28px] p-5 sm:p-6">
+      <section id="room-call-stage" hidden={!isVisible} aria-label="Video call" className="syncplay-call-stage">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="syncplay-caps text-xs text-slate-400">Video chat</div>
+              <div className="syncplay-caps text-xs text-slate-400">Video call</div>
               <h2 className="syncplay-hero-title mt-1 text-2xl text-white">
-                {isJoined ? `${peerIds.length + 1} connected` : "See each other"}
+                {isJoined ? `${peerIds.length + 1} connected` : "Ready to join?"}
               </h2>
             </div>
             <span className={`syncplay-video-indicator ${isJoined ? "is-active" : ""}`} aria-hidden="true" />
           </div>
 
           {isJoined ? (
-            <div className="syncplay-video-grid mt-4">
-              <div className="syncplay-video-tile syncplay-video-tile-local">
+            <div className={`syncplay-call-grid mt-4 ${peerIds.length === 0 ? "is-solo" : peerIds.length < 4 ? "is-small" : "is-large"}`}>
+              <div className="syncplay-call-tile syncplay-call-tile-local">
                 <video
                   ref={(element) => {
                     localVideoRef.current = element;
@@ -351,19 +335,21 @@ export function VideoChat({ roomId }: VideoChatProps) {
                       element.srcObject = localStreamRef.current;
                     }
                   }}
+                  className={isCameraOff ? "invisible" : ""}
                   autoPlay
                   muted
                   playsInline
                 />
-                <span>You</span>
+                {isCameraOff ? <div className="syncplay-call-avatar" aria-label="Camera off">{localName.slice(0, 1).toUpperCase()}</div> : null}
+                <div className="syncplay-call-name">{localName} (You){isMuted ? " · Muted" : ""}</div>
               </div>
-              {Object.entries(remoteStreams).map(([peerId, stream]) => (
-                <div className="syncplay-video-tile" key={peerId}>
+              {peerIds.map((peerId) => (
+                <div className="syncplay-call-tile" key={peerId}>
                   <video
                     ref={(element) => {
                       if (element) {
                         remoteVideoRefs.current.set(peerId, element);
-                        element.srcObject = stream;
+                        element.srcObject = remoteStreams[peerId] ?? null;
                       } else {
                         remoteVideoRefs.current.delete(peerId);
                       }
@@ -371,29 +357,34 @@ export function VideoChat({ roomId }: VideoChatProps) {
                     autoPlay
                     playsInline
                   />
-                  <span>Participant</span>
+                  {!remoteStreams[peerId] ? <div className="syncplay-call-avatar">{(members.find((member) => member.id === peerId)?.name || "Guest").slice(0, 1).toUpperCase()}</div> : null}
+                  <div className="syncplay-call-name">{members.find((member) => member.id === peerId)?.name || "Participant"}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="syncplay-video-empty mt-4">Join video to turn on your camera and microphone.</p>
+            <div className="syncplay-call-lobby mt-4">
+              <div className="syncplay-call-lobby-avatar">{localName.slice(0, 1).toUpperCase()}</div>
+              <p className="text-lg font-semibold">Meet face to face</p>
+              <p className="max-w-sm text-sm text-slate-300">Join to turn on your camera and microphone. Everyone in the call appears here in a tiled view.</p>
+            </div>
           )}
 
-          <div className="mt-4 flex gap-3">
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
             {!isJoined ? (
-              <button type="button" onClick={joinVideo} className="syncplay-button-primary flex-1 rounded-2xl px-4 py-3 text-sm font-semibold">
-                Join video
+              <button type="button" onClick={joinVideo} disabled={isJoining} className="syncplay-button-primary disabled:opacity-50 rounded-2xl px-4 py-3 text-sm font-semibold">
+                {isJoining ? "Connecting…" : "Join video call"}
               </button>
             ) : (
               <>
-                <button type="button" onClick={toggleMute} className="syncplay-button-secondary flex-1 rounded-2xl px-3 py-3 text-sm font-semibold">
+                <button type="button" onClick={toggleMute} aria-pressed={isMuted} className="syncplay-button-secondary flex-1 rounded-2xl px-3 py-3 text-sm font-semibold">
                   {isMuted ? "Unmute" : "Mute"}
                 </button>
-                <button type="button" onClick={toggleCamera} className="syncplay-button-secondary flex-1 rounded-2xl px-3 py-3 text-sm font-semibold">
+                <button type="button" onClick={toggleCamera} aria-pressed={isCameraOff} className="syncplay-button-secondary flex-1 rounded-2xl px-3 py-3 text-sm font-semibold">
                   {isCameraOff ? "Camera on" : "Camera off"}
                 </button>
                 <button type="button" onClick={leaveVideo} className="syncplay-button-secondary flex-1 rounded-2xl px-3 py-3 text-sm font-semibold">
-                  Leave
+                  Leave call
                 </button>
               </>
             )}
@@ -410,14 +401,13 @@ export function VideoChat({ roomId }: VideoChatProps) {
             </div>
           ) : null}
         </section>
-      ) : null}
 
       <button
         type="button"
-        onClick={toggleVideoPanel}
-        aria-label={isVideoOpen ? "Close video chat" : "Open video chat"}
-        aria-expanded={isVideoOpen}
-        className={`syncplay-video-launcher ${isVideoOpen ? "is-active" : ""}`}
+        onClick={() => { onOpen(); document.getElementById("room-call-stage")?.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" }); }}
+        aria-label="Show video call"
+        aria-pressed={isVisible}
+        className={`syncplay-video-launcher ${isVisible ? "is-active" : ""}`}
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="6" width="13" height="12" rx="2" />

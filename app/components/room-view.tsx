@@ -169,6 +169,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
   const roomBackground = theme?.background ?? "#0f172a";
   const roomButtonColor = theme?.buttonColor ?? theme?.accent ?? "#5eead4";
   const searchParams = useSearchParams();
+  const [stageView, setStageView] = useState<"playback" | "call">("playback");
   const [room, setRoom] = useState<RoomState | null>(null);
   const [name] = useState(initialName || "Guest");
   const [role] = useState(initialRole);
@@ -620,6 +621,15 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_340px] lg:gap-8 xl:grid-cols-[minmax(0,1.25fr)_380px]">
             <div className="space-y-6 lg:space-y-8">
               <section className="syncplay-panel syncplay-playback-panel rounded-[28px] p-5 sm:p-6">
+                <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Main area view">
+                  {(["playback", "call"] as const).map((view) => (
+                    <button key={view} type="button" aria-pressed={stageView === view} onClick={() => setStageView(view)} className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 ${stageView === view ? "border-[var(--accent)] bg-[var(--accent)] text-black" : "border-[var(--border)] bg-[var(--soft-background)] text-[var(--foreground)]"}`}>
+                      {view === "playback" ? "Playback" : "Video call"}
+                    </button>
+                  ))}
+                </div>
+                <div hidden={stageView !== "playback"}>
+
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <div className="syncplay-caps text-xs text-slate-400">Playback</div>
@@ -710,6 +720,8 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     </div>
                   </div>
                 </div>
+                </div>
+                <VideoChat roomId={roomId} members={room?.users ?? []} localName={name} isVisible={stageView === "call"} onOpen={() => setStageView("call")} />
               </section>
 
               <section className="syncplay-panel syncplay-controls-panel rounded-[28px] p-5 sm:p-6">
@@ -949,7 +961,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
             </aside>
           </div>
           <VoiceChat roomId={roomId} />
-          <VideoChat roomId={roomId} />
       </div>
     </div>
   );
