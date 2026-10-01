@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getButtonTextColor } from "../lib/room-colors";
 import { socket, socketUrl } from "../lib/socket";
 import { FLOATING_PANEL_EVENT, openFloatingPanel, type FloatingPanelName } from "../lib/floating-panel";
 import type { ChatMessage, MediaType, PlaybackState, QueueTrack, RoomState } from "../lib/room-types";
@@ -530,6 +531,9 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
       className="syncplay-room px-5 py-5 text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8"
       style={{
         "--room-background": roomBackground,
+        "--room-accent": roomAccent,
+        "--room-button": roomButtonColor,
+        "--room-button-text": getButtonTextColor(roomButtonColor),
         background: `radial-gradient(circle at top, ${roomBackground} 0%, rgba(8, 8, 10, 0.96) 42%, #050505 100%)`,
       } as CSSProperties}
     >

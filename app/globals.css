@@ -212,11 +212,14 @@ html[data-theme="light"] :is([class~="bg-black/40"], [class~="bg-black/70"]).tex
 
 /* Keep the selected room palette as a tint on light surfaces. */
 html[data-theme="light"] .syncplay-room {
+  --accent: var(--room-button, #5eead4);
+  --accent-strong: color-mix(in srgb, var(--room-accent, #5eead4) 40%, #122033);
+  --accent-soft: color-mix(in srgb, var(--room-button, #5eead4) 80%, white);
   background: radial-gradient(circle at top, color-mix(in srgb, var(--room-background) 10%, var(--surface)), var(--background) 70%) !important;
 }
 
 html[data-theme="light"] .syncplay-room-header {
-  background: var(--panel-background) !important;
+  background: color-mix(in srgb, var(--room-accent, #5eead4) 6%, var(--surface)) !important;
 }
 
 html[data-theme="light"] .syncplay-room-title,
@@ -1316,7 +1319,7 @@ button:hover,
 }
 
 html[data-theme="light"] .syncplay-video-shell {
-  background: #090d0a !important;
+  background: var(--surface-strong) !important;
 }
 
 .syncplay-theme-toggle {
@@ -1626,4 +1629,24 @@ html[data-theme="light"] .syncplay-theme-toggle:hover {
   .syncplay-view-switch {
     flex-shrink: 0;
   }
+}
+
+
+/* Keep custom room colors legible on the light theme's surfaces. */
+html[data-theme="light"] .syncplay-room :is(.syncplay-button-primary, .syncplay-transport-primary, .syncplay-view-option.is-selected) {
+  color: var(--room-button-text, #122033) !important;
+}
+
+html[data-theme="light"] .syncplay-room :is(.syncplay-button-primary, .syncplay-transport-primary):hover {
+  background: var(--room-button, #5eead4) !important;
+  filter: brightness(0.95);
+}
+
+html[data-theme="light"] .syncplay-room .syncplay-role-badge {
+  color: var(--accent-strong) !important;
+}
+
+html[data-theme="light"] .syncplay-room .syncplay-call-lobby {
+  background: var(--surface-strong);
+  color: var(--foreground);
 }
