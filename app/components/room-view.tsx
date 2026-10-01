@@ -206,7 +206,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
   const livePosition = useMemo(() => derivePosition(playback), [playback]);
   useEffect(() => {
     const action = searchParams.get("action") ?? initialAction;
-    const title = searchParams.get("title") ?? initialTitle ?? "Sykonyx shared room";
+    const title = initialTitle;
     const payload = {
       roomId,
       name,
@@ -312,7 +312,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
       socket.off("connect_error", handleConnectError);
       socket.disconnect();
     };
-  }, [initialAction, name, roomId, router, searchParams]);
+  }, [initialAction, initialTitle, name, roomId, router, searchParams]);
 
   function approveJoin(requestId: string) {
     socket.emit("approve-room-join", { requestId });

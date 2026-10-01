@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "../../components/app-shell";
 import { AuthPageLoading } from "../../components/auth-page-loading";
 import { RoomView } from "../../components/room-view";
+import { readRoomLinkText } from "../../lib/room-link";
 import { socketUrl } from "../../lib/socket";
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
@@ -56,10 +57,10 @@ function RoomPageContent() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const roomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
-  const initialName = searchParams.get("name") || "Guest";
+  const initialName = readRoomLinkText(searchParams.get("name"), searchParams.get("linkVersion")) || "Guest";
   const initialRole = searchParams.get("role") === "host" ? "host" : "guest";
   const initialAction = searchParams.get("action") === "create" ? "create" : "join";
-  const initialTitle = searchParams.get("title") || "Sykonyx shared room";
+  const initialTitle = readRoomLinkText(searchParams.get("title"), searchParams.get("linkVersion")) || "Sykonyx shared room";
   const roomTheme = {
     accent: searchParams.get("accent") || "#5eead4",
     background: searchParams.get("background") || "#0f172a",

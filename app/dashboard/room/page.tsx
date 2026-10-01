@@ -119,6 +119,7 @@ function DashboardRoomPageContent() {
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const query = new URLSearchParams({
+      linkVersion: "2",
       name,
       role: "host",
       action: "create",
@@ -164,7 +165,7 @@ function DashboardRoomPageContent() {
       return;
     }
 
-    router.push(`/room/${code}?name=${encodeURIComponent(name)}&role=guest&action=join&title=${encodeURIComponent("Sykonyx shared room")}`);
+    router.push(`/room/${code}?linkVersion=2&name=${encodeURIComponent(name)}&role=guest&action=join&title=${encodeURIComponent("Sykonyx shared room")}`);
   }
 
   async function signOut() {
