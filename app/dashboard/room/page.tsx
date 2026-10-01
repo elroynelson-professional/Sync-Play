@@ -104,19 +104,7 @@ function DashboardRoomPageContent() {
   ];
 
   const selectedRoomTheme = (() => {
-    if (roomTheme.startsWith("saved:")) {
-      const savedTheme = customRoomThemes.find((theme) => `saved:${theme.id}` === roomTheme);
-      if (savedTheme) {
-        return {
-          name: savedTheme.name,
-          accent: savedTheme.accent,
-          background: savedTheme.background,
-          buttonColor: savedTheme.buttonColor || savedTheme.accent,
-        };
-      }
-    }
-
-    if (roomTheme === "custom") {
+    if (roomTheme === "custom" || roomTheme.startsWith("saved:")) {
       return {
         name: roomThemeCustom.trim() || "Custom theme",
         accent: roomThemeAccent,

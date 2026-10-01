@@ -210,6 +210,12 @@ html[data-theme="light"] :is([class~="bg-black/40"], [class~="bg-black/70"]).tex
   color: #fff !important;
 }
 
+/* Room controls use the selected button palette in both appearance modes. */
+.syncplay-room {
+  --accent: var(--room-button, #5eead4);
+  --accent-soft: color-mix(in srgb, var(--room-button, #5eead4) 80%, white);
+}
+
 /* Keep the selected room palette as a tint on light surfaces. */
 html[data-theme="light"] .syncplay-room {
   --accent: var(--room-button, #5eead4);
@@ -1633,11 +1639,11 @@ html[data-theme="light"] .syncplay-theme-toggle:hover {
 
 
 /* Keep custom room colors legible on the light theme's surfaces. */
-html[data-theme="light"] .syncplay-room :is(.syncplay-button-primary, .syncplay-transport-primary, .syncplay-view-option.is-selected) {
+.syncplay-room :is(.syncplay-button-primary, .syncplay-transport-primary, .syncplay-view-option.is-selected) {
   color: var(--room-button-text, #122033) !important;
 }
 
-html[data-theme="light"] .syncplay-room :is(.syncplay-button-primary, .syncplay-transport-primary):hover {
+.syncplay-room :is(.syncplay-button-primary, .syncplay-transport-primary):hover {
   background: var(--room-button, #5eead4) !important;
   filter: brightness(0.95);
 }
