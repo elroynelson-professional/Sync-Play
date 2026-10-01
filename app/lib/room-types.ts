@@ -3,8 +3,6 @@ export type RoomMember = {
   name: string;
 };
 
-export type RoomPurpose = "video" | "movie" | "audio";
-
 export type MediaType = "youtube" | "direct" | "audio";
 
 export type QueueTrack = {
@@ -38,7 +36,6 @@ export type PlaybackState = {
 export type RoomState = {
   roomId: string;
   hostId: string | null;
-  purpose: RoomPurpose;
   title: string | null;
   users: RoomMember[];
   playback: PlaybackState;

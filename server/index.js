@@ -238,12 +238,11 @@ function hasActivePlayback(room) {
   return Boolean(room.playback.videoId);
 }
 
-function createRoom(roomId, hostId, name, title = null, purpose = "video") {
+function createRoom(roomId, hostId, name, title = null) {
   return {
     roomId,
     hostId,
     title: typeof title === "string" && title.trim() ? title.trim().slice(0, 80) : null,
-    purpose: ["video", "movie", "audio"].includes(purpose) ? purpose : "video",
     users: [{ id: hostId, userId: null, name }],
     playback: createPlaybackState(),
     queue: [],
@@ -1120,13 +1119,13 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("create-room", async ({ roomId, name, userId, inviteeIds = [], title, purpose }) => {
+  socket.on("create-room", async ({ roomId, name, userId, inviteeIds = [], title }) => {
     const normalizedRoomId = (roomId || createRoomCode()).toUpperCase();
     let room = getRoom(normalizedRoomId);
     const trimmedTitle = typeof title === "string" ? title.trim().slice(0, 80) : "";
 
     if (!room) {
-      room = createRoom(normalizedRoomId, socket.id, name || "Host", trimmedTitle || null, purpose);
+      room = createRoom(normalizedRoomId, socket.id, name || "Host", trimmedTitle || null);
       room.users[0].userId = userId || null;
       rooms.set(normalizedRoomId, room);
     } else {

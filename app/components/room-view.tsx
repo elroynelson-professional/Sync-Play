@@ -211,7 +211,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
       roomId,
       name,
       title,
-      purpose: searchParams.get("purpose") || "video",
       userId: typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null")?.id || null : null,
       inviteeIds: (searchParams.get("invitees") || "").split(",").filter(Boolean),
     };
@@ -544,7 +543,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
         >
           <div className="flex flex-wrap items-center justify-between gap-5">
             <div>
-              <div className="syncplay-caps text-xs text-slate-400">Room {roomId} · {room?.purpose === "movie" ? "Movie" : room?.purpose === "audio" ? "Audio" : "Video"}</div>
+              <div className="syncplay-caps text-xs text-slate-400">Room {roomId}</div>
               <h1 className="syncplay-hero-title syncplay-room-title mt-1 text-3xl sm:text-4xl" style={{ color: roomAccent }}>
                 {roomTitle}
               </h1>
