@@ -121,10 +121,10 @@ function DashboardRoomPageContent() {
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const query = new URLSearchParams({
-      name: encodeURIComponent(name),
+      name,
       role: "host",
       action: "create",
-      title: encodeURIComponent(title),
+      title,
       schedule: roomSchedule,
       purpose: roomPurpose,
     });

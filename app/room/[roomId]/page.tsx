@@ -56,10 +56,10 @@ function RoomPageContent() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const roomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
-  const initialName = searchParams.get("name") ? decodeURIComponent(searchParams.get("name")!) : "Guest";
+  const initialName = searchParams.get("name") || "Guest";
   const initialRole = searchParams.get("role") === "host" ? "host" : "guest";
   const initialAction = searchParams.get("action") === "create" ? "create" : "join";
-  const initialTitle = searchParams.get("title") ? decodeURIComponent(searchParams.get("title")!) : "Sykonyx shared room";
+  const initialTitle = searchParams.get("title") || "Sykonyx shared room";
   const roomTheme = {
     accent: searchParams.get("accent") || "#5eead4",
     background: searchParams.get("background") || "#0f172a",
