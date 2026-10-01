@@ -329,7 +329,7 @@ function DashboardRoomPageContent() {
           </button>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,360px)]">
+        <div className={`grid gap-5 ${mode === "join" ? "lg:grid-cols-[minmax(0,1.6fr)_minmax(260px,360px)]" : ""}`}>
           <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-none">
             <div className="space-y-4">
               <label className="block space-y-2">
@@ -480,74 +480,7 @@ function DashboardRoomPageContent() {
                 )}
               </div>
             </aside>
-          ) : (
-            <aside className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-none">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">Toolkit</p>
-                  <h4 className="mt-2 text-xl font-semibold text-[var(--foreground)]">Launch ideas</h4>
-                </div>
-                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-600">Live</div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Quick presets</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
-                      { label: "Study sprint", title: "Study sprint session", hint: "Focused" },
-                      { label: "Gaming", title: "Late-night gaming lobby", hint: "Competitive" },
-                      { label: "Hangout", title: "Casual hangout room", hint: "Social" },
-                    ].map((preset) => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => setRoomTitle(preset.title)}
-                        className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3 text-left transition hover:border-emerald-400/40 hover:bg-emerald-500/5"
-                      >
-                        <div className="text-sm font-semibold text-[var(--foreground)]">{preset.label}</div>
-                        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">{preset.hint}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Invite ready</div>
-                  <div className="space-y-2">
-                    {friendContacts.slice(0, 4).map((friend) => (
-                      <button
-                        key={friend.id}
-                        type="button"
-                        onClick={() => setSelectedInviteeIds((current) => current.includes(friend.id) ? current.filter((id) => id !== friend.id) : [...current, friend.id])}
-                        className={`flex w-full items-center justify-between rounded-xl border px-2.5 py-2 text-left text-sm transition ${selectedInviteeIds.includes(friend.id) ? "border-emerald-500/40 bg-emerald-500/8 text-emerald-700" : "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--border)] hover:bg-[var(--control-background)]"}`}
-                      >
-                        <span>{friend.name}</span>
-                        <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">{selectedInviteeIds.includes(friend.id) ? "On" : "Add"}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Theme preview</div>
-                  <div className="rounded-2xl border border-[var(--border)] p-3" style={{ background: `linear-gradient(135deg, ${selectedRoomTheme.background} 0%, ${selectedRoomTheme.background} 35%, ${selectedRoomTheme.accent} 100%)` }}>
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/70 px-3 py-2 backdrop-blur-sm">
-                      <div>
-                        <div className="text-[10px] uppercase tracking-[0.15em] text-white/70">Palette</div>
-                        <div className="mt-1 text-sm font-semibold text-[#ffffff]">{selectedRoomTheme.name}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: selectedRoomTheme.accent }} />
-                        <span className="h-6 w-6 rounded-full border border-white/20" style={{ background: selectedRoomTheme.background }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </aside>
-          )}
+          ) : null}
         </div>
       </section>
     </AppShell>
