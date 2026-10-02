@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { ThemeToggle } from "./theme-toggle";
 
 type TopBarProps = {
+  lockRoomTheme?: boolean;
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   searchPlaceholder: string;
@@ -21,6 +22,7 @@ type TopBarProps = {
 };
 
 export function TopBar({
+  lockRoomTheme = false,
   searchTerm,
   onSearchTermChange,
   searchPlaceholder,
@@ -92,7 +94,7 @@ export function TopBar({
       </div>
 
       <div className="flex items-center justify-between gap-2 sm:gap-3">
-        <ThemeToggle />
+        <ThemeToggle locked={lockRoomTheme} />
         <button
           type="button"
           onClick={onInbox}

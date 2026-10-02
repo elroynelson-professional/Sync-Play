@@ -12,3 +12,17 @@ export function getButtonTextColor(color: string): "#ffffff" | "#000000" {
   const darkLuminance = 0;
   return 1.05 / (luminance + 0.05) > (luminance + 0.05) / (darkLuminance + 0.05) ? "#ffffff" : "#000000";
 }
+
+
+export function isCustomRoomTheme(theme?: { custom?: boolean; accent?: string; background?: string; buttonColor?: string }): boolean {
+  if (!theme) return false;
+  if (theme.custom !== undefined) return theme.custom;
+  // Recognize room links created before the explicit custom-theme flag.
+  const accent = (theme.accent || "#5eead4").toLowerCase();
+  const background = (theme.background || "#0f172a").toLowerCase();
+  const button = (theme.buttonColor || accent).toLowerCase();
+  return button !== accent || ![
+    ["#5eead4", "#0f172a"], ["#93c5fd", "#111827"],
+    ["#f9a8d4", "#1f2937"], ["#a78bfa", "#140f2d"],
+  ].some(([presetAccent, presetBackground]) => accent === presetAccent && background === presetBackground);
+}

@@ -6,6 +6,7 @@ import { AppShell } from "../../components/app-shell";
 import { AuthPageLoading } from "../../components/auth-page-loading";
 import { RoomView } from "../../components/room-view";
 import { readRoomLinkText } from "../../lib/room-link";
+import { isCustomRoomTheme } from "../../lib/room-colors";
 import { socketUrl } from "../../lib/socket";
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
@@ -62,6 +63,7 @@ function RoomPageContent() {
   const initialAction = searchParams.get("action") === "create" ? "create" : "join";
   const initialTitle = readRoomLinkText(searchParams.get("title"), searchParams.get("linkVersion")) || "Sykonyx shared room";
   const roomTheme = {
+    custom: searchParams.has("themeKind") ? searchParams.get("themeKind") === "custom" : undefined,
     accent: searchParams.get("accent") || "#5eead4",
     background: searchParams.get("background") || "#0f172a",
     buttonColor: searchParams.get("buttonColor") || searchParams.get("accent") || "#5eead4",
@@ -114,6 +116,7 @@ function RoomPageContent() {
 
   return (
     <AppShell
+      lockRoomTheme={isCustomRoomTheme(roomTheme)}
       searchTerm={searchTerm}
       onSearchTermChange={setSearchTerm}
       searchPlaceholder="Search room"

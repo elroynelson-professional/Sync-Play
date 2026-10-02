@@ -1,5 +1,7 @@
 "use client";
 
+import { isCustomRoomTheme } from "../lib/room-colors";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { socket, socketUrl } from "../lib/socket";
@@ -133,7 +135,7 @@ export default function DashboardPage() {
     role: "host" | "guest";
     action: "create" | "join";
     title: string;
-    theme?: { name: string; accent: string; background: string; buttonColor?: string };
+    theme?: { custom?: boolean; name: string; accent: string; background: string; buttonColor?: string };
   } | null>(null);
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; name: string; type: "image" | "video" } | null>(null);
 
@@ -572,6 +574,7 @@ export default function DashboardPage() {
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const theme = {
+      custom: roomTheme === "custom" || roomTheme.startsWith("saved:"),
       name: selectedRoomTheme.name,
       accent: selectedRoomTheme.accent,
       background: selectedRoomTheme.background,
@@ -624,7 +627,7 @@ export default function DashboardPage() {
 
   if (activeRoomSession) {
     return (
-      <AppShell
+      <AppShell lockRoomTheme={isCustomRoomTheme(activeRoomSession.theme)}
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         searchPlaceholder="Search room"

@@ -210,6 +210,7 @@ function DashboardRoomPageContent() {
     };
     const query = new URLSearchParams({
       linkVersion: "2",
+      themeKind: roomTheme === "custom" || roomTheme.startsWith("saved:") ? "custom" : "preset",
       name,
       role: "host",
       action: "create",
