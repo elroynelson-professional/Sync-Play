@@ -72,7 +72,7 @@ function DashboardRoomPageContent() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState(searchParams.get("code") || "");
   const [roomTitle, setRoomTitle] = useState("");
-  const [roomTheme, setRoomTheme] = useState("cinema");
+  const [roomTheme, setRoomTheme] = useState("custom");
   const [roomThemeCustom, setRoomThemeCustom] = useState("");
   const [roomThemeAccent, setRoomThemeAccent] = useState("#5eead4");
   const [roomThemeBackground, setRoomThemeBackground] = useState("#0f172a");
@@ -95,33 +95,16 @@ function DashboardRoomPageContent() {
 
   const mode = searchParams.get("mode") === "join" ? "join" : "create";
   const roomThemeOptions = [
-    { value: "cinema", label: "Cinema noir" },
-    { value: "focus", label: "Focus mode" },
-    { value: "social", label: "Social lounge" },
-    { value: "gaming", label: "Gaming arena" },
     { value: "custom", label: "Custom theme" },
     ...customRoomThemes.map((theme) => ({ value: `saved:${theme.id}`, label: theme.name })),
   ];
 
-  const selectedRoomTheme = (() => {
-    if (roomTheme === "custom" || roomTheme.startsWith("saved:")) {
-      return {
-        name: roomThemeCustom.trim() || "Custom theme",
-        accent: roomThemeAccent,
-        background: roomThemeBackground,
-        buttonColor: roomThemeButtonColor,
-      };
-    }
-
-    const presets: Record<string, { name: string; accent: string; background: string; buttonColor: string }> = {
-      cinema: { name: "Cinema noir", accent: "#5eead4", background: "#0f172a", buttonColor: "#5eead4" },
-      focus: { name: "Focus mode", accent: "#93c5fd", background: "#111827", buttonColor: "#93c5fd" },
-      social: { name: "Social lounge", accent: "#f9a8d4", background: "#1f2937", buttonColor: "#f9a8d4" },
-      gaming: { name: "Gaming arena", accent: "#a78bfa", background: "#140f2d", buttonColor: "#a78bfa" },
-    };
-
-    return presets[roomTheme] ?? presets.cinema;
-  })();
+  const selectedRoomTheme = {
+    name: roomThemeCustom.trim() || "Custom theme",
+    accent: roomThemeAccent,
+    background: roomThemeBackground,
+    buttonColor: roomThemeButtonColor,
+  };
 
   useEffect(() => {
     fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
@@ -210,7 +193,7 @@ function DashboardRoomPageContent() {
     };
     const query = new URLSearchParams({
       linkVersion: "2",
-      themeKind: roomTheme === "custom" || roomTheme.startsWith("saved:") ? "custom" : "preset",
+      themeKind: "custom",
       name,
       role: "host",
       action: "create",

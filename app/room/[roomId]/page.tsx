@@ -7,7 +7,6 @@ import { AuthPageLoading } from "../../components/auth-page-loading";
 import { RoomInbox } from "../../components/room-inbox";
 import { RoomView } from "../../components/room-view";
 import { readRoomLinkText } from "../../lib/room-link";
-import { isCustomRoomTheme } from "../../lib/room-colors";
 import { socketUrl } from "../../lib/socket";
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
@@ -118,7 +117,7 @@ function RoomPageContent() {
 
   return (
     <AppShell
-      lockRoomTheme={isCustomRoomTheme(roomTheme)}
+      lockRoomTheme
       searchTerm={searchTerm}
       onSearchTermChange={setSearchTerm}
       searchPlaceholder="Search room"

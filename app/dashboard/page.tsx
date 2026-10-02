@@ -2,7 +2,6 @@
 
 import { InboxPanel } from "../components/inbox-panel";
 
-import { isCustomRoomTheme } from "../lib/room-colors";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -107,7 +106,7 @@ export default function DashboardPage() {
   const [roomDisplayName, setRoomDisplayName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [roomTitle, setRoomTitle] = useState("");
-  const [roomTheme, setRoomTheme] = useState("cinema");
+  const [roomTheme, setRoomTheme] = useState("custom");
   const [roomThemeCustom, setRoomThemeCustom] = useState("");
   const [roomThemeAccent, setRoomThemeAccent] = useState("#5eead4");
   const [roomThemeBackground, setRoomThemeBackground] = useState("#0f172a");
@@ -256,45 +255,16 @@ export default function DashboardPage() {
   });
 
   const roomThemeOptions = [
-    { value: "cinema", label: "Cinema noir" },
-    { value: "focus", label: "Focus mode" },
-    { value: "social", label: "Social lounge" },
-    { value: "gaming", label: "Gaming arena" },
     { value: "custom", label: "Custom theme" },
     ...customRoomThemes.map((theme) => ({ value: `saved:${theme.id}`, label: theme.name })),
   ];
 
-  const selectedRoomTheme = (() => {
-    if (roomTheme.startsWith("saved:")) {
-      const savedTheme = customRoomThemes.find((theme) => `saved:${theme.id}` === roomTheme);
-      if (savedTheme) {
-        return {
-          name: savedTheme.name,
-          accent: savedTheme.accent,
-          background: savedTheme.background,
-          buttonColor: savedTheme.buttonColor || savedTheme.accent,
-        };
-      }
-    }
-
-    if (roomTheme === "custom") {
-      return {
-        name: roomThemeCustom.trim() || "Custom theme",
-        accent: roomThemeAccent,
-        background: roomThemeBackground,
-        buttonColor: roomThemeButtonColor,
-      };
-    }
-
-    const presets: Record<string, { name: string; accent: string; background: string; buttonColor: string }> = {
-      cinema: { name: "Cinema noir", accent: "#5eead4", background: "#0f172a", buttonColor: "#5eead4" },
-      focus: { name: "Focus mode", accent: "#93c5fd", background: "#111827", buttonColor: "#93c5fd" },
-      social: { name: "Social lounge", accent: "#f9a8d4", background: "#1f2937", buttonColor: "#f9a8d4" },
-      gaming: { name: "Gaming arena", accent: "#a78bfa", background: "#140f2d", buttonColor: "#a78bfa" },
-    };
-
-    return presets[roomTheme] ?? presets.cinema;
-  })();
+  const selectedRoomTheme = {
+    name: roomThemeCustom.trim() || "Custom theme",
+    accent: roomThemeAccent,
+    background: roomThemeBackground,
+    buttonColor: roomThemeButtonColor,
+  };
 
   const roomToolkitPresets = [
     { label: "Movie night", title: "Movie night watch party", hint: "Cinematic" },
@@ -521,7 +491,7 @@ export default function DashboardPage() {
     setRoomDisplayName("");
     setRoomCode("");
     setRoomTitle("");
-    setRoomTheme("cinema");
+    setRoomTheme("custom");
     setRoomThemeCustom("");
     setRoomThemeAccent("#5eead4");
     setRoomThemeBackground("#0f172a");
@@ -577,7 +547,7 @@ export default function DashboardPage() {
 
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const theme = {
-      custom: roomTheme === "custom" || roomTheme.startsWith("saved:"),
+      custom: true,
       name: selectedRoomTheme.name,
       accent: selectedRoomTheme.accent,
       background: selectedRoomTheme.background,
@@ -630,7 +600,7 @@ export default function DashboardPage() {
 
   if (activeRoomSession) {
     return (
-      <AppShell lockRoomTheme={isCustomRoomTheme(activeRoomSession.theme)}
+      <AppShell lockRoomTheme
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         searchPlaceholder="Search room"
