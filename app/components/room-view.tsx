@@ -11,7 +11,6 @@ import { DirectMediaPlayer } from "./direct-video-player";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./youtube-player";
 import { VoiceChat } from "./voice-chat";
 import { VideoChat } from "./video-chat";
-import { ThemeToggle } from "./theme-toggle";
 
 type RoomViewProps = {
   roomId: string;
@@ -554,7 +553,6 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <ThemeToggle />
               <span
                 className="syncplay-role-badge rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs text-slate-200"
                 style={{ borderColor: `${roomAccent}66`, background: `${roomAccent}1a`, color: roomAccent }}
