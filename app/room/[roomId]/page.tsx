@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "../../components/app-shell";
 import { AuthPageLoading } from "../../components/auth-page-loading";
+import { RoomInbox } from "../../components/room-inbox";
 import { RoomView } from "../../components/room-view";
 import { readRoomLinkText } from "../../lib/room-link";
 import { isCustomRoomTheme } from "../../lib/room-colors";
@@ -56,6 +57,7 @@ function RoomPageContent() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<AccountUser | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
 
   const roomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
   const initialName = readRoomLinkText(searchParams.get("name"), searchParams.get("linkVersion")) || "Guest";
@@ -121,7 +123,7 @@ function RoomPageContent() {
       onSearchTermChange={setSearchTerm}
       searchPlaceholder="Search room"
       user={user}
-      onInbox={() => router.push(`/dashboard?inbox=1&returnTo=${encodeURIComponent(`/room/${roomId}`)}`)}
+      onInbox={() => setIsInboxOpen((open) => !open)}
       onAccountSettings={() => router.push("/dashboard?settings=1")}
       onCreateRoom={() => router.push("/dashboard/room?mode=create")}
       onJoinRoom={() => router.push("/dashboard/room?mode=join")}
@@ -136,6 +138,7 @@ function RoomPageContent() {
         initialTitle={initialTitle}
         theme={roomTheme}
       />
+      {isInboxOpen ? <RoomInbox user={user} onClose={() => setIsInboxOpen(false)} /> : null}
     </AppShell>
   );
 }
