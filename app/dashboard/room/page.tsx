@@ -164,6 +164,21 @@ function DashboardRoomPageContent() {
     setRoomError("");
   }
 
+  function removeSavedTheme() {
+    if (!roomTheme.startsWith("saved:")) return;
+    const themeId = roomTheme.slice("saved:".length);
+    const nextThemes = customRoomThemes.filter((theme) => theme.id !== themeId);
+    try {
+      window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
+    } catch {
+      setRoomError("The saved theme could not be removed. Please try again.");
+      return;
+    }
+    setCustomRoomThemes(nextThemes);
+    setRoomTheme("custom");
+    setRoomError("");
+  }
+
   function applySavedTheme(theme: RoomThemePreset) {
     setRoomTheme(`saved:${theme.id}`);
     setRoomThemeCustom(theme.name);
@@ -368,6 +383,11 @@ function DashboardRoomPageContent() {
                       <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/15">
                         Save theme
                       </button>
+                      {roomTheme.startsWith("saved:") ? (
+                        <button type="button" onClick={removeSavedTheme} className="w-full rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:bg-rose-500/20">
+                          Remove saved theme
+                        </button>
+                      ) : null}
                     </div>
                   ) : null}
                 </>
