@@ -1,5 +1,7 @@
 "use client";
 
+import { RoomSchedulePicker } from "../components/room-schedule-picker";
+
 import { RoomThemePicker } from "../components/room-theme-picker";
 
 import { InboxPanel } from "../components/inbox-panel";
@@ -725,10 +727,7 @@ export default function DashboardPage() {
                               }
                             }} />
 
-                          <label className="block space-y-2">
-                            <span className="text-sm font-medium text-slate-200">Go live at</span>
-                            <input type="datetime-local" value={roomSchedule} onChange={(event) => setRoomSchedule(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60" />
-                          </label>
+                          <RoomSchedulePicker value={roomSchedule} onChange={setRoomSchedule} />
                         </div>
 
                         {(roomTheme === "custom" || roomTheme.startsWith("saved:")) ? (

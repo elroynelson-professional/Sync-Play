@@ -1,5 +1,7 @@
 "use client";
 
+import { RoomSchedulePicker } from "../../components/room-schedule-picker";
+
 import { RoomThemePicker } from "../../components/room-theme-picker";
 
 import { Suspense, useEffect, useState } from "react";
@@ -339,10 +341,7 @@ function DashboardRoomPageContent() {
                         }
                       }} />
 
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-[var(--muted)]">Go live at</span>
-                      <input type="datetime-local" value={roomSchedule} onChange={(event) => setRoomSchedule(event.target.value)} className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none focus:border-emerald-400/60" />
-                    </label>
+                    <RoomSchedulePicker value={roomSchedule} onChange={setRoomSchedule} />
                   </div>
 
                   {(roomTheme === "custom" || roomTheme.startsWith("saved:")) ? (

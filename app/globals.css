@@ -1678,3 +1678,7 @@ html[data-theme="light"] .syncplay-room .syncplay-call-lobby {
   outline: 2px solid #10b981;
   outline-offset: -2px;
 }
+
+.room-schedule-picker button:hover {
+  transform: none;
+}
