@@ -1,5 +1,7 @@
 "use client";
 
+import { RoomThemePicker } from "../../components/room-theme-picker";
+
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "../../components/app-shell";
@@ -94,10 +96,7 @@ function DashboardRoomPageContent() {
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
 
   const mode = searchParams.get("mode") === "join" ? "join" : "create";
-  const roomThemeOptions = [
-    { value: "custom", label: "Custom theme" },
-    ...customRoomThemes.map((theme) => ({ value: `saved:${theme.id}`, label: theme.name })),
-  ];
+
 
   const selectedRoomTheme = {
     name: roomThemeCustom.trim() || "Custom theme",
@@ -164,9 +163,7 @@ function DashboardRoomPageContent() {
     setRoomError("");
   }
 
-  function removeSavedTheme() {
-    if (!roomTheme.startsWith("saved:")) return;
-    const themeId = roomTheme.slice("saved:".length);
+  function removeSavedTheme(themeId: string) {
     const nextThemes = customRoomThemes.filter((theme) => theme.id !== themeId);
     try {
       window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
@@ -175,7 +172,7 @@ function DashboardRoomPageContent() {
       return;
     }
     setCustomRoomThemes(nextThemes);
-    setRoomTheme("custom");
+    if (roomTheme === `saved:${themeId}`) setRoomTheme("custom");
     setRoomError("");
   }
 
@@ -327,10 +324,7 @@ function DashboardRoomPageContent() {
                   </label>
 
                   <div className="grid min-w-0 gap-5 md:col-span-2 md:grid-cols-2">
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-[var(--muted)]">Room theme</span>
-                      <select value={roomTheme} onChange={(event) => {
-                        const value = event.target.value;
+                    <RoomThemePicker value={roomTheme} themes={customRoomThemes} onRemove={removeSavedTheme} onChange={(value) => {
                         setRoomTheme(value);
                         if (value === "custom") {
                           setRoomThemeCustom("");
@@ -343,12 +337,7 @@ function DashboardRoomPageContent() {
                           const theme = customRoomThemes.find((item) => `saved:${item.id}` === value);
                           if (theme) applySavedTheme(theme);
                         }
-                      }} className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none focus:border-emerald-400/60">
-                        {roomThemeOptions.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </label>
+                      }} />
 
                     <label className="block space-y-2">
                       <span className="text-sm font-medium text-[var(--muted)]">Go live at</span>
@@ -383,11 +372,6 @@ function DashboardRoomPageContent() {
                       <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/15">
                         Save theme
                       </button>
-                      {roomTheme.startsWith("saved:") ? (
-                        <button type="button" onClick={removeSavedTheme} className="w-full rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:bg-rose-500/20">
-                          Remove saved theme
-                        </button>
-                      ) : null}
                     </div>
                   ) : null}
                 </>

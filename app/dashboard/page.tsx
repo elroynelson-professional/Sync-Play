@@ -1,5 +1,7 @@
 "use client";
 
+import { RoomThemePicker } from "../components/room-theme-picker";
+
 import { InboxPanel } from "../components/inbox-panel";
 
 
@@ -254,10 +256,7 @@ export default function DashboardPage() {
     );
   });
 
-  const roomThemeOptions = [
-    { value: "custom", label: "Custom theme" },
-    ...customRoomThemes.map((theme) => ({ value: `saved:${theme.id}`, label: theme.name })),
-  ];
+
 
   const selectedRoomTheme = {
     name: roomThemeCustom.trim() || "Custom theme",
@@ -525,9 +524,7 @@ export default function DashboardPage() {
     setRoomError("");
   }
 
-  function removeSavedTheme() {
-    if (!roomTheme.startsWith("saved:")) return;
-    const themeId = roomTheme.slice("saved:".length);
+  function removeSavedTheme(themeId: string) {
     const nextThemes = customRoomThemes.filter((theme) => theme.id !== themeId);
     try {
       window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
@@ -536,7 +533,7 @@ export default function DashboardPage() {
       return;
     }
     setCustomRoomThemes(nextThemes);
-    setRoomTheme("custom");
+    if (roomTheme === `saved:${themeId}`) setRoomTheme("custom");
     setRoomError("");
   }
 
@@ -713,10 +710,7 @@ export default function DashboardPage() {
                         </label>
 
                         <div className="grid gap-4 md:grid-cols-2">
-                          <label className="block space-y-2">
-                            <span className="text-sm font-medium text-slate-200">Room theme</span>
-                            <select value={roomTheme} onChange={(event) => {
-                              const value = event.target.value;
+                          <RoomThemePicker value={roomTheme} themes={customRoomThemes} onRemove={removeSavedTheme} onChange={(value) => {
                               setRoomTheme(value);
                               if (value === "custom") {
                                 setRoomThemeCustom("");
@@ -729,12 +723,7 @@ export default function DashboardPage() {
                                 const theme = customRoomThemes.find((item) => `saved:${item.id}` === value);
                                 if (theme) applySavedTheme(theme);
                               }
-                            }} className="w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-base text-white outline-none focus:border-emerald-400/60">
-                              {roomThemeOptions.map((option) => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                              ))}
-                            </select>
-                          </label>
+                            }} />
 
                           <label className="block space-y-2">
                             <span className="text-sm font-medium text-slate-200">Go live at</span>
@@ -769,11 +758,6 @@ export default function DashboardPage() {
                             <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15">
                               Save theme
                             </button>
-                      {roomTheme.startsWith("saved:") ? (
-                        <button type="button" onClick={removeSavedTheme} className="w-full rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:bg-rose-500/20">
-                          Remove saved theme
-                        </button>
-                      ) : null}
                           </div>
                         ) : null}
                       </>
