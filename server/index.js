@@ -1127,6 +1127,7 @@ const server = http.createServer(async (request, response) => {
   }
 
   const roomSettingsMatch = requestUrl.pathname.match(/^\/api\/rooms\/([A-Z0-9]{4,8})\/settings$/i);
+  const roomRemoveMatch = requestUrl.pathname.match(/^\/api\/rooms\/([A-Z0-9]{4,8})\/remove$/i);
   if (request.method === "POST" && roomSettingsMatch) {
     try {
       const user = await getAuthenticatedUser(request);
@@ -1170,6 +1171,50 @@ const server = http.createServer(async (request, response) => {
     } catch (error) {
       console.error("Room settings update failed:", error);
       writeJson(response, 503, { error: "Could not save this room. Please try again." }, request);
+    }
+    return;
+  }
+
+  if (request.method === "POST" && roomRemoveMatch) {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) return writeJson(response, 401, { error: "Please sign in to remove this room." }, request);
+      const roomId = roomRemoveMatch[1].toUpperCase();
+      const room = await roomStore.load(roomId);
+      if (!room) return writeJson(response, 404, { error: "This room was not found." }, request);
+
+      const database = await getAuthDatabase();
+      let canRemove = room.ownerUserId === user.id;
+
+      // Backward compatibility: older rooms may not have persisted ownerUserId.
+      if (!canRemove && !room.ownerUserId) {
+        const createdActivity = await database.collection("activity").findOne({
+          userId: user.id,
+          roomId: room.roomId,
+          type: "room-created",
+        });
+        if (createdActivity) {
+          canRemove = true;
+          room.ownerUserId = user.id;
+        }
+      }
+
+      if (!canRemove) return writeJson(response, 403, { error: "Only the room owner can remove this room." }, request);
+
+      const connectedSockets = [...io.sockets.sockets.values()].filter((connectedSocket) => connectedSocket.data.roomId === room.roomId);
+      for (const connectedSocket of connectedSockets) {
+        connectedSocket.leave(room.roomId);
+        connectedSocket.data.roomId = null;
+        connectedSocket.emit("room-error", "This room was removed by the host.");
+      }
+
+      rooms.delete(room.roomId);
+      await database.collection("rooms").deleteOne({ _id: room.roomId });
+
+      writeJson(response, 200, { removed: true, roomId: room.roomId }, request);
+    } catch (error) {
+      console.error("Room remove failed:", error);
+      writeJson(response, 503, { error: "Could not remove this room. Please try again." }, request);
     }
     return;
   }

@@ -87,6 +87,7 @@ function DashboardRoomPageContent() {
   const [selectedRoomForPanel, setSelectedRoomForPanel] = useState<ListedRoom | null>(null);
   const [roomPanelMode, setRoomPanelMode] = useState<"view" | "edit" | null>(null);
   const [roomSettingsSaving, setRoomSettingsSaving] = useState(false);
+  const [deletingRoomCode, setDeletingRoomCode] = useState<string | null>(null);
   const [roomSettingsNotice, setRoomSettingsNotice] = useState("");
   const [roomError, setRoomError] = useState("");
   const [isInboxOpen, setIsInboxOpen] = useState(false);
@@ -233,6 +234,38 @@ function DashboardRoomPageContent() {
       setRoomError(failure instanceof Error ? failure.message : "Could not save this room. Please try again.");
     } finally {
       setRoomSettingsSaving(false);
+    }
+  }
+
+  async function deleteSavedRoom(room: ListedRoom) {
+    if (!room.canEdit || deletingRoomCode) return;
+    const confirmed = typeof window === "undefined" ? true : window.confirm(`Remove ${room.name} from saved rooms?`);
+    if (!confirmed) return;
+
+    setDeletingRoomCode(room.code);
+    setRoomError("");
+    setRoomSettingsNotice("");
+    try {
+      const response = await fetch(`${socketUrl}/api/rooms/${encodeURIComponent(room.code)}/remove`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || "Could not remove this room.");
+      }
+
+      setActiveRooms((current) => current.filter((item) => item.code !== room.code));
+      if (selectedRoomForPanel?.code === room.code) {
+        setSelectedRoomForPanel(null);
+        setRoomPanelMode(null);
+        setRoomCode("");
+      }
+      setRoomSettingsNotice("Room removed from saved rooms.");
+    } catch (failure) {
+      setRoomError(failure instanceof Error ? failure.message : "Could not remove this room. Please try again.");
+    } finally {
+      setDeletingRoomCode(null);
     }
   }
 
@@ -537,7 +570,7 @@ function DashboardRoomPageContent() {
 
               <div className="space-y-3">
                 {activeRooms.length > 0 ? activeRooms.map((room) => (
-                  <RoomListCard key={room.code} room={room} onView={() => openRoomPanel(room, "view")} onEdit={() => openRoomPanel(room, "edit")} />
+                  <RoomListCard key={room.code} room={room} onView={() => openRoomPanel(room, "view")} onEdit={() => openRoomPanel(room, "edit")} onDelete={() => void deleteSavedRoom(room)} deleting={deletingRoomCode === room.code} />
                 )) : (
                   <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--soft-background)] p-4 text-sm text-[var(--muted)]">
                     No active rooms are available right now.
