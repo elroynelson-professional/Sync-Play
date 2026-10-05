@@ -1,6 +1,6 @@
 "use client";
 
-import { RoomSchedulePicker } from "../../components/room-schedule-picker";
+import { useRoomThemes } from "../../lib/use-room-themes";
 
 import { RoomThemePicker } from "../../components/room-theme-picker";
 
@@ -12,7 +12,6 @@ import { isRoomCodeValid, normalizeRoomCode } from "../../lib/room-validation";
 import { socketUrl } from "../../lib/socket";
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
-const CUSTOM_ROOM_THEMES_KEY = "syncplay-custom-room-themes-v1";
 
 type AccountUser = {
   id: string;
@@ -81,17 +80,8 @@ function DashboardRoomPageContent() {
   const [roomThemeAccent, setRoomThemeAccent] = useState("#5eead4");
   const [roomThemeBackground, setRoomThemeBackground] = useState("#0f172a");
   const [roomThemeButtonColor, setRoomThemeButtonColor] = useState("#5eead4");
-  const [roomSchedule, setRoomSchedule] = useState("");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
-  const [customRoomThemes, setCustomRoomThemes] = useState<RoomThemePreset[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(CUSTOM_ROOM_THEMES_KEY) || "[]") as RoomThemePreset[];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  });
+  const { themes: customRoomThemes, error: themeError, busy: themeBusy, save: saveTheme, remove: removeTheme } = useRoomThemes(user?.id);
   const [activeRooms, setActiveRooms] = useState<Array<{ name: string; host: string; viewers: string; code: string; status: "Live" | "Idle" }>>([]);
   const [roomError, setRoomError] = useState("");
   const [isInboxOpen, setIsInboxOpen] = useState(false);
@@ -141,7 +131,7 @@ function DashboardRoomPageContent() {
       .catch(() => router.replace("/"));
   }, [router]);
 
-  function saveCustomRoomTheme() {
+  async function saveCustomRoomTheme() {
     const name = roomThemeCustom.trim();
     if (!name) {
       setRoomError("Give the custom theme a name before saving.");
@@ -156,24 +146,13 @@ function DashboardRoomPageContent() {
       buttonColor: roomThemeButtonColor,
     };
 
-    const nextThemes = [nextTheme, ...customRoomThemes].slice(0, 8);
-    setCustomRoomThemes(nextThemes);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
-    }
+    if (!await saveTheme(nextTheme)) return;
     setRoomTheme(`saved:${nextTheme.id}`);
     setRoomError("");
   }
 
-  function removeSavedTheme(themeId: string) {
-    const nextThemes = customRoomThemes.filter((theme) => theme.id !== themeId);
-    try {
-      window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
-    } catch {
-      setRoomError("The saved theme could not be removed. Please try again.");
-      return;
-    }
-    setCustomRoomThemes(nextThemes);
+  async function removeSavedTheme(themeId: string) {
+    if (!await removeTheme(themeId)) return;
     if (roomTheme === `saved:${themeId}`) setRoomTheme("custom");
     setRoomError("");
   }
@@ -215,7 +194,8 @@ function DashboardRoomPageContent() {
       accent: theme.accent,
       background: theme.background,
       buttonColor: theme.buttonColor,
-      schedule: roomSchedule,
+      themeName: theme.name,
+      invitees: selectedInviteeIds.join(","),
     });
 
     router.push(`/room/${code}?${query.toString()}`);
@@ -341,7 +321,7 @@ function DashboardRoomPageContent() {
                         }
                       }} />
 
-                    <RoomSchedulePicker value={roomSchedule} onChange={setRoomSchedule} />
+                    <p className="self-end py-3 text-sm text-[var(--muted)]">Your room starts when you create it. Reuse its invite link next time.</p>
                   </div>
 
                   {(roomTheme === "custom" || roomTheme.startsWith("saved:")) ? (
@@ -368,8 +348,8 @@ function DashboardRoomPageContent() {
                         </label>
                       </div>
 
-                      <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/15">
-                        Save theme
+                      <button type="button" onClick={saveCustomRoomTheme} disabled={themeBusy} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/15">
+                        {themeBusy ? "Saving…" : "Save theme"}
                       </button>
                     </div>
                   ) : null}
@@ -398,6 +378,7 @@ function DashboardRoomPageContent() {
                 </fieldset>
               ) : null}
 
+              {themeError ? <p role="alert" className="text-sm text-rose-600 md:col-span-full">{themeError}</p> : null}
               {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-700 md:col-span-full">{roomError}</div> : null}
 
               <button

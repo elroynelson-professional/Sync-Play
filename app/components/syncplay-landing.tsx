@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { safeReturnDestination } from "../lib/room-link";
+import { RoomDemo } from "./room-demo";
 import { socketUrl } from "../lib/socket";
 
 function makeRoomCode() {
@@ -45,14 +48,14 @@ export function SyncPlayLanding() {
         setDisplayName(payload.user.name);
         setAuthMessage(`Welcome back, ${payload.user.name}.`);
         window.localStorage.setItem("syncplay-active-user-v1", JSON.stringify(payload.user));
-        router.replace("/dashboard");
+        router.replace(safeReturnDestination(new URLSearchParams(window.location.search).get("returnTo")));
       })
       .catch(() => undefined);
   }, [router]);
 
   useEffect(() => {
     if (activeUser) {
-      router.replace("/dashboard");
+      router.replace(safeReturnDestination(new URLSearchParams(window.location.search).get("returnTo")));
     }
   }, [activeUser, router]);
 
@@ -157,7 +160,7 @@ export function SyncPlayLanding() {
       setOtpInput("");
       setIsOtpSent(false);
       storeActiveUser(payload.user);
-      router.replace("/dashboard");
+      router.replace(safeReturnDestination(new URLSearchParams(window.location.search).get("returnTo")));
     } catch {
       setAuthMessage("The authentication server is unavailable. Start the SyncPlay server and try again.");
     }
@@ -245,10 +248,13 @@ export function SyncPlayLanding() {
                 Chat, talk, and see each other while you share the moment.
               </p>
             </div>
-
+            <RoomDemo />
+            <p className="mt-5 text-sm text-[var(--muted)]">Supports embeddable YouTube videos, direct video/audio links, and your own media uploads. Playback depends on browser support. Subscription streaming services aren’t supported.</p>
+            <Link href="/?returnTo=%2Fdashboard%2Froom%3Fmode%3Dcreate#account" className="mt-5 inline-flex rounded-2xl bg-emerald-500 px-5 py-3 font-semibold text-black">Create your room</Link>
+            <p className="mt-2 text-xs text-[var(--muted)]">Sign in or create an account to host and join real rooms.</p>
           </section>
 
-          <section className="syncplay-panel syncplay-landing-entry rounded-3xl p-6 sm:p-7 lg:p-9">
+          <section id="account" className="syncplay-panel syncplay-landing-entry rounded-3xl p-6 sm:p-7 lg:p-9">
             <div className="syncplay-entry-card rounded-[28px] bg-white/5 p-6 sm:p-7">
               <div className="flex items-center justify-between gap-3">
                 <div>

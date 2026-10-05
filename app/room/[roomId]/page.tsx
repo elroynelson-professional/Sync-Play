@@ -59,11 +59,12 @@ function RoomPageContent() {
   const [isInboxOpen, setIsInboxOpen] = useState(false);
 
   const roomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
-  const initialName = readRoomLinkText(searchParams.get("name"), searchParams.get("linkVersion")) || "Guest";
+  const initialName = readRoomLinkText(searchParams.get("name"), searchParams.get("linkVersion")) || user?.name || "Guest";
   const initialRole = searchParams.get("role") === "host" ? "host" : "guest";
   const initialAction = searchParams.get("action") === "create" ? "create" : "join";
   const initialTitle = readRoomLinkText(searchParams.get("title"), searchParams.get("linkVersion")) || "Sykonyx shared room";
   const roomTheme = {
+    name: searchParams.get("themeName") || "Custom theme",
     custom: searchParams.has("themeKind") ? searchParams.get("themeKind") === "custom" : undefined,
     accent: searchParams.get("accent") || "#5eead4",
     background: searchParams.get("background") || "#0f172a",
@@ -71,30 +72,25 @@ function RoomPageContent() {
   };
 
   useEffect(() => {
-    const activeUser = readActiveUser();
-    if (activeUser) {
-      setUser(activeUser);
-      return;
-    }
-
+    const loginPath = `/?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
     fetch(`${socketUrl}/api/auth/me`, { credentials: "include" })
       .then(async (response) => {
         if (!response.ok) {
-          router.replace("/");
+          router.replace(loginPath);
           return;
         }
 
         const payload = (await response.json()) as { user?: AccountUser };
         const nextUser = normalizeStoredUser(payload.user) || readActiveUser();
         if (!nextUser) {
-          router.replace("/");
+          router.replace(loginPath);
           return;
         }
 
         setUser(nextUser);
         window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(nextUser));
       })
-      .catch(() => router.replace("/"));
+      .catch(() => router.replace(loginPath));
   }, [router]);
 
   async function signOut() {

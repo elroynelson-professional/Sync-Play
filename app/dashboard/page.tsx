@@ -1,6 +1,6 @@
 "use client";
 
-import { RoomSchedulePicker } from "../components/room-schedule-picker";
+import { useRoomThemes } from "../lib/use-room-themes";
 
 import { RoomThemePicker } from "../components/room-theme-picker";
 
@@ -68,7 +68,6 @@ type DashboardData = {
 };
 
 const ACTIVE_USER_KEY = "syncplay-active-user-v1";
-const CUSTOM_ROOM_THEMES_KEY = "syncplay-custom-room-themes-v1";
 
 type RoomThemePreset = {
   id: string;
@@ -115,9 +114,8 @@ export default function DashboardPage() {
   const [roomThemeAccent, setRoomThemeAccent] = useState("#5eead4");
   const [roomThemeBackground, setRoomThemeBackground] = useState("#0f172a");
   const [roomThemeButtonColor, setRoomThemeButtonColor] = useState("#5eead4");
-  const [roomSchedule, setRoomSchedule] = useState("");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
-  const [customRoomThemes, setCustomRoomThemes] = useState<RoomThemePreset[]>([]);
+  const { themes: customRoomThemes, error: themeError, busy: themeBusy, save: saveTheme, remove: removeTheme } = useRoomThemes(user?.id);
   const [roomError, setRoomError] = useState("");
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
@@ -145,18 +143,6 @@ export default function DashboardPage() {
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; name: string; type: "image" | "video" } | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const storedThemes = window.localStorage.getItem(CUSTOM_ROOM_THEMES_KEY);
-        if (storedThemes) {
-          const parsedThemes = JSON.parse(storedThemes) as RoomThemePreset[];
-          setCustomRoomThemes(Array.isArray(parsedThemes) ? parsedThemes : []);
-        }
-      } catch {
-        setCustomRoomThemes([]);
-      }
-    }
-
     const invalidCodeMessage = typeof window !== "undefined" ? window.sessionStorage.getItem("syncplay-room-error") : null;
     if (invalidCodeMessage) {
       setRoomError(invalidCodeMessage);
@@ -497,12 +483,11 @@ export default function DashboardPage() {
     setRoomThemeAccent("#5eead4");
     setRoomThemeBackground("#0f172a");
     setRoomThemeButtonColor("#5eead4");
-    setRoomSchedule("");
     setSelectedInviteeIds([]);
     setRoomError("");
   }
 
-  function saveCustomRoomTheme() {
+  async function saveCustomRoomTheme() {
     const name = roomThemeCustom.trim();
     if (!name) {
       setRoomError("Give the custom theme a name before saving.");
@@ -517,24 +502,13 @@ export default function DashboardPage() {
       buttonColor: roomThemeButtonColor,
     };
 
-    const nextThemes = [nextTheme, ...customRoomThemes].slice(0, 8);
-    setCustomRoomThemes(nextThemes);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
-    }
+    if (!await saveTheme(nextTheme)) return;
     setRoomTheme(`saved:${nextTheme.id}`);
     setRoomError("");
   }
 
-  function removeSavedTheme(themeId: string) {
-    const nextThemes = customRoomThemes.filter((theme) => theme.id !== themeId);
-    try {
-      window.localStorage.setItem(CUSTOM_ROOM_THEMES_KEY, JSON.stringify(nextThemes));
-    } catch {
-      setRoomError("The saved theme could not be removed. Please try again.");
-      return;
-    }
-    setCustomRoomThemes(nextThemes);
+  async function removeSavedTheme(themeId: string) {
+    if (!await removeTheme(themeId)) return;
     if (roomTheme === `saved:${themeId}`) setRoomTheme("custom");
     setRoomError("");
   }
@@ -568,8 +542,9 @@ export default function DashboardPage() {
       buttonColor: selectedRoomTheme.buttonColor || selectedRoomTheme.accent,
     };
 
+    const query = new URLSearchParams({ linkVersion: "2", name, title, role: "host", action: "create", themeKind: "custom", themeName: theme.name, accent: theme.accent, background: theme.background, buttonColor: theme.buttonColor, invitees: selectedInviteeIds.join(",") });
     closeRoomModal();
-    setActiveRoomSession({ roomId: code, name, role: "host", action: "create", title, theme });
+    router.push(`/room/${code}?${query.toString()}`);
   }
 
   async function submitJoinRoom() {
@@ -727,7 +702,7 @@ export default function DashboardPage() {
                               }
                             }} />
 
-                          <RoomSchedulePicker value={roomSchedule} onChange={setRoomSchedule} />
+                          <p className="self-end py-3 text-sm text-[var(--muted)]">Your room starts when you create it. Reuse its invite link next time.</p>
                         </div>
 
                         {(roomTheme === "custom" || roomTheme.startsWith("saved:")) ? (
@@ -754,8 +729,8 @@ export default function DashboardPage() {
                               </label>
                             </div>
 
-                            <button type="button" onClick={saveCustomRoomTheme} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15">
-                              Save theme
+                            <button type="button" onClick={saveCustomRoomTheme} disabled={themeBusy} className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15">
+                              {themeBusy ? "Saving…" : "Save theme"}
                             </button>
                           </div>
                         ) : null}
@@ -786,6 +761,7 @@ export default function DashboardPage() {
                       </fieldset>
                     ) : null}
 
+                    {themeError ? <p role="alert" className="text-sm text-rose-600 md:col-span-full">{themeError}</p> : null}
                     {roomError ? <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{roomError}</div> : null}
 
                     <button type="button" onClick={roomModalMode === "create" ? submitCreateRoom : submitJoinRoom} className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-[#03150a] transition hover:bg-emerald-400">

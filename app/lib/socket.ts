@@ -4,6 +4,7 @@ export const socketUrl = (process.env.NEXT_PUBLIC_SOCKET_URL ?? "http://localhos
 
 export const socket = io(socketUrl, {
   autoConnect: false,
+  withCredentials: true,
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,

@@ -9,3 +9,12 @@ export function readRoomLinkText(value: string | null, version: string | null): 
     return value;
   }
 }
+
+// Only known app destinations may be resumed after authentication.
+export function safeReturnDestination(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || /[\\\r\n]/.test(value)) return "/dashboard";
+  const url = new URL(value, "https://sykonyx.invalid");
+  if (/^\/room\/[A-Z0-9]{4,8}$/i.test(url.pathname)) return url.pathname + url.search;
+  if (url.pathname === "/dashboard/room") return "/dashboard/room?mode=create";
+  return "/dashboard";
+}

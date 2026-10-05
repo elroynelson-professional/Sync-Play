@@ -36,6 +36,7 @@ export type PlaybackState = {
 export type RoomState = {
   roomId: string;
   hostId: string | null;
+  theme?: { name: string; accent: string; background: string; buttonColor: string };
   title: string | null;
   users: RoomMember[];
   playback: PlaybackState;

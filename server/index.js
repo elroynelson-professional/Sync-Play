@@ -8,12 +8,14 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { MongoClient } = require("mongodb");
 const { Server } = require("socket.io");
+const { normalizeTheme, createRoomStore } = require("./room-store");
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3002;
 const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
 const uploadDirectory = path.join(__dirname, "uploads");
 const dataDirectory = path.join(__dirname, "data");
 const rooms = new Map();
+const roomStore = createRoomStore(getAuthDatabase, rooms);
 const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
 const mongoClient = process.env.MONGODB_URI ? new MongoClient(process.env.MONGODB_URI) : null;
 let mongoDatabasePromise = null;
@@ -35,6 +37,8 @@ async function getAuthDatabase() {
   if (!mongoDatabasePromise) {
     mongoDatabasePromise = mongoClient.connect().then((client) => {
       const database = client.db(process.env.MONGODB_DB || "syncplay");
+      database.collection("rooms").createIndex({ ownerUserId: 1 }).catch(() => undefined);
+      database.collection("rooms").createIndex({ approvedUserIds: 1 }).catch(() => undefined);
       database.collection("users").createIndex({ email: 1 }, { unique: true }).catch(() => undefined);
       database.collection("sessions").createIndex({ tokenHash: 1 }, { unique: true }).catch(() => undefined);
       database.collection("otpRequests").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }).catch(() => undefined);
@@ -285,12 +289,16 @@ function broadcastRoom(io, roomId) {
   const room = getRoom(roomId);
   if (room) {
     io.to(roomId).emit("room-state", publicRoomState(room));
+    roomStore.save(room).catch((error) => {
+      console.error("Room save failed:", error);
+      io.to(roomId).emit("room-error", "Changes could not be saved. Reconnect to try again before leaving.");
+    });
   }
 }
 
 function publicRoomState(room) {
-  const { pendingJoins, ...state } = room;
-  return state;
+  const { roomId, hostId, title, theme, users, playback, queue, history, messages, createdAt } = room;
+  return { roomId, hostId, title, theme, users, playback, queue, history, messages, createdAt };
 }
 
 function setCorsHeaders(response, request) {
@@ -663,6 +671,31 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (requestUrl.pathname === "/api/room-themes" && ["GET", "POST"].includes(request.method)) {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) return writeJson(response, 401, { error: "Please sign in to manage themes." }, request);
+      const users = (await getAuthDatabase()).collection("users");
+      if (request.method === "POST") {
+        const body = await readJsonBody(request);
+        if (body.action === "remove" && typeof body.id === "string") {
+          await users.updateOne({ id: user.id }, { $pull: { roomThemes: { id: body.id } } });
+        } else if (body.action === "save" && typeof body.theme?.id === "string" && body.theme.id.length < 100) {
+          const theme = { id: body.theme.id, ...normalizeTheme(body.theme) };
+          await users.updateOne({ id: user.id }, { $push: { roomThemes: { $each: [theme], $position: 0, $slice: 8 } } });
+        } else if (body.action === "migrate" && Array.isArray(body.themes)) {
+          const themes = body.themes.slice(0, 8).map((theme) => ({ id: crypto.randomUUID(), ...normalizeTheme(theme) }));
+          await users.updateOne({ id: user.id, roomThemes: { $exists: false } }, { $set: { roomThemes: themes } });
+        } else return writeJson(response, 400, { error: "Invalid theme request." }, request);
+      }
+      const account = await users.findOne({ id: user.id }, { projection: { roomThemes: 1 } });
+      writeJson(response, 200, { themes: account?.roomThemes || [], migrated: Array.isArray(account?.roomThemes) }, request);
+    } catch {
+      writeJson(response, 503, { error: "Themes could not be saved or loaded. Please try again." }, request);
+    }
+    return;
+  }
+
   if (request.method === "GET" && requestUrl.pathname === "/api/dashboard") {
     try {
       const user = await getAuthenticatedUser(request);
@@ -681,13 +714,16 @@ const server = http.createServer(async (request, response) => {
           .filter((userId) => typeof userId === "string" && friendIds.includes(userId)),
       );
       const userRoomIds = new Set(activities.map((activity) => activity.roomId));
-      const liveRooms = [...rooms.values()]
-        .filter((room) => room.users.some((member) => member.userId === user.id) || userRoomIds.has(room.roomId))
+      const savedRooms = await database.collection("rooms").find({ $or: [{ ownerUserId: user.id }, { approvedUserIds: user.id }] }).sort({ createdAt: -1 }).limit(100).toArray();
+      const dashboardRooms = new Map(savedRooms.map((room) => [room.roomId, { ...room, users: [], hostId: null }]));
+      rooms.forEach((room, id) => dashboardRooms.set(id, room));
+      const liveRooms = [...dashboardRooms.values()]
+        .filter((room) => room.ownerUserId === user.id || room.approvedUserIds?.includes(user.id) || room.users.some((member) => member.userId === user.id) || userRoomIds.has(room.roomId))
         .map((room) => ({
           name: room.title || `Room ${room.roomId}`,
           host: room.users.find((member) => member.id === room.hostId)?.name || "Host",
           viewers: `${room.users.length} online`,
-          status: room.playback.videoId ? "Live" : "Idle",
+          status: room.users.length > 0 ? "Live" : "Idle",
           code: room.roomId,
         }));
       const completedRoomSeconds = activities.reduce((total, activity) => total + (activity.type === "room-session" ? activity.durationSeconds || 0 : 0), 0);
@@ -1092,7 +1128,12 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    writeJson(response, 200, { valid: rooms.has(roomId), roomId });
+    try {
+      const room = await roomStore.load(roomId);
+      writeJson(response, 200, { valid: Boolean(room), roomId }, request);
+    } catch {
+      writeJson(response, 503, { error: "Room lookup is unavailable. Please try again." }, request);
+    }
     return;
   }
 
@@ -1102,7 +1143,8 @@ const server = http.createServer(async (request, response) => {
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: allowedFrontendOrigins,
+    credentials: true,
   },
 });
 
@@ -1112,131 +1154,133 @@ function notifyUser(userId, event, payload = {}) {
     .forEach((connectedSocket) => connectedSocket.emit(event, payload));
 }
 
+io.use(async (socket, next) => {
+  try {
+    const user = await getAuthenticatedUser(socket.request);
+    if (!user) return next(new Error("Please sign in again to connect."));
+    socket.data.userId = user.id;
+    socket.data.accountName = user.name;
+    next();
+  } catch { next(new Error("Connection unavailable. Please try again.")); }
+});
+
+function enterRoom(socket, room, name) {
+  const userId = socket.data.userId;
+  name = typeof name === "string" && name.trim() ? name.trim().slice(0, 80) : socket.data.accountName;
+  upsertUser(room, socket.id, name || socket.data.accountName, userId);
+  if (room.ownerUserId === userId || !room.hostId) room.hostId = socket.id;
+  socket.join(room.roomId);
+  socket.data.roomId = room.roomId;
+  delete socket.data.pendingRoomId;
+  socket.data.name = name || socket.data.accountName;
+  socket.data.roomStartedAt ||= Date.now();
+  socket.emit("join-approved");
+  broadcastRoom(io, room.roomId);
+  if (room.hostId === socket.id) {
+    room.pendingJoins.forEach((request) => socket.emit("room-join-request", request));
+  }
+}
+
+async function deliverInvitations(socket, room, inviteeIds) {
+  if (!Array.isArray(inviteeIds) || !inviteeIds.length) return;
+  try {
+    const database = await getAuthDatabase();
+    const sender = await database.collection("users").findOne({ id: socket.data.userId });
+    const friends = new Set(sender?.friends || []);
+    const validIds = [...new Set(inviteeIds.filter((id) => typeof id === "string" && friends.has(id)))].slice(0, 100);
+    const recipients = await database.collection("users").find({ id: { $in: validIds } }).toArray();
+    let delivered = 0;
+    for (const recipient of recipients) {
+      // Stable message identity prevents duplicate inbox invitations on refresh/reconnect.
+      const id = `room-invite:${room.roomId}:${socket.data.userId}:${recipient.id}`;
+      const message = { id, senderId: sender.id, senderName: sender.name,
+        recipientId: recipient.id, recipientName: recipient.name,
+        text: `${sender.name} invited you to join ${room.title || room.roomId}.`,
+        roomId: room.roomId, roomTitle: room.title, createdAt: Date.now(), read: false };
+      const result = await database.collection("directMessages").updateOne({ _id: id }, { $setOnInsert: message }, { upsert: true });
+      if (result.upsertedCount) notifyUser(recipient.id, "direct-message", message);
+      delivered++;
+    }
+    socket.emit("room-invitations", { message: `${delivered} invitation${delivered === 1 ? "" : "s"} delivered to inboxes.${delivered < new Set(inviteeIds).size ? " Some selected friends are no longer available." : ""}` });
+  } catch (error) {
+    console.error("Room invite delivery failed:", error);
+    socket.emit("room-invitations", { message: "Some invitations could not be delivered. Reconnect to retry, or share the invite link." });
+  }
+}
+
 io.on("connection", (socket) => {
-  socket.on("identify", ({ userId }) => {
-    if (typeof userId === "string" && userId) {
-      socket.data.userId = userId;
-    }
-  });
+  // Identity comes from the authenticated session, never a client-supplied user ID.
+  socket.on("identify", () => {});
 
-  socket.on("create-room", async ({ roomId, name, userId, inviteeIds = [], title }) => {
-    const normalizedRoomId = (roomId || createRoomCode()).toUpperCase();
-    let room = getRoom(normalizedRoomId);
-    const trimmedTitle = typeof title === "string" ? title.trim().slice(0, 80) : "";
-
-    if (!room) {
-      room = createRoom(normalizedRoomId, socket.id, name || "Host", trimmedTitle || null);
-      room.users[0].userId = userId || null;
-      rooms.set(normalizedRoomId, room);
-    } else {
-      room.hostId = socket.id;
-      if (trimmedTitle) room.title = trimmedTitle;
-      upsertUser(room, socket.id, name || "Host", userId);
-    }
-
-    socket.join(normalizedRoomId);
-    socket.data.roomId = normalizedRoomId;
-    socket.data.name = name || "Host";
-    socket.data.userId = userId || null;
-    socket.data.role = "host";
-    socket.data.roomStartedAt = Date.now();
-
-    if (userId && Array.isArray(inviteeIds) && inviteeIds.length > 0) {
-      try {
-        const database = await getAuthDatabase();
-        const sender = await database.collection("users").findOne({ id: userId }, { projection: { name: 1, friends: 1 } });
-        const friendIds = new Set(sender?.friends || []);
-        const validInvitees = [...new Set(inviteeIds.filter((id) => typeof id === "string" && friendIds.has(id)))];
-        const recipients = await database.collection("users").find({ id: { $in: validInvitees } }, { projection: { id: 1, name: 1 } }).toArray();
-        const roomTitle = room.title || `Room ${normalizedRoomId}`;
-        const messages = recipients.map((recipient) => ({
-          id: crypto.randomUUID(),
-          senderId: userId,
-          senderName: sender.name,
-          recipientId: recipient.id,
-          recipientName: recipient.name,
-          text: `${sender.name} invited you to join ${roomTitle}.`,
-          roomId: normalizedRoomId,
-          roomTitle,
-          createdAt: Date.now(),
-          read: false,
-        }));
-        if (messages.length > 0) {
-          await database.collection("directMessages").insertMany(messages);
-          const targetSockets = [...io.sockets.sockets.values()];
-          messages.forEach((message) => {
-            targetSockets.filter((targetSocket) => targetSocket.data.userId === message.recipientId).forEach((targetSocket) => targetSocket.emit("direct-message", message));
-          });
+  socket.on("create-room", async ({ roomId, name, inviteeIds = [], title, theme }) => {
+    try {
+      const id = String(roomId || createRoomCode()).toUpperCase();
+      if (!/^[A-Z0-9]{4,8}$/.test(id)) return socket.emit("room-error", "Invalid room code.");
+      let room = await roomStore.load(id);
+      if (!room) {
+        room = createRoom(id, socket.id, name || socket.data.accountName, title);
+        room.ownerUserId = socket.data.userId;
+        room.approvedUserIds = [];
+        room.theme = normalizeTheme(theme);
+        try {
+          await roomStore.save(room, true);
+          rooms.set(id, room);
+          recordDashboardActivity(socket.data.userId, id, "room-created").catch(console.error);
+        } catch (error) {
+          if (error.code !== 11000) throw error;
+          room = await roomStore.load(id);
+          if (!room) throw error;
         }
-      } catch (error) {
-        console.error("Room invite delivery failed:", error);
       }
+      if (room.ownerUserId !== socket.data.userId) return socket.emit("room-error", "This room belongs to another host. Use its invite link to request entry.");
+      if (!socket.connected) return;
+      enterRoom(socket, room, name);
+      await deliverInvitations(socket, room, inviteeIds);
+    } catch (error) {
+      console.error("Room creation failed:", error);
+      socket.emit("room-error", "Could not save or open this room. Reconnect to try again.");
     }
-
-    socket.emit("room-state", publicRoomState(room));
-    io.to(normalizedRoomId).emit("room-state", publicRoomState(room));
-    recordDashboardActivity(userId, normalizedRoomId, "room-created").catch((error) => console.error("Activity record failed:", error));
   });
 
-  socket.on("join-room", ({ roomId, name, userId }) => {
-    const normalizedRoomId = (roomId || "").toUpperCase();
-    const room = getRoom(normalizedRoomId);
-
-    if (!room) {
-      socket.emit("room-error", `Room ${normalizedRoomId} was not found.`);
-      return;
-    }
-
-    const existingRequest = room.pendingJoins.find((request) => request.socketId === socket.id);
-    if (existingRequest) {
+  socket.on("join-room", async ({ roomId, name }) => {
+    try {
+      const id = String(roomId || "").toUpperCase();
+      if (!/^[A-Z0-9]{4,8}$/.test(id)) return socket.emit("room-error", "Invalid room code.");
+      const room = await roomStore.load(id);
+      if (!socket.connected) return;
+      if (!room) return socket.emit("room-error", `Room ${id} was not found.`);
+      if (room.ownerUserId === socket.data.userId || room.approvedUserIds.includes(socket.data.userId)) {
+        enterRoom(socket, room, name);
+        return;
+      }
+      const request = { requestId: socket.id, socketId: socket.id, userId: socket.data.userId,
+        name: typeof name === "string" && name.trim() ? name.trim().slice(0, 80) : socket.data.accountName, createdAt: Date.now() };
+      if (!room.pendingJoins.some((item) => item.socketId === socket.id)) room.pendingJoins.push(request);
+      socket.data.pendingRoomId = id;
       socket.emit("join-request-pending");
-      return;
+      if (room.hostId) io.to(room.hostId).emit("room-join-request", request);
+    } catch {
+      socket.emit("room-error", "Could not open this room. Reconnect to try again.");
     }
-
-    const joinRequest = {
-      requestId: socket.id,
-      socketId: socket.id,
-      userId: userId || null,
-      name: name || "Guest",
-      createdAt: Date.now(),
-    };
-    room.pendingJoins.push(joinRequest);
-    socket.data.pendingRoomId = normalizedRoomId;
-    socket.data.name = name || "Guest";
-    socket.data.userId = userId || null;
-    socket.data.role = "guest";
-    socket.emit("join-request-pending");
-    io.to(room.hostId).emit("room-join-request", {
-      requestId: joinRequest.requestId,
-      name: joinRequest.name,
-      createdAt: joinRequest.createdAt,
-    });
   });
 
-  socket.on("approve-room-join", ({ requestId }) => {
-    const roomId = socket.data.roomId;
-    const room = roomId ? getRoom(roomId) : null;
-    if (!room || room.hostId !== socket.id || typeof requestId !== "string") return;
-
-    const requestIndex = room.pendingJoins.findIndex((request) => request.requestId === requestId);
-    if (requestIndex < 0) return;
-
-    const [joinRequest] = room.pendingJoins.splice(requestIndex, 1);
-    const guestSocket = io.sockets.sockets.get(joinRequest.socketId);
-    if (!guestSocket) return;
-
-    upsertUser(room, guestSocket.id, joinRequest.name, joinRequest.userId);
-    guestSocket.join(roomId);
-    guestSocket.data.roomId = roomId;
-    delete guestSocket.data.pendingRoomId;
-    guestSocket.data.name = joinRequest.name;
-    guestSocket.data.userId = joinRequest.userId;
-    guestSocket.data.role = "guest";
-    guestSocket.data.roomStartedAt = Date.now();
-    guestSocket.emit("join-approved");
-    guestSocket.emit("room-state", publicRoomState(room));
-    io.to(roomId).emit("room-state", publicRoomState(room));
-    recordDashboardActivity(joinRequest.userId, roomId, "room-joined").catch((error) => console.error("Activity record failed:", error));
+  socket.on("approve-room-join", async ({ requestId }) => {
+    const room = getRoom(socket.data.roomId);
+    if (!room || room.hostId !== socket.id) return;
+    const request = room.pendingJoins.find((item) => item.requestId === requestId);
+    const guest = request && io.sockets.sockets.get(request.socketId);
+    if (!guest) return;
+    try {
+      if (!room.approvedUserIds.includes(request.userId)) room.approvedUserIds.push(request.userId);
+      await roomStore.save(room);
+      room.pendingJoins = room.pendingJoins.filter((item) => item.requestId !== requestId);
+      if (!guest.connected) return;
+      enterRoom(guest, room, request.name);
+      recordDashboardActivity(request.userId, room.roomId, "room-joined").catch(console.error);
+    } catch {
+      room.approvedUserIds = room.approvedUserIds.filter((id) => id !== request.userId);
+      socket.emit("room-error", "Approval could not be saved. Please approve the request again.");
+    }
   });
 
   socket.on("deny-room-join", ({ requestId }) => {
@@ -1669,10 +1713,14 @@ io.on("connection", (socket) => {
 
     if (room.hostId === socket.id) {
       room.hostId = room.users[0]?.id ?? null;
+      if (room.hostId) room.pendingJoins.forEach((request) => io.to(room.hostId).emit("room-join-request", request));
     }
 
     if (room.users.length === 0) {
-      rooms.delete(roomId);
+      room.playback = { ...room.playback, position: room.playback.position + (room.playback.playing ? (Date.now() - room.playback.updatedAt) / 1000 : 0), playing: false, updatedAt: Date.now() };
+      roomStore.save(room).then(() => {
+        if (!room.users.length && !room.pendingJoins.length) rooms.delete(roomId);
+      }).catch((error) => console.error("Room save failed:", error));
       return;
     }
 

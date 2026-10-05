@@ -7,6 +7,7 @@ import type { YouTubePlayerHandle } from "./youtube-player";
 type DirectMediaPlayerProps = {
   playback: PlaybackState;
   onTrackEnd?: (trackId: string) => void;
+  onPlaybackError?: (message: string) => void;
   mediaKind?: "video" | "audio";
 };
 
@@ -17,7 +18,7 @@ function getExpectedPosition(playback: PlaybackState) {
 }
 
 export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlayerProps>(
-  function DirectMediaPlayer({ playback, onTrackEnd, mediaKind = "video" }, ref) {
+  function DirectMediaPlayer({ playback, onTrackEnd, onPlaybackError, mediaKind = "video" }, ref) {
     const [mediaError, setMediaError] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const mediaRef = useRef<HTMLMediaElement | null>(null);
@@ -32,7 +33,7 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
       ref,
       () => ({
         play: () => {
-          void mediaRef.current?.play();
+          void mediaRef.current?.play().catch(() => onPlaybackError?.("Your browser blocked playback. Try playback again or check your sound permissions."));
         },
         pause: () => mediaRef.current?.pause(),
         seek: (seconds: number) => {
@@ -41,7 +42,7 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
           }
         },
       }),
-      [],
+      [onPlaybackError],
     );
 
     useEffect(() => {
@@ -66,11 +67,11 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
       }
 
       if (playback.playing) {
-        void media.play().catch(() => undefined);
+        void media.play().catch((error: Error) => { if (error.name !== "AbortError") onPlaybackError?.("Your browser blocked playback. Press play to allow it."); });
       } else {
         media.pause();
       }
-    }, [activeTrackId, playback]);
+    }, [activeTrackId, playback, onPlaybackError]);
 
     useEffect(() => {
       if (!playback.playing) return;
@@ -123,7 +124,7 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
             className="sr-only"
             preload="metadata"
             controls={false}
-            onError={() => setMediaError(true)}
+            onError={() => { setMediaError(true); onPlaybackError?.("This media could not be played. Check the link, file format, or connection."); }}
             onEnded={() => {
               const trackId = loadedTrackIdRef.current ?? activeTrackIdRef.current;
               if (trackId) onTrackEnd?.(trackId);
@@ -137,7 +138,7 @@ export const DirectMediaPlayer = forwardRef<YouTubePlayerHandle, DirectMediaPlay
             preload="metadata"
             controls={false}
             controlsList="nodownload noplaybackrate"
-            onError={() => setMediaError(true)}
+            onError={() => { setMediaError(true); onPlaybackError?.("This media could not be played. Check the link, file format, or connection."); }}
             onEnded={() => {
               const trackId = loadedTrackIdRef.current ?? activeTrackIdRef.current;
               if (trackId) onTrackEnd?.(trackId);

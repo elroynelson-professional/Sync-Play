@@ -33,10 +33,10 @@ For local authentication, copy `.env.example` to `.env`, fill in your MongoDB At
 ## Test the flow
 
 1. Open the app in one browser window.
-2. Enter a name and click `Create room`.
-3. Copy the room code from the URL.
+2. Sign in, open `Create room`, enter a title and display name, and choose your custom colors.
+3. Click `Copy invite link` in the room.
 4. Open a second browser window or private tab.
-5. Enter the same room code and click `Join room`.
+5. Open the invite link, sign in with a second account, and approve the request from the host’s window.
 6. Use the room controls to load a YouTube URL, direct media URL, or local audio/video file.
 
 ## Make it live
@@ -90,7 +90,12 @@ npm run server
 
 ## Notes
 
-- The current server keeps room state in memory, so rooms reset when the process restarts.
+- MongoDB stores room identities, owners, approved members, colors, queues, and playback snapshots. Rooms survive an empty session or restart; restored playback is paused. Returning approved members can rejoin without another approval. The owner regains host controls when returning.
 - Voice and video chat ask each participant for device permission and use WebRTC with a public STUN server. Production deployments should add a TURN relay for users behind restrictive networks.
 - Remote media input must be a direct media URL such as MP4, WebM, MP3, WAV, or OGG; a webpage URL is not itself a playable media source. Uploaded files are stored by the realtime server and are temporary in this prototype.
-- For production, persist rooms and playback state in a database or shared cache later.
+- Live Socket.IO presence remains in one server process. Multiple realtime replicas require a shared adapter and coordinated room state. Uploaded files still require durable disk/object storage to survive deployment.
+- Custom themes are saved to the signed-in account (up to eight); legacy browser themes migrate once. Room colors are distributed by the server.
+- Rooms start immediately. Scheduling/reminders are not implemented, so the scheduling field is hidden.
+- Realtime connections require the session cookie. Set `FRONTEND_ORIGINS` to a comma-separated list of exact frontend origins, or `FRONTEND_ORIGIN` for one origin. Both HTTP and Socket.IO use this allowlist with credentials.
+
+Run isolated room-flow tests with `node --test server/*.test.js`. They exercise the real HTTP/Socket.IO handlers with an in-memory MongoDB substitute; they do not touch production accounts or messages.

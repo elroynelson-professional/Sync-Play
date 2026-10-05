@@ -54,6 +54,7 @@ type YouTubePlayerOptions = {
     playsinline: 0 | 1;
   };
   events: {
+    onError: (event: { data: number }) => void;
     onReady: () => void;
     onStateChange: (event: { data: number }) => void;
   };
@@ -62,6 +63,7 @@ type YouTubePlayerOptions = {
 type YouTubePlayerProps = {
   playback: PlaybackState;
   onTrackEnd?: (trackId: string) => void;
+  onPlaybackError?: (message: string) => void;
 };
 
 export type YouTubePlayerHandle = {
@@ -77,7 +79,8 @@ function loadYouTubeApi() {
     return Promise.resolve(window.YT);
   }
 
-  return new Promise<NonNullable<Window["YT"]>>((resolve) => {
+  return new Promise<NonNullable<Window["YT"]>>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("YouTube timed out")), 15000);
     const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
 
     const previousReady = window.onYouTubeIframeAPIReady;
@@ -85,6 +88,7 @@ function loadYouTubeApi() {
     window.onYouTubeIframeAPIReady = () => {
       previousReady?.();
       if (window.YT) {
+        window.clearTimeout(timeout);
         resolve(window.YT);
       }
     };
@@ -93,6 +97,7 @@ function loadYouTubeApi() {
       const script = document.createElement("script");
       script.src = "https://www.youtube.com/iframe_api";
       script.async = true;
+      script.onerror = () => { window.clearTimeout(timeout); script.remove(); reject(new Error("YouTube failed to load")); };
       document.head.appendChild(script);
     }
   });
@@ -105,7 +110,7 @@ function getExpectedPosition(playback: PlaybackState) {
 }
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
-  function YouTubePlayer({ playback, onTrackEnd }, ref) {
+  function YouTubePlayer({ playback, onTrackEnd, onPlaybackError }, ref) {
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
@@ -120,6 +125,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
   activeTrackIdRef.current = activeTrackId;
   activeVideoIdRef.current = playback.videoId;
   const isReady = hasVideo && isPlayerReady;
+  const reportError = useEffectEvent((message: string) => onPlaybackError?.(message));
   const handleTrackEnd = useEffectEvent((trackId: string | null) => {
     if (trackId) {
       onTrackEnd?.(trackId);
@@ -171,6 +177,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           playsinline: 1,
         },
         events: {
+          onError: () => reportError("YouTube could not play this video. It may be private, unavailable, or blocked from embedding. Try another video."),
           onReady: () => {
             setIsPlayerReady(true);
           },
@@ -181,7 +188,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
           },
         },
       });
-    });
+    }).catch(() => { if (!cancelled) reportError("YouTube could not load. Check your connection and retry playback."); });
 
     return () => {
       cancelled = true;

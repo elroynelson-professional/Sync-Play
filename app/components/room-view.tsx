@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getButtonTextColor } from "../lib/room-colors";
 import { socket, socketUrl } from "../lib/socket";
@@ -163,17 +163,22 @@ function getThumbnailUrl(videoId: string) {
   return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 }
 
-export function RoomView({ roomId, initialName, initialRole, initialAction, initialTitle = "Sykonyx shared room", theme, onLeave }: RoomViewProps) {
+export function RoomView({ roomId, initialName, initialAction, initialTitle = "Sykonyx shared room", theme, onLeave }: RoomViewProps) {
   const router = useRouter();
-  const roomAccent = theme?.accent ?? "#5eead4";
-  const roomBackground = theme?.background ?? "#0f172a";
-  const roomButtonColor = theme?.buttonColor ?? theme?.accent ?? "#5eead4";
   const searchParams = useSearchParams();
   const [stageView, setStageView] = useState<"playback" | "call">("playback");
   const [room, setRoom] = useState<RoomState | null>(null);
   const [name] = useState(initialName || "Guest");
-  const [role] = useState(initialRole);
-  const [, setStatus] = useState("Connecting to room...");
+  const [status, setStatus] = useState("Connecting to room...");
+  const [roomError, setRoomError] = useState("");
+  const [inputError, setInputError] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const [failedUpload, setFailedUpload] = useState<File | null>(null);
+  const [mediaError, setMediaError] = useState("");
+  const [playerAttempt, setPlayerAttempt] = useState(0);
+  const [inviteStatus, setInviteStatus] = useState("");
+  const [shareStatus, setShareStatus] = useState("");
+  const [manualInvite, setManualInvite] = useState("");
   const [trackInput, setTrackInput] = useState("");
   const [chatInput, setChatInput] = useState("");
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
@@ -187,7 +192,24 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
   const chatListRef = useRef<HTMLDivElement | null>(null);
   const isChatOpenRef = useRef(false);
 
-  const isHost = role === "host" || room?.hostId === socket.id;
+  const activeTheme = room?.theme ?? theme;
+  const roomAccent = activeTheme?.accent ?? "#5eead4";
+  const roomBackground = activeTheme?.background ?? "#0f172a";
+  const roomButtonColor = activeTheme?.buttonColor ?? activeTheme?.accent ?? "#5eead4";
+  const initialTheme = useRef(theme);
+  const isHost = Boolean(room && room.hostId === socket.id);
+  const reportMediaError = useCallback((message: string) => setMediaError(message), []);
+  async function shareInvite(native = false) {
+    const url = `${window.location.origin}/room/${encodeURIComponent(roomId)}`;
+    try {
+      if (native && navigator.share) { await navigator.share({ title: roomTitle, text: "Join my room on Sykonyx", url }); setShareStatus("Invite shared."); }
+      else { await navigator.clipboard.writeText(url); setShareStatus("Invite link copied."); }
+      setManualInvite("");
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      setManualInvite(url); setShareStatus("Select and copy the link below.");
+    }
+  }
   const roomTitle = room?.title || initialTitle || "Sykonyx shared room";
 
   const playback = room?.playback ?? EMPTY_PLAYBACK;
@@ -206,24 +228,25 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
 
   const livePosition = useMemo(() => derivePosition(playback), [playback]);
   useEffect(() => {
-    const action = searchParams.get("action") ?? initialAction;
+    const action = initialAction;
     const title = initialTitle;
     const payload = {
       roomId,
       name,
       title,
-      userId: typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("syncplay-active-user-v1") || "null")?.id || null : null,
+      theme: initialTheme.current,
       inviteeIds: (searchParams.get("invitees") || "").split(",").filter(Boolean),
     };
 
     function handleRoomState(nextRoom: RoomState) {
       setRoom(nextRoom);
+      setRoomError("");
       setStatus(nextRoom.users.length > 1 ? "Room active and synced." : "Waiting for another participant...");
       setLocalPosition(derivePosition(nextRoom.playback));
     }
 
     function handleRoomError(message: string) {
-      setStatus(message);
+      setRoomError(message);
 
       if (message.toLowerCase().includes("not found") || message.toLowerCase().includes("invalid")) {
         if (typeof window !== "undefined") {
@@ -277,13 +300,16 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
 
     function handleDisconnect() {
       setIsConnected(false);
+      setStatus("Connection lost. Trying to reconnect…");
     }
 
-    function handleConnectError() {
+    function handleConnectError(error: Error) {
       setIsConnected(false);
-      setStatus("Realtime server is offline. Start `npm run dev` or `npm run server`.");
+      setRoomError(error.message.includes("sign in") ? "Your session expired. Sign in again to return to this room." : "Unable to connect. Check your connection and try again.");
     }
 
+    function handleInvitations(payload: { message: string }) { setInviteStatus(payload.message); }
+    socket.on("room-invitations", handleInvitations);
     socket.on("room-state", handleRoomState);
     socket.on("room-error", handleRoomError);
     socket.on("join-request-pending", handleJoinRequestPending);
@@ -301,6 +327,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
     }
 
     return () => {
+      socket.off("room-invitations", handleInvitations);
       socket.off("room-state", handleRoomState);
       socket.off("room-error", handleRoomError);
       socket.off("join-request-pending", handleJoinRequestPending);
@@ -381,6 +408,8 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
     url: string | null;
     mediaType: MediaType;
   }) {
+    setInputError("");
+    setMediaError("");
     const hasActiveVideo = Boolean(playback.videoId);
 
     socket.emit(hasActiveVideo ? "enqueue-track" : "change-track", {
@@ -399,7 +428,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
     const directUrl = youtubeId ? null : extractDirectMediaUrl(input);
 
     if (!youtubeId && !directUrl) {
-      setStatus("Paste a YouTube URL, direct media URL, or upload a local audio/video file.");
+      setInputError("Paste a YouTube URL, direct media URL, or upload a local audio/video file.");
       return;
     }
 
@@ -421,13 +450,18 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
     const file = event.target.files?.[0];
     event.target.value = "";
 
-    if (!file) return;
+    if (file) await uploadMedia(file);
+  }
 
+  async function uploadMedia(file: File) {
+    setUploadError("");
+    setFailedUpload(null);
     if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) {
-      setStatus("Choose an audio or video file to upload.");
+      setUploadError("Choose an audio or video file to upload.");
       return;
     }
 
+    if (!isConnected || !room) { setUploadError("Reconnect to your room before uploading."); setFailedUpload(file); return; }
     setIsUploadingMedia(true);
 
     try {
@@ -455,8 +489,9 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
       });
 
       setStatus(hasActiveVideo ? `Queued ${file.name}. It will play after the current video ends.` : `Loaded ${file.name} into room ${roomId}.`);
-    } catch (uploadError) {
-      setStatus(uploadError instanceof Error ? uploadError.message : "Could not upload that media file.");
+    } catch (failure) {
+      setUploadError(failure instanceof Error ? failure.message : "Could not upload that media file.");
+      setFailedUpload(file);
     } finally {
       setIsUploadingMedia(false);
     }
@@ -576,6 +611,15 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
           </div>
         </header>
 
+        <div className="syncplay-panel rounded-2xl px-4 py-3 text-sm" role={roomError ? "alert" : "status"}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{roomError || status}</span>
+            <div className="flex gap-3">
+              {roomError || !isConnected ? <button type="button" className="underline" onClick={() => { setRoomError(""); setStatus("Reconnecting…"); socket.disconnect().connect(); }}>Reconnect</button> : null}
+              {roomError.includes("Sign in") ? <a className="underline" href={`/?returnTo=${encodeURIComponent(`/room/${roomId}`)}`}>Sign in again</a> : null}
+            </div>
+          </div>
+        </div>
         {isJoinPending ? (
           <section className="syncplay-panel rounded-[28px] p-8 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-400/10 text-2xl text-emerald-300">...</div>
@@ -635,13 +679,20 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                   </div>
                 </div>
 
+                {mediaError ? <div role="alert" className="mt-3 rounded-xl border border-rose-400/30 p-3 text-sm">
+                  <p>{mediaError}</p>
+                  <button type="button" className="mt-2 underline" onClick={() => { setMediaError(""); setPlayerAttempt((value) => value + 1); }}>Retry playback</button>
+                  <span className="ml-3">Or load another link or file below.</span>
+                </div> : null}
+                {inputError ? <p role="alert" className="mt-3 text-sm">{inputError} Edit the media field below to try again.</p> : null}
+                {uploadError ? <div role="alert" className="mt-3 text-sm"><p>{uploadError}</p>{failedUpload ? <button type="button" disabled={isUploadingMedia || !isConnected} className="mt-2 underline disabled:opacity-50" onClick={() => void uploadMedia(failedUpload)}>Retry upload</button> : null}</div> : null}
                 <div className="syncplay-video-shell mt-4 rounded-[24px] bg-zinc-950 p-3 sm:p-4">
                   {getEffectiveMediaType(playback.mediaType, playback.url) === "audio" ? (
-                    <DirectMediaPlayer ref={playerRef} playback={playback} mediaKind="audio" onTrackEnd={handleTrackEnd} />
+                    <DirectMediaPlayer key={`${playback.trackId}-${playerAttempt}`} ref={playerRef} playback={playback} onPlaybackError={reportMediaError} mediaKind="audio" onTrackEnd={handleTrackEnd} />
                   ) : getEffectiveMediaType(playback.mediaType, playback.url) === "direct" ? (
-                    <DirectMediaPlayer ref={playerRef} playback={playback} onTrackEnd={handleTrackEnd} />
+                    <DirectMediaPlayer key={`${playback.trackId}-${playerAttempt}`} ref={playerRef} playback={playback} onPlaybackError={reportMediaError} onTrackEnd={handleTrackEnd} />
                   ) : (
-                    <YouTubePlayer ref={playerRef} playback={playback} onTrackEnd={handleTrackEnd} />
+                    <YouTubePlayer key={`${playback.trackId}-${playerAttempt}`} ref={playerRef} playback={playback} onPlaybackError={reportMediaError} onTrackEnd={handleTrackEnd} />
                   )}
 
                 </div>
@@ -653,7 +704,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <button
                       type="button"
                       onClick={handlePreviousTrack}
-                      disabled={history.length === 0}
+                      disabled={history.length === 0 || !isConnected}
                       aria-label="Previous video"
                       title="Previous video"
                       className="syncplay-transport-button flex h-10 w-10 items-center justify-center rounded-xl text-lg text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
@@ -663,7 +714,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <button
                       type="button"
                       onClick={() => handleSkip(-10)}
-                      disabled={!playback.videoId}
+                      disabled={!playback.videoId || !isConnected}
                       aria-label="Rewind 10 seconds"
                       title="Rewind 10 seconds"
                       className="syncplay-transport-button flex h-10 min-w-12 items-center justify-center rounded-xl px-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
@@ -673,7 +724,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <button
                       type="button"
                       onClick={() => emitPlayback(playback.playing ? "pause" : "play")}
-                      disabled={!playback.videoId}
+                      disabled={!playback.videoId || !isConnected}
                       aria-label={playback.playing ? "Pause" : "Play"}
                       title={playback.playing ? "Pause" : "Play"}
                       className="syncplay-transport-primary flex h-12 w-12 items-center justify-center rounded-full text-xl text-black transition disabled:cursor-not-allowed disabled:opacity-30"
@@ -684,7 +735,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <button
                       type="button"
                       onClick={() => handleSkip(10)}
-                      disabled={!playback.videoId}
+                      disabled={!playback.videoId || !isConnected}
                       aria-label="Fast forward 10 seconds"
                       title="Fast forward 10 seconds"
                       className="syncplay-transport-button flex h-10 min-w-12 items-center justify-center rounded-xl px-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
@@ -694,7 +745,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <button
                       type="button"
                       onClick={handleNextTrack}
-                      disabled={queue.length === 0}
+                      disabled={queue.length === 0 || !isConnected}
                       aria-label="Next video"
                       title="Next video"
                       className="syncplay-transport-button flex h-10 w-10 items-center justify-center rounded-xl text-lg text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
@@ -747,6 +798,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     <button
                       type="button"
                       onClick={handleLoadTrack}
+                      disabled={!isConnected || !room}
                       className="syncplay-button-primary rounded-2xl px-4 py-3 font-semibold text-black transition"
                       style={{ background: roomButtonColor }}
                     >
@@ -760,7 +812,7 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                       type="file"
                       accept="video/*,audio/*"
                       onChange={handleLocalMediaUpload}
-                      disabled={isUploadingMedia}
+                      disabled={isUploadingMedia || !isConnected || !room}
                       className="syncplay-input w-full rounded-2xl border border-white/10 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition file:mr-3 file:rounded-lg file:border-0 file:px-3 file:py-2 file:font-semibold disabled:cursor-not-allowed disabled:opacity-60"
                     />
                     <span className="syncplay-upload-help block text-xs leading-5 text-slate-400">
@@ -930,6 +982,14 @@ export function RoomView({ roomId, initialName, initialRole, initialAction, init
                     </h2>
                   </div>
                 </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => void shareInvite()} className="syncplay-button-primary rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: roomButtonColor, color: getButtonTextColor(roomButtonColor) }}>Copy invite link</button>
+                  <button type="button" onClick={() => void shareInvite(true)} className="syncplay-button-secondary rounded-xl border px-4 py-2 text-sm">Share invite</button>
+                </div>
+                <p className="mt-3 text-xs opacity-75">New visitors sign in, then request entry. Approved members can return with this link.</p>
+                {shareStatus ? <p role="status" className="mt-2 text-sm">{shareStatus}</p> : null}
+                {inviteStatus ? <p role="status" className="mt-2 text-sm">{inviteStatus}</p> : null}
+                {manualInvite ? <input aria-label="Invite link" readOnly value={manualInvite} onFocus={(event) => event.target.select()} className="syncplay-input mt-2 w-full rounded-xl p-2" /> : null}
               </section>
 
               <section className="syncplay-panel syncplay-members-panel rounded-[28px] p-5 sm:p-6">
