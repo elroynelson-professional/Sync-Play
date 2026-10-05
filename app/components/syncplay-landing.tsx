@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { safeReturnDestination } from "../lib/room-link";
 import { GoogleSignIn } from "./google-sign-in";
-import { RoomDemo } from "./room-demo";
 import { socketUrl } from "../lib/socket";
 
 function makeRoomCode() {
@@ -249,7 +248,6 @@ export function SyncPlayLanding() {
                 Chat, talk, and see each other while you share the moment.
               </p>
             </div>
-            <RoomDemo />
             <p className="mt-5 text-sm text-[var(--muted)]">Supports embeddable YouTube videos, direct video/audio links, and your own media uploads. Playback depends on browser support. Subscription streaming services aren’t supported.</p>
             <Link href="/?returnTo=%2Fdashboard%2Froom%3Fmode%3Dcreate#account" className="mt-5 inline-flex rounded-2xl bg-emerald-500 px-5 py-3 font-semibold text-black">Create your room</Link>
             <p className="mt-2 text-xs text-[var(--muted)]">Sign in or create an account to host and join real rooms.</p>
