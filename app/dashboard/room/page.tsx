@@ -2,6 +2,7 @@
 
 import { useRoomThemes } from "../../lib/use-room-themes";
 
+import { RoomListCard, type ListedRoom } from "../../components/room-list-card";
 import { RoomThemePicker } from "../../components/room-theme-picker";
 
 import { Suspense, useEffect, useState } from "react";
@@ -82,7 +83,7 @@ function DashboardRoomPageContent() {
   const [roomThemeButtonColor, setRoomThemeButtonColor] = useState("#5eead4");
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const { themes: customRoomThemes, error: themeError, busy: themeBusy, save: saveTheme, remove: removeTheme } = useRoomThemes(user?.id);
-  const [activeRooms, setActiveRooms] = useState<Array<{ name: string; host: string; viewers: string; code: string; status: "Live" | "Idle" }>>([]);
+  const [activeRooms, setActiveRooms] = useState<ListedRoom[]>([]);
   const [roomError, setRoomError] = useState("");
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
@@ -124,7 +125,7 @@ function DashboardRoomPageContent() {
 
         const dashboardResponse = await fetch(`${socketUrl}/api/dashboard`, { credentials: "include" });
         if (dashboardResponse.ok) {
-          const dashboardPayload = (await dashboardResponse.json()) as { rooms?: Array<{ name: string; host: string; viewers: string; code: string; status: "Live" | "Idle" }> };
+          const dashboardPayload = (await dashboardResponse.json()) as { rooms?: ListedRoom[] };
           setActiveRooms(dashboardPayload.rooms || []);
         }
       })
@@ -403,28 +404,10 @@ function DashboardRoomPageContent() {
 
               <div className="space-y-3">
                 {activeRooms.length > 0 ? activeRooms.map((room) => (
-                  <div key={room.code} className="rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-lg font-semibold text-[var(--foreground)]">{room.name}</div>
-                        <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">Host: {room.host}</div>
-                      </div>
-                      <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] ${room.status === "Live" ? "bg-emerald-500/10 text-emerald-600" : "bg-slate-200 text-slate-700"}`}>
-                        {room.status}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="text-xs text-[var(--muted)]">{room.viewers}</span>
-                      <button
-                        type="button"
-                        onClick={() => { setRoomCode(room.code); void joinRoom(room.code); }}
-                        className="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-semibold text-[#03150a] transition hover:bg-emerald-400"
-                      >
-                        Join
-                      </button>
-                    </div>
-                  </div>
+                  <RoomListCard key={room.code} room={room} onView={() => {
+                    setRoomCode(room.code);
+                    setRoomError("");
+                  }} onSaved={(updated) => setActiveRooms((current) => current.map((item) => item.code === updated.code ? updated : item))} />
                 )) : (
                   <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--soft-background)] p-4 text-sm text-[var(--muted)]">
                     No active rooms are available right now.
