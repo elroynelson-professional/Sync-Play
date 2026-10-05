@@ -717,6 +717,13 @@ const server = http.createServer(async (request, response) => {
       const savedRooms = await database.collection("rooms").find({ $or: [{ ownerUserId: user.id }, { approvedUserIds: user.id }] }).sort({ createdAt: -1 }).limit(100).toArray();
       const dashboardRooms = new Map(savedRooms.map((room) => [room.roomId, { ...room, users: [], hostId: null }]));
       rooms.forEach((room, id) => dashboardRooms.set(id, room));
+      const activeMembersByRoom = [...io.sockets.sockets.values()].reduce((counts, socket) => {
+        const roomId = socket.data.roomId;
+        if (typeof roomId === "string" && roomId) {
+          counts.set(roomId, (counts.get(roomId) || 0) + 1);
+        }
+        return counts;
+      }, new Map());
       const createdRoomIds = new Set(
         activities
           .filter((activity) => activity.type === "room-created" && typeof activity.roomId === "string")
@@ -724,15 +731,18 @@ const server = http.createServer(async (request, response) => {
       );
       const liveRooms = [...dashboardRooms.values()]
         .filter((room) => room.ownerUserId === user.id || room.approvedUserIds?.includes(user.id) || room.users.some((member) => member.userId === user.id) || userRoomIds.has(room.roomId))
-        .map((room) => ({
-          name: room.title || `Room ${room.roomId}`,
-          host: room.users.find((member) => member.id === room.hostId)?.name || "Host",
-          viewers: `${room.users.length} online`,
-          status: room.users.length > 0 ? "Live" : "Idle",
-          code: room.roomId,
-          canEdit: room.ownerUserId === user.id || (!room.ownerUserId && createdRoomIds.has(room.roomId)),
-          theme: normalizeTheme(room.theme),
-        }));
+        .map((room) => {
+          const activeMembers = activeMembersByRoom.get(room.roomId) || 0;
+          return {
+            name: room.title || `Room ${room.roomId}`,
+            host: room.users.find((member) => member.id === room.hostId)?.name || "Host",
+            viewers: `${activeMembers} online`,
+            status: activeMembers > 0 ? "Live" : "Idle",
+            code: room.roomId,
+            canEdit: room.ownerUserId === user.id || (!room.ownerUserId && createdRoomIds.has(room.roomId)),
+            theme: normalizeTheme(room.theme),
+          };
+        });
       const completedRoomSeconds = activities.reduce((total, activity) => total + (activity.type === "room-session" ? activity.durationSeconds || 0 : 0), 0);
       const activeRoomSeconds = [...io.sockets.sockets.values()].reduce((total, socket) => {
         if (socket.data.userId !== user.id || !socket.data.roomId || !socket.data.roomStartedAt) return total;
