@@ -568,7 +568,7 @@ export function RoomView({ roomId, initialName, initialAction, initialTitle = "S
         "--room-accent": roomAccent,
         "--room-button": roomButtonColor,
         "--room-button-text": getButtonTextColor(roomButtonColor),
-        background: `radial-gradient(circle at top, ${roomBackground} 0%, rgba(8, 8, 10, 0.96) 42%, #050505 100%)`,
+        background: roomBackground,
       } as CSSProperties}
     >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:gap-8">
@@ -577,7 +577,7 @@ export function RoomView({ roomId, initialName, initialAction, initialTitle = "S
           style={{
             borderColor: `${roomAccent}55`,
             boxShadow: `inset 0 0 0 1px ${roomAccent}22`,
-            background: `linear-gradient(180deg, ${roomBackground} 0%, rgba(10,10,11,0.92) 100%)`,
+            background: roomBackground,
           }}
         >
           <div className="flex flex-wrap items-center justify-between gap-5">
