@@ -589,7 +589,7 @@ export default function DashboardPage() {
 
   if (activeRoomSession) {
     return (
-      <AppShell lockRoomTheme
+      <AppShell
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
         searchPlaceholder="Search room"

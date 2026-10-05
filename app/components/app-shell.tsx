@@ -15,7 +15,6 @@ type UserSearchResult = {
 };
 
 type AppShellProps = {
-  lockRoomTheme?: boolean;
   children: ReactNode;
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
@@ -32,7 +31,7 @@ type AppShellProps = {
   onDashboardClick?: () => void;
 };
 
-export function AppShell({ lockRoomTheme = false, children, searchTerm, onSearchTermChange, searchPlaceholder, user, onInbox, onAccountSettings, onCreateRoom, onJoinRoom, onHelp, onLogout, hasUnread, isSettingsOpen, onDashboardClick }: AppShellProps) {
+export function AppShell({ children, searchTerm, onSearchTermChange, searchPlaceholder, user, onInbox, onAccountSettings, onCreateRoom, onJoinRoom, onHelp, onLogout, hasUnread, isSettingsOpen, onDashboardClick }: AppShellProps) {
   const pathname = usePathname();
   const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
   const [friendRequestPendingId, setFriendRequestPendingId] = useState<string | null>(null);
@@ -174,7 +173,7 @@ export function AppShell({ lockRoomTheme = false, children, searchTerm, onSearch
             ) : null}
           </div>
 
-          <TopBar lockRoomTheme={lockRoomTheme} searchTerm={searchTerm} onSearchTermChange={onSearchTermChange} searchPlaceholder={searchPlaceholder} user={user} onInbox={onInbox} onAccountSettings={onAccountSettings} hasUnread={hasUnread} userSearchResults={userSearchResults} onAddFriend={addFriend} friendRequestPendingId={friendRequestPendingId} />
+          <TopBar searchTerm={searchTerm} onSearchTermChange={onSearchTermChange} searchPlaceholder={searchPlaceholder} user={user} onInbox={onInbox} onAccountSettings={onAccountSettings} hasUnread={hasUnread} userSearchResults={userSearchResults} onAddFriend={addFriend} friendRequestPendingId={friendRequestPendingId} />
           <div className="syncplay-page-shell mt-4 flex-1 overflow-y-auto overflow-x-hidden pb-2 pr-0 md:pr-1">{children}</div>
         </div>
       </div>

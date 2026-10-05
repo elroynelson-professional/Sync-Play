@@ -23,15 +23,15 @@ function subscribeToTheme(callback: () => void) {
   };
 }
 
-export function ThemeToggle({ locked = false }: { locked?: boolean }) {
+export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = locked ? "dark" : theme;
+    document.documentElement.dataset.theme = theme;
     return () => {
       document.documentElement.dataset.theme = getThemeSnapshot();
     };
-  }, [theme, locked]);
+  }, [theme]);
 
   function toggleTheme() {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
@@ -41,8 +41,6 @@ export function ThemeToggle({ locked = false }: { locked?: boolean }) {
   }
 
   const nextThemeLabel = theme === "dark" ? "light" : "dark";
-
-  if (locked) return null;
 
   return (
     <button

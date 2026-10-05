@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+.syncplay-room {
   --background: #0a0a0a;
   --foreground: #f5f5f5;
   --muted: #ffffff;
@@ -87,7 +88,7 @@ body {
 
 /* Compatibility for existing dark-first utilities. Keep these mappings together;
    media and artwork use explicit colors instead of theme text utilities. */
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="bg-[#050505]"],
   [class~="bg-[#090909]"],
   [class~="bg-[#0a0a0a]"],
@@ -111,7 +112,7 @@ html[data-theme="light"] :is(
   background-color: var(--surface) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="bg-white/5"],
   [class~="bg-white/6"],
   [class~="bg-white/8"],
@@ -122,7 +123,7 @@ html[data-theme="light"] :is(
   background-color: var(--control-background) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="text-white"],
   [class~="text-slate-100"],
   [class~="text-slate-200"],
@@ -131,7 +132,7 @@ html[data-theme="light"] :is(
   color: var(--foreground) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="text-slate-300"],
   [class~="text-slate-400"],
   [class~="text-slate-500"],
@@ -142,7 +143,7 @@ html[data-theme="light"] :is(
   color: var(--muted) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="text-emerald-200"],
   [class~="text-emerald-300"],
   [class~="text-emerald-400"]
@@ -150,19 +151,19 @@ html[data-theme="light"] :is(
   color: var(--accent-strong) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="text-rose-200"]
 ) {
   color: #be123c !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="text-amber-300"]
 ) {
   color: #92400e !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="border-white/5"],
   [class~="border-white/8"],
   [class~="border-white/10"],
@@ -172,7 +173,7 @@ html[data-theme="light"] :is(
   border-color: var(--border) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="hover:bg-white/5"],
   [class~="hover:bg-white/10"],
   [class~="hover:bg-[#111111]"]
@@ -180,57 +181,41 @@ html[data-theme="light"] :is(
   background-color: var(--control-background-hover) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="hover:text-white"]
 ):hover {
   color: var(--foreground) !important;
 }
 
-html[data-theme="light"] :is(
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(
   [class~="hover:text-rose-300"]
 ):hover {
   color: #be123c !important;
 }
 
-html[data-theme="light"] :is(input, textarea, select) {
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(input, textarea, select) {
   color: var(--input-text);
 }
 
-html[data-theme="light"] :is(input, textarea)::placeholder {
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(input, textarea)::placeholder {
   color: var(--muted) !important;
   opacity: 1;
 }
 
-html[data-theme="light"] :is(input, textarea, select):focus,
-html[data-theme="light"] [class~="focus-within:border-emerald-400/50"]:focus-within {
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is(input, textarea, select):focus,
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *))[class~="focus-within:border-emerald-400/50"]:focus-within {
   border-color: var(--accent-strong) !important;
 }
 
-html[data-theme="light"] :is([class~="bg-black/40"], [class~="bg-black/70"]).text-white {
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)):is([class~="bg-black/40"], [class~="bg-black/70"]).text-white {
   color: #fff !important;
 }
 
-/* Room controls use the selected button palette in both appearance modes. */
+/* Room appearance is independent of the surrounding site appearance. */
 .syncplay-room {
+  color-scheme: dark;
   --accent: var(--room-button, #5eead4);
   --accent-soft: color-mix(in srgb, var(--room-button, #5eead4) 80%, white);
-}
-
-/* Keep the selected room palette as a tint on light surfaces. */
-html[data-theme="light"] .syncplay-room {
-  --accent: var(--room-button, #5eead4);
-  --accent-strong: color-mix(in srgb, var(--room-accent, #5eead4) 40%, #122033);
-  --accent-soft: color-mix(in srgb, var(--room-button, #5eead4) 80%, white);
-  background: radial-gradient(circle at top, color-mix(in srgb, var(--room-background) 10%, var(--surface)), var(--background) 70%) !important;
-}
-
-html[data-theme="light"] .syncplay-room-header {
-  background: color-mix(in srgb, var(--room-accent, #5eead4) 6%, var(--surface)) !important;
-}
-
-html[data-theme="light"] .syncplay-room-title,
-html[data-theme="light"] .syncplay-room-code {
-  color: var(--accent-strong) !important;
 }
 
 @keyframes fade-up {
@@ -1334,7 +1319,7 @@ button:hover,
   text-transform: uppercase;
 }
 
-html[data-theme="light"] .syncplay-video-shell {
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)).syncplay-video-shell {
   background: var(--surface-strong) !important;
 }
 
@@ -1384,14 +1369,14 @@ html[data-theme="light"] .syncplay-video-shell {
   background: rgba(34, 34, 34, 0.94);
 }
 
-html[data-theme="light"] .syncplay-theme-toggle {
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)).syncplay-theme-toggle {
   border-color: #d0d5dd;
   background: #ffffff;
   color: #344054;
   box-shadow: 0 8px 24px rgba(16, 24, 40, 0.1);
 }
 
-html[data-theme="light"] .syncplay-theme-toggle:hover {
+html[data-theme="light"] :not(:where(.syncplay-room, .syncplay-room *)).syncplay-theme-toggle:hover {
   background: #f8fafc;
 }
 
@@ -1656,15 +1641,6 @@ html[data-theme="light"] .syncplay-theme-toggle:hover {
 .syncplay-room :is(.syncplay-button-primary, .syncplay-transport-primary):hover {
   background: var(--room-button, #5eead4) !important;
   filter: brightness(0.95);
-}
-
-html[data-theme="light"] .syncplay-room .syncplay-role-badge {
-  color: var(--accent-strong) !important;
-}
-
-html[data-theme="light"] .syncplay-room .syncplay-call-lobby {
-  background: var(--surface-strong);
-  color: var(--foreground);
 }
 
 /* Menus stay anchored while interacting with individual theme actions. */

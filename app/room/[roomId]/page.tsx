@@ -113,7 +113,6 @@ function RoomPageContent() {
 
   return (
     <AppShell
-      lockRoomTheme
       searchTerm={searchTerm}
       onSearchTermChange={setSearchTerm}
       searchPlaceholder="Search room"
