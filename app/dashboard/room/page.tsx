@@ -84,6 +84,10 @@ function DashboardRoomPageContent() {
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const { themes: customRoomThemes, error: themeError, busy: themeBusy, save: saveTheme, remove: removeTheme } = useRoomThemes(user?.id);
   const [activeRooms, setActiveRooms] = useState<ListedRoom[]>([]);
+  const [selectedRoomForPanel, setSelectedRoomForPanel] = useState<ListedRoom | null>(null);
+  const [roomPanelMode, setRoomPanelMode] = useState<"view" | "edit" | null>(null);
+  const [roomSettingsSaving, setRoomSettingsSaving] = useState(false);
+  const [roomSettingsNotice, setRoomSettingsNotice] = useState("");
   const [roomError, setRoomError] = useState("");
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
@@ -164,6 +168,72 @@ function DashboardRoomPageContent() {
     setRoomThemeAccent(theme.accent);
     setRoomThemeBackground(theme.background);
     setRoomThemeButtonColor(theme.buttonColor || theme.accent);
+  }
+
+  function openRoomPanel(room: ListedRoom, panelMode: "view" | "edit") {
+    setSelectedRoomForPanel(room);
+    setRoomPanelMode(panelMode);
+    setRoomCode(room.code);
+    setRoomTitle(room.name);
+    setRoomTheme("custom");
+    setRoomThemeCustom(room.theme?.name || room.name);
+    setRoomThemeAccent(room.theme?.accent || "#5eead4");
+    setRoomThemeBackground(room.theme?.background || "#0f172a");
+    setRoomThemeButtonColor(room.theme?.buttonColor || room.theme?.accent || "#5eead4");
+    setRoomError("");
+    setRoomSettingsNotice("");
+  }
+
+  async function saveRoomSettings() {
+    if (!selectedRoomForPanel || roomPanelMode !== "edit" || !selectedRoomForPanel.canEdit || roomSettingsSaving) return;
+
+    const nextTitle = roomTitle.trim();
+    if (nextTitle.length < 2 || nextTitle.length > 80) {
+      setRoomError("Room title must be between 2 and 80 characters.");
+      return;
+    }
+
+    const theme = {
+      name: roomThemeCustom.trim() || "Custom theme",
+      accent: roomThemeAccent,
+      background: roomThemeBackground,
+      buttonColor: roomThemeButtonColor,
+    };
+
+    setRoomSettingsSaving(true);
+    setRoomError("");
+    setRoomSettingsNotice("");
+    try {
+      const response = await fetch(`${socketUrl}/api/rooms/${encodeURIComponent(selectedRoomForPanel.code)}/settings`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: nextTitle, theme }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || "Could not save this room.");
+      }
+
+      const updatedRoom: ListedRoom = {
+        ...selectedRoomForPanel,
+        name: payload.title,
+        theme: payload.theme,
+      };
+
+      setActiveRooms((current) => current.map((room) => room.code === updatedRoom.code ? updatedRoom : room));
+      setSelectedRoomForPanel(updatedRoom);
+      setRoomTitle(payload.title);
+      setRoomThemeCustom(payload.theme?.name || payload.title);
+      setRoomThemeAccent(payload.theme?.accent || roomThemeAccent);
+      setRoomThemeBackground(payload.theme?.background || roomThemeBackground);
+      setRoomThemeButtonColor(payload.theme?.buttonColor || payload.theme?.accent || roomThemeButtonColor);
+      setRoomSettingsNotice("Room settings updated.");
+    } catch (failure) {
+      setRoomError(failure instanceof Error ? failure.message : "Could not save this room. Please try again.");
+    } finally {
+      setRoomSettingsSaving(false);
+    }
   }
 
   function createRoom() {
@@ -356,10 +426,73 @@ function DashboardRoomPageContent() {
                   ) : null}
                 </>
               ) : (
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-[var(--muted)]">Room code</span>
-                  <input value={roomCode} onChange={(event) => setRoomCode(event.target.value)} placeholder="Enter room code" className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base uppercase text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
-                </label>
+                <>
+                  <label className="block space-y-2">
+                    <span className="text-sm font-medium text-[var(--muted)]">Room code</span>
+                    <input value={roomCode} onChange={(event) => setRoomCode(event.target.value)} placeholder="Enter room code" className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base uppercase text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] focus:border-emerald-400/60" />
+                  </label>
+
+                  {selectedRoomForPanel ? (
+                    <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--soft-background)] p-4">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Room settings</p>
+                        <p className="mt-1 text-sm text-[var(--muted)]">
+                          {roomPanelMode === "edit" && selectedRoomForPanel.canEdit ? "You are editing your room settings." : "View only. Only the room owner can edit this room."}
+                        </p>
+                      </div>
+
+                      <label className="block space-y-2">
+                        <span className="text-sm font-medium text-[var(--muted)]">Room title</span>
+                        <input
+                          value={roomTitle}
+                          onChange={(event) => setRoomTitle(event.target.value)}
+                          disabled={roomPanelMode !== "edit" || !selectedRoomForPanel.canEdit}
+                          placeholder="Movie night, watch party, study session..."
+                          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-70"
+                        />
+                      </label>
+
+                      <label className="block space-y-2">
+                        <span className="text-sm font-medium text-[var(--muted)]">Theme name</span>
+                        <input
+                          value={roomThemeCustom}
+                          onChange={(event) => setRoomThemeCustom(event.target.value)}
+                          disabled={roomPanelMode !== "edit" || !selectedRoomForPanel.canEdit}
+                          placeholder="Midnight watch club"
+                          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-4 py-3 text-base text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-70"
+                        />
+                      </label>
+
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-3 py-2.5 text-sm text-[var(--muted)]">
+                          <span>Accent</span>
+                          <input type="color" value={roomThemeAccent} onChange={(event) => setRoomThemeAccent(event.target.value)} disabled={roomPanelMode !== "edit" || !selectedRoomForPanel.canEdit} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed" />
+                        </label>
+
+                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-3 py-2.5 text-sm text-[var(--muted)]">
+                          <span>Background</span>
+                          <input type="color" value={roomThemeBackground} onChange={(event) => setRoomThemeBackground(event.target.value)} disabled={roomPanelMode !== "edit" || !selectedRoomForPanel.canEdit} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed" />
+                        </label>
+
+                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--input-background)] px-3 py-2.5 text-sm text-[var(--muted)]">
+                          <span>Buttons</span>
+                          <input type="color" value={roomThemeButtonColor} onChange={(event) => setRoomThemeButtonColor(event.target.value)} disabled={roomPanelMode !== "edit" || !selectedRoomForPanel.canEdit} className="h-10 w-16 cursor-pointer rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed" />
+                        </label>
+                      </div>
+
+                      {roomSettingsNotice ? <p className="text-sm text-emerald-700">{roomSettingsNotice}</p> : null}
+
+                      <button
+                        type="button"
+                        onClick={() => void saveRoomSettings()}
+                        disabled={roomPanelMode !== "edit" || !selectedRoomForPanel.canEdit || roomSettingsSaving}
+                        className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {roomSettingsSaving ? "Saving…" : "Save room changes"}
+                      </button>
+                    </div>
+                  ) : null}
+                </>
               )}
 
               {mode === "create" && friendContacts.length > 0 ? (
@@ -404,10 +537,7 @@ function DashboardRoomPageContent() {
 
               <div className="space-y-3">
                 {activeRooms.length > 0 ? activeRooms.map((room) => (
-                  <RoomListCard key={room.code} room={room} onView={() => {
-                    setRoomCode(room.code);
-                    setRoomError("");
-                  }} onSaved={(updated) => setActiveRooms((current) => current.map((item) => item.code === updated.code ? updated : item))} />
+                  <RoomListCard key={room.code} room={room} onView={() => openRoomPanel(room, "view")} onEdit={() => openRoomPanel(room, "edit")} />
                 )) : (
                   <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--soft-background)] p-4 text-sm text-[var(--muted)]">
                     No active rooms are available right now.
