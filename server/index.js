@@ -717,6 +717,11 @@ const server = http.createServer(async (request, response) => {
       const savedRooms = await database.collection("rooms").find({ $or: [{ ownerUserId: user.id }, { approvedUserIds: user.id }] }).sort({ createdAt: -1 }).limit(100).toArray();
       const dashboardRooms = new Map(savedRooms.map((room) => [room.roomId, { ...room, users: [], hostId: null }]));
       rooms.forEach((room, id) => dashboardRooms.set(id, room));
+      const createdRoomIds = new Set(
+        activities
+          .filter((activity) => activity.type === "room-created" && typeof activity.roomId === "string")
+          .map((activity) => activity.roomId),
+      );
       const liveRooms = [...dashboardRooms.values()]
         .filter((room) => room.ownerUserId === user.id || room.approvedUserIds?.includes(user.id) || room.users.some((member) => member.userId === user.id) || userRoomIds.has(room.roomId))
         .map((room) => ({
@@ -725,6 +730,8 @@ const server = http.createServer(async (request, response) => {
           viewers: `${room.users.length} online`,
           status: room.users.length > 0 ? "Live" : "Idle",
           code: room.roomId,
+          canEdit: room.ownerUserId === user.id || (!room.ownerUserId && createdRoomIds.has(room.roomId)),
+          theme: normalizeTheme(room.theme),
         }));
       const completedRoomSeconds = activities.reduce((total, activity) => total + (activity.type === "room-session" ? activity.durationSeconds || 0 : 0), 0);
       const activeRoomSeconds = [...io.sockets.sockets.values()].reduce((total, socket) => {
@@ -1116,6 +1123,54 @@ const server = http.createServer(async (request, response) => {
 
   if ((request.method === "GET" || request.method === "HEAD") && requestUrl.pathname.startsWith("/uploads/")) {
     serveUpload(request, response, decodeURIComponent(requestUrl.pathname.slice("/uploads/".length)));
+    return;
+  }
+
+  const roomSettingsMatch = requestUrl.pathname.match(/^\/api\/rooms\/([A-Z0-9]{4,8})\/settings$/i);
+  if (request.method === "POST" && roomSettingsMatch) {
+    try {
+      const user = await getAuthenticatedUser(request);
+      if (!user) return writeJson(response, 401, { error: "Please sign in to edit this room." }, request);
+      const room = await roomStore.load(roomSettingsMatch[1].toUpperCase());
+      if (!room) return writeJson(response, 404, { error: "This room was not found." }, request);
+      const database = await getAuthDatabase();
+      let canEdit = room.ownerUserId === user.id;
+
+      // Backward compatibility: older rooms may not have persisted ownerUserId.
+      if (!canEdit && !room.ownerUserId) {
+        const createdActivity = await database.collection("activity").findOne({
+          userId: user.id,
+          roomId: room.roomId,
+          type: "room-created",
+        });
+        if (createdActivity) {
+          canEdit = true;
+          room.ownerUserId = user.id;
+          if (!Array.isArray(room.approvedUserIds)) room.approvedUserIds = [];
+        }
+      }
+
+      if (!canEdit) return writeJson(response, 403, { error: "Only the room owner can edit this room." }, request);
+      const body = await readJsonBody(request);
+      const title = typeof body.title === "string" ? body.title.trim() : "";
+      if (title.length < 2 || title.length > 80 || !body.theme || !["accent", "background", "buttonColor"].every((key) => /^#[0-9a-f]{6}$/i.test(body.theme[key]))) {
+        return writeJson(response, 400, { error: "Enter a title between 2 and 80 characters and valid room colors." }, request);
+      }
+      const previous = { title: room.title, theme: room.theme };
+      const theme = normalizeTheme(body.theme);
+      room.title = title;
+      room.theme = theme;
+      try { await roomStore.save(room); }
+      catch (error) {
+        if (room.theme === theme) Object.assign(room, previous);
+        throw error;
+      }
+      io.to(room.roomId).emit("room-state", publicRoomState(room));
+      writeJson(response, 200, { title: room.title, theme: room.theme }, request);
+    } catch (error) {
+      console.error("Room settings update failed:", error);
+      writeJson(response, 503, { error: "Could not save this room. Please try again." }, request);
+    }
     return;
   }
 
