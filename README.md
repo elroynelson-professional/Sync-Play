@@ -99,3 +99,14 @@ npm run server
 - Realtime connections require the session cookie. Set `FRONTEND_ORIGINS` to a comma-separated list of exact frontend origins, or `FRONTEND_ORIGIN` for one origin. Both HTTP and Socket.IO use this allowlist with credentials.
 
 Run isolated room-flow tests with `node --test server/*.test.js`. They exercise the real HTTP/Socket.IO handlers with an in-memory MongoDB substitute; they do not touch production accounts or messages.
+
+## Google sign-in setup
+
+1. In [Google Auth Platform](https://console.cloud.google.com/auth/clients), select or create a project. Configure the consent screen's branding, audience, and contact email. For an External app in Testing mode, add your test accounts.
+2. Create an OAuth client with application type **Web application**. Add the exact frontend URLs to **Authorized JavaScript origins**: `https://www.sykonyx.com`, `https://sykonyx.com` if used, and `http://localhost:3000` for development. Origins have no path or trailing slash. Add `http://127.0.0.1:3000` only if you use it locally.
+3. Set `GOOGLE_CLIENT_ID` on the realtime backend to the generated `...apps.googleusercontent.com` client ID and restart/redeploy it. Set the same value in your ignored local `.env` for local testing. No client secret, redirect URI, or frontend build variable is required for this Google Identity Services popup flow.
+4. Ensure `FRONTEND_ORIGINS` includes those frontend origins. Test the Google button from an authorized frontend origin with cookies enabled. To allow the general public, complete Google's publishing/verification requirements shown in your console.
+
+The backend verifies Google's signature, audience, issuer, expiry, verified email, and a signed browser-bound nonce. It then issues the existing HttpOnly session cookie. Accounts are identified by Google's stable `sub`; matching password accounts must confirm their password once before linking. No Google access/refresh tokens are stored. Invite destinations are preserved after sign-in.
+
+Run `node --test server/*.test.js` for isolated authentication and room-flow tests. Real Google account selection requires a configured client ID and authorized origin; automated tests mock the Google verifier rather than contacting Google.

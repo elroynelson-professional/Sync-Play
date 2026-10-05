@@ -8,6 +8,8 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { MongoClient } = require("mongodb");
 const { Server } = require("socket.io");
+const { OAuth2Client } = require("google-auth-library");
+const { createGoogleAuth, GoogleAuthError } = require("./google-auth");
 const { normalizeTheme, createRoomStore } = require("./room-store");
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3002;
@@ -25,6 +27,13 @@ const allowedFrontendOrigins = (process.env.FRONTEND_ORIGINS || process.env.FRON
   .filter(Boolean);
 const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
 const SESSION_COOKIE = "syncplay-session";
+const GOOGLE_COOKIE = "syncplay-google-challenge";
+const googleClientId = process.env.GOOGLE_CLIENT_ID || "";
+const googleClient = new OAuth2Client();
+const googleAuth = createGoogleAuth({ clientId: googleClientId, verifyIdToken: (options) => googleClient.verifyIdToken(options), getDatabase: getAuthDatabase, comparePassword: bcrypt.compare });
+function googleCookie(value, maxAge = 300) {
+  return `${GOOGLE_COOKIE}=${encodeURIComponent(value)}; HttpOnly; ${isProduction ? "SameSite=None; Secure" : "SameSite=Lax"}; Path=/api/auth/google; Max-Age=${maxAge}`;
+}
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
 fs.mkdirSync(dataDirectory, { recursive: true });
@@ -540,6 +549,33 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (requestUrl.pathname === "/api/auth/google/config" && request.method === "GET") {
+    response.setHeader("Cache-Control", "no-store");
+    if (!googleClientId) return writeJson(response, 503, { error: "Google sign-in is not available yet." }, request);
+    const { nonce, cookie } = googleAuth.challenge();
+    response.setHeader("Set-Cookie", googleCookie(cookie));
+    return writeJson(response, 200, { clientId: googleClientId, nonce }, request);
+  }
+
+  if (requestUrl.pathname === "/api/auth/google" && request.method === "POST") {
+    response.setHeader("Cache-Control", "no-store");
+    if (!googleClientId) return writeJson(response, 503, { error: "Google sign-in is not available yet." }, request);
+    if (!allowedFrontendOrigins.includes(request.headers.origin) || !request.headers["content-type"]?.startsWith("application/json")) {
+      return writeJson(response, 403, { error: "Google sign-in must start from Sykonyx." }, request);
+    }
+    try {
+      const body = await readJsonBody(request);
+      const account = await googleAuth.authenticate({ cookie: parseCookies(request)[GOOGLE_COOKIE], credential: body.credential, password: body.password });
+      await createSession(account.id, response);
+      response.setHeader("Set-Cookie", [response.getHeader("Set-Cookie"), googleCookie("", 0)]);
+      return writeJson(response, 200, { user: { id: account.id, name: account.name, email: account.email, createdAt: account.createdAt, profileImage: account.profileImage || null } }, request);
+    } catch (error) {
+      if (error instanceof GoogleAuthError) return writeJson(response, error.status, { error: error.message, code: error.code }, request);
+      console.error("Google authentication service failed:", error.name);
+      return writeJson(response, 503, { error: "Google sign-in is temporarily unavailable. Please try again." }, request);
+    }
+  }
+
   if (request.method === "POST" && requestUrl.pathname === "/api/auth/request-otp") {
     let database;
     let email = "";
@@ -632,7 +668,7 @@ const server = http.createServer(async (request, response) => {
 
       const database = await getAuthDatabase();
       const storedUser = await database.collection("users").findOne({ email });
-      if (!storedUser || !(await bcrypt.compare(password, storedUser.passwordHash))) {
+      if (!storedUser || !storedUser.passwordHash || !(await bcrypt.compare(password, storedUser.passwordHash))) {
         writeJson(response, 401, { error: "Email or password is incorrect." }, request);
         return;
       }

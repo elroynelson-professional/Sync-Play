@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { safeReturnDestination } from "../lib/room-link";
+import { GoogleSignIn } from "./google-sign-in";
 import { RoomDemo } from "./room-demo";
 import { socketUrl } from "../lib/socket";
 
@@ -274,6 +275,7 @@ export function SyncPlayLanding() {
                 ) : null}
               </div>
 
+              {!activeUser ? <div className="mt-6"><GoogleSignIn onSuccess={(user) => { storeActiveUser(user); setActiveUser(user); router.replace(safeReturnDestination(new URLSearchParams(window.location.search).get("returnTo"))); }} /></div> : null}
               {activeUser ? (
                 <div className="mt-6 space-y-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
                   <p className="text-sm text-emerald-200">Signed in as</p>
