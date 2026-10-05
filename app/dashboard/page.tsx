@@ -1,5 +1,6 @@
 "use client";
 
+import { ResumeRooms, type ResumeRoom } from "../components/resume-rooms";
 import { useRoomThemes } from "../lib/use-room-themes";
 
 import { RoomThemePicker } from "../components/room-theme-picker";
@@ -64,6 +65,7 @@ type DashboardData = {
     watchTime: string;
   };
   rooms: DashboardRoom[];
+  resumeRooms?: ResumeRoom[];
   activityBars: { label: string; value: number }[];
 };
 
@@ -1005,7 +1007,7 @@ export default function DashboardPage() {
               <div className="grid gap-3 md:grid-cols-3">
                 {[
                   { label: "Active rooms", value: String(dashboardData?.metrics.activeRooms ?? 0), change: "Rooms you created or joined" },
-                  { label: "Live viewers", value: String(dashboardData?.metrics.liveViewers ?? 0), change: "Currently in your rooms" },
+                  { label: "Time together", value: dashboardData?.metrics.watchTime ?? "0h 0m", change: "Time spent in your rooms" },
                   { label: "Friends online", value: String(dashboardData?.metrics.friendsOnline ?? 0), change: "Ready to watch together" },
                 ].map((card) => (
                   <div
@@ -1054,22 +1056,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[22px] border border-white/10 bg-[#0d0d0d] p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-[1.2rem] font-semibold tracking-[-0.04em] text-white">Activity</h3>
-                  </div>
-
-                  <div className="flex h-40 items-end justify-between gap-2">
-                    {(dashboardData?.activityBars ?? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label) => ({ label, value: 0 }))).map((bar) => (
-                      <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
-                        <div className="flex w-full items-end justify-center rounded-t-xl bg-white/6" style={{ height: `${bar.value}%` }}>
-                          <div className="w-full rounded-t-xl bg-emerald-500" style={{ height: "100%" }} />
-                        </div>
-                        <span className="text-[10px] uppercase text-slate-400">{bar.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <ResumeRooms rooms={dashboardData?.resumeRooms ?? []} loading={!dashboardData} onView={(code) => router.push(`/room/${encodeURIComponent(code)}`)} onCreate={() => openRoomModal("create")} />
               </div>
             </section>
           )}

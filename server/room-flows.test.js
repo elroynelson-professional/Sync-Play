@@ -28,7 +28,11 @@ function memoryDatabase() {
     return {
       createIndex: async () => {},
       findOne: async (query) => clone(docs.find((doc) => matches(doc, query)) || null),
-      find: (query) => ({ toArray: async () => clone(docs.filter((doc) => matches(doc, query))) }),
+      find: (query) => {
+        let results = docs.filter((doc) => matches(doc, query));
+        const cursor = { sort(order) { const [key, direction] = Object.entries(order)[0]; results.sort((a, b) => (a[key] - b[key]) * direction); return cursor; }, limit(count) { results = results.slice(0, count); return cursor; }, toArray: async () => clone(results) };
+        return cursor;
+      },
       insertOne: async (doc) => {
         if (doc._id && docs.some((item) => item._id === doc._id)) throw new Error("duplicate id");
         docs.push(clone(doc));
@@ -118,6 +122,24 @@ test("authenticated creation, invitations, approvals, restart/rejoin, themes and
   const request = next(host, "room-join-request"); friend.emit("join-room", { roomId: "ABCDEF", name: "Friend" });
   const pending = await request; stateEvent = next(friend, "room-state"); host.emit("approve-room-join", { requestId: pending.requestId }); await stateEvent;
   stateEvent = next(host, "room-state"); host.emit("change-track", { videoId: "abcdefghijk", title: "Test video", mediaType: "youtube" }); await stateEvent;
+  const editRoom = (user, body) => fetch(`${app.url}/api/rooms/ABCDEF/settings`, { method: "POST", headers: { Cookie: `syncplay-session=${user}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  assert.equal((await editRoom("stranger", { title: "Hijacked", theme })).status, 403);
+  assert.equal((await editRoom("friend", { title: "Hijacked", theme })).status, 403);
+  assert.equal((await editRoom("unknown", { title: "Hijacked", theme })).status, 401);
+  assert.equal((await editRoom("host", { title: "", theme })).status, 400);
+  const changedTheme = { ...theme, background: "#445566" };
+  stateEvent = next(friend, "room-state");
+  assert.equal((await editRoom("host", { title: "Updated club", theme: changedTheme })).status, 200);
+  const edited = await stateEvent;
+  assert.equal(edited.title, "Updated club"); assert.deepEqual(edited.theme, changedTheme);
+  const ownerDashboard = await (await fetch(`${app.url}/api/dashboard`, { headers: { Cookie: "syncplay-session=host" } })).json();
+  assert.equal(ownerDashboard.rooms[0].canEdit, true);
+  assert.equal(ownerDashboard.resumeRooms[0].title, "Test video");
+  assert.equal(ownerDashboard.resumeRooms[0].name, "Updated club");
+  const friendDashboard = await (await fetch(`${app.url}/api/dashboard`, { headers: { Cookie: "syncplay-session=friend" } })).json();
+  assert.equal(friendDashboard.rooms[0].canEdit, false);
+  const strangerDashboard = await (await fetch(`${app.url}/api/dashboard`, { headers: { Cookie: "syncplay-session=stranger" } })).json();
+  assert.equal(strangerDashboard.resumeRooms.length, 0);
   // Account theme API: persisted saves/deletes and migration does not resurrect deleted themes.
   const themeRequest = async (body) => {
     const response = await fetch(`${app.url}/api/room-themes`, { method: body ? "POST" : "GET", headers: { Cookie: "syncplay-session=host", "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
@@ -135,7 +157,7 @@ test("authenticated creation, invitations, approvals, restart/rejoin, themes and
   const returning = await client(app, "friend"); sockets.push(returning);
   stateEvent = next(returning, "room-state"); returning.emit("join-room", { roomId: "ABCDEF" });
   const restored = await stateEvent;
-  assert.equal(restored.title, "Film club"); assert.deepEqual(restored.theme, theme);
+  assert.equal(restored.title, "Updated club"); assert.deepEqual(restored.theme, changedTheme);
   assert.equal(restored.playback.videoId, "abcdefghijk"); assert.equal(restored.users.length, 1);
   const owner = await client(app); sockets.push(owner);
   stateEvent = next(owner, "room-state"); owner.emit("join-room", { roomId: "ABCDEF" });

@@ -743,6 +743,14 @@ const server = http.createServer(async (request, response) => {
             theme: normalizeTheme(room.theme),
           };
         });
+      const accessibleCodes = new Set(liveRooms.map((room) => room.code));
+      const resumeRooms = [...dashboardRooms.values()]
+        .filter((room) => accessibleCodes.has(room.roomId) && room.playback?.videoId)
+        .sort((a, b) => b.playback.updatedAt - a.playback.updatedAt)
+        .slice(0, 3)
+        .map((room) => ({ code: room.roomId, name: room.title || `Room ${room.roomId}`,
+          title: room.playback.title || "Untitled media", mediaType: room.playback.mediaType || "youtube",
+          position: Math.max(0, room.playback.position || 0), playing: Boolean(activeMembersByRoom.get(room.roomId) && room.playback.playing) }));
       const completedRoomSeconds = activities.reduce((total, activity) => total + (activity.type === "room-session" ? activity.durationSeconds || 0 : 0), 0);
       const activeRoomSeconds = [...io.sockets.sockets.values()].reduce((total, socket) => {
         if (socket.data.userId !== user.id || !socket.data.roomId || !socket.data.roomStartedAt) return total;
@@ -764,6 +772,7 @@ const server = http.createServer(async (request, response) => {
           watchTime: `${Math.floor(roomTimeSeconds / 3600)}h ${Math.floor((roomTimeSeconds % 3600) / 60)}m`,
         },
         rooms: liveRooms,
+        resumeRooms,
         activityBars: activityBars.map((bar) => ({ ...bar, value: Math.round((bar.value / maxActivity) * 100) })),
       }, request);
     } catch (error) {
