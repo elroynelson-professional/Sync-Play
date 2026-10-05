@@ -239,8 +239,6 @@ function DashboardRoomPageContent() {
 
   async function deleteSavedRoom(room: ListedRoom) {
     if (!room.canEdit || deletingRoomCode) return;
-    const confirmed = typeof window === "undefined" ? true : window.confirm(`Remove ${room.name} from saved rooms?`);
-    if (!confirmed) return;
 
     setDeletingRoomCode(room.code);
     setRoomError("");
